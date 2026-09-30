@@ -2,404 +2,319 @@
 
 @section('title', 'Transaksi - Jiwanta')
 
-@push('styles')
-<style>
-    html { scroll-behavior: smooth; }
-
-    /* === ANIMASI === */
-    .scroll-anim {
-        opacity: 0;
-        transform: translateY(30px);
-        transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-    }
-    .scroll-anim.visible {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    .delay-1 { transition-delay: 0.1s; }
-    .delay-2 { transition-delay: 0.2s; }
-    .delay-3 { transition-delay: 0.3s; }
-
-    #main-wrapper {
-        transition: background-color 0.1s linear;
-    }
-
-    /* === STYLE KHUSUS TRANSAKSI === */
-    /* Stepper */
-    .stepper-line {
-        position: absolute;
-        top: 50%;
-        left: 8;
-        right: 8;
-        height: 2px;
-        background: #d1d5db;
-        transform: translateY(-50%);
-        z-index: 0;
-    }
-    .stepper-line-active {
-        background: #2d5a4a;
-        transition: width 0.5s ease;
-    }
-    .stepper-circle {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        position: relative;
-        z-index: 1;
-    }
-    .stepper-circle.active {
-        background: #2d5a4a;
-        color: white;
-        box-shadow: 0 0 0 4px rgba(45, 90, 74, 0.2);
-    }
-    .stepper-circle.completed {
-        background: #2d5a4a;
-        color: white;
-    }
-    .stepper-circle.pending {
-        background: white;
-        color: #9ca3af;
-        border: 2px solid #d1d5db;
-    }
-
-    /* Countdown */
-    .countdown-box {
-        background: linear-gradient(135deg, #2d5a4a 0%, #3d6a5a 100%);
-        color: white;
-        border-radius: 16px;
-        padding: 16px 20px;
-        font-family: 'Courier New', monospace;
-        font-size: 28px;
-        font-weight: bold;
-        letter-spacing: 2px;
-        text-align: center;
-        box-shadow: 0 4px 12px rgba(45, 90, 74, 0.3);
-    }
-
-    /* Upload Area */
-    .upload-area {
-        border: 2px dashed #d1d5db;
-        border-radius: 12px;
-        padding: 30px 20px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        background: #f9fafb;
-    }
-    .upload-area:hover {
-        border-color: #2d5a4a;
-        background: #f0fdf4;
-    }
-    .upload-area.has-file {
-        border-color: #2d5a4a;
-        background: #f0fdf4;
-        border-style: solid;
-    }
-
-    /* Copy Button */
-    .copy-btn {
-        background: #2d5a4a;
-        color: white;
-        padding: 6px 12px;
-        border-radius: 8px;
-        font-size: 12px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        border: none;
-    }
-    .copy-btn:hover { background: #234a3d; transform: scale(1.05); }
-    .copy-btn.copied { background: #10b981; }
-
-    /* Status Badge */
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-    .status-pending { background: #fef3c7; color: #92400e; }
-
-    @keyframes pulse-dot {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-    }
-    .pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
-</style>
-@endpush
-
 @section('content')
 
-{{-- Wrapper Utama --}}
-<div id="main-wrapper" class="w-full min-h-screen flex justify-center" style="background-color: #2d5a4a;">
-
-    {{-- Container (Sama persis dengan Dashboard) --}}
-    <div class="w-full max-w-2xl bg-[#c8dcc4] min-h-screen relative shadow-2xl pb-24">
+<div class="min-h-screen w-full bg-[#eceefa] font-sans text-[#0b2e22]">
+    <div class="relative mx-auto min-h-screen w-full max-w-[420px] bg-[#f8f8ff] pb-28">
 
         {{-- ========== HEADER ========== --}}
-        <div class="bg-white px-6 pt-6 pb-4 rounded-b-[2rem] shadow-sm relative z-10">
-            <div class="flex justify-between items-center mb-2">
-                <div class="flex items-center gap-3">
-                    <button onclick="window.history.back()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition">
-                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        <header class="flex items-center justify-between px-5 pt-5 pb-3 rounded-b-2xl bg-[#cdeedb]">
+            <h1 class="text-lg font-bold tracking-tight text-[#0b2e22]">Jiwanta</h1>
+            <div class="flex items-center gap-3">
+                <span class="text-xs font-medium text-[#0b2e22]">Transaksi</span>
+                <img src="{{ asset('images/profil.jpg') }}" alt="Profil"
+                     class="h-9 w-9 rounded-full bg-[#c9d3c4] object-cover">
+            </div>
+        </header>
+
+        <main class="space-y-4 px-4 pt-1">
+
+            {{-- ========== STEPPER ========== --}}
+            <section class="rounded-2xl bg-white px-5 pt-4 pb-3 shadow-sm">
+                <div class="flex items-center">
+                    {{-- Step 1 --}}
+                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#cdeedb] text-[#0b2e22]">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                         </svg>
-                    </button>
+                    </div>
+                    <div class="mx-2 h-[2px] flex-1 bg-[#0b2e22]"></div>
+                    {{-- Step 2 --}}
+                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0b2e22] text-sm font-bold text-white">2</div>
+                    <div class="mx-2 h-[2px] flex-1 bg-[#d9dcf3]"></div>
+                    {{-- Step 3 --}}
+                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dfe2f8] text-sm font-semibold text-[#0b2e22]">3</div>
+                </div>
+                <div class="mt-2 flex items-start justify-between text-center">
+                    <div class="w-20">
+                        <p class="text-[11px] font-bold leading-tight text-[#0b2e22]">1. Reservasi</p>
+                        <p class="text-[9px] text-gray-400">Selesai</p>
+                    </div>
+                    <div class="w-20">
+                        <p class="text-[11px] font-bold leading-tight text-[#0b2e22]">2. Checkout</p>
+                        <p class="text-[9px] font-semibold text-[#8a4b0f]">Aktif</p>
+                    </div>
+                    <div class="w-20">
+                        <p class="text-[11px] font-bold leading-tight text-gray-500">3. E-Ticket</p>
+                        <p class="text-[9px] text-gray-400">Selanjutnya</p>
+                    </div>
+                </div>
+            </section>
+
+            {{-- ========== TIMER ========== --}}
+            <section class="flex items-center justify-between rounded-2xl bg-[#ffd7a8] px-4 py-4">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-9 w-9 items-center justify-center rounded-full bg-[#7a4a1a] text-white">
+                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
                     <div>
-                        <h1 class="text-sm font-bold leading-tight text-gray-800">JIWANTA</h1>
-                        <p class="text-[10px] text-gray-500 leading-tight">Thermal Springs</p>
+                        <p class="text-[10px] font-bold uppercase leading-tight tracking-wide text-[#8a4b0f]">Sisa Waktu Pembayaran</p>
+                        <p id="countdown" class="text-2xl font-extrabold leading-tight text-[#0b2e22]">01:59:44</p>
                     </div>
                 </div>
+                <span class="rounded-full bg-[#fff1dd] px-3 py-1 text-[10px] font-bold text-[#7a4a1a]">Batas 2 Jam</span>
+            </section>
+
+            {{-- ========== DETAIL TIKET ========== --}}
+            <section class="rounded-2xl bg-white p-4 shadow-sm">
                 <div class="flex items-center gap-3">
-                    <span class="text-sm font-medium text-gray-700">Transaksi</span>
-                    <div class="w-8 h-8 rounded-full bg-gray-200"></div>
-                </div>
-            </div>
-        </div>
-
-        {{-- ========== KONTEN UTAMA ========== --}}
-        <div class="px-5 py-6 relative z-20">
-
-            {{-- Stepper / Timeline --}}
-            <div class="scroll-anim mb-8">
-                <div class="relative flex items-center justify-between px-2">
-                    <div class="stepper-line"></div>
-                    <div class="stepper-line stepper-line-active" style="width: 50%;"></div>
-
-                    <div class="stepper-circle completed">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                        </svg9>
-                    </div>
-                    <div class="stepper-circle active">2</div>
-                    <div class="stepper-circle pending">3</div>
-                </div>
-                <div class="flex justify-between px-1 mt-2">
-                    <span class="text-[10px] font-semibold text-[#2d5a4a]">Reservasi</span>
-                    <span class="text-[10px] font-semibold text-[#2d5a4a]">Checkout</span>
-                    <span class="text-[10px] font-semibold text-gray-400">Selesai</span>
-                </div
-            </div>
-
-            {{-- Countdown Timer --}}
-            <div class="scroll-anim delay-1 mb-6 text-center">
-                <div class="countbox inline-block min-w-[200px]">
-                    <div class="text-[10px] font-normal opacity-80 mb-1 tracking-widest">WAKTU PEMBAYARAN</div>
-                    <div id="countdown">00:05:00</div>
-                </div>
-            </div>
-
-            {{-- Detail Reservasi --}}
-            <div class="bg-white rounded-2xl p-5 shadow-sm mb-4 scroll-anim delay-1">
-                <div class="flex items-center gap-2 mb-4">
-                    <div class="w-8 h-8 rounded-full bg-[#2d5a4a] flex items-center justify-center text-white">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-                            <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-sm font-bold text-gray-800">Detail Reservasi</h3>
-                </div>
-
-                <div class="space-y-3 text-xs">
-                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
-                        <span class="text-gray-500">Tanggal</span>
-                        <span class="font-semibold text-gray-800">18 September 2024</span>
-                    </div>
-                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
-                        <span class="text-gray-500">Paket</span>
-                        <span class="font-semibold text-gray-800"> Tiket Renang Premier</span>
-                    </div>
-                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
-                        <span class="text-gray-500">Lokasi</span>
-                        <span class="font-semibold text-gray-800">Jiwanta Ciwidey</span>
-                    </div>
-                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
-                        <span class="text-gray-500">Durasi</span>
-                        <span class="font-semibold text-gray-800">-</span>
-                    </div>
-                    <div class="flex justify-between items-center py-2 pt-3">
-                        <span class="text-gray-500 font-medium">Total Harga</span>
-                        <span class="text-lg font-bold text-[#2d5a4a]">Rp 110.250</span>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Data Pemesan --}}
-            <div class="bg-white rounded-2xl p-5 shadow-sm mb-4 scroll-anim delay-2">
-                <div class="flex items-center gap-2 mb-4">
-                    <div class="w-8 h-8 rounded-full bg-[#2d5a4a] flex items-center justify-center text-white">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-sm font-bold text-gray-800">Data Pemesan</h3>
-                </div>
-
-                <div class="space-y-3 text-xs">
-                    <div class="py-2 border-b border-gray-100">
-                        <span class="text-gray-500 block mb-1">Nama</span>
-                        <span class="font-semibold text-gray-800">Raditya Rahmawaty</span>
-                    </div>
-                    <div class="py-2 border-b border-gray-100">
-                        <span class="text-gray-500 block mb-1">Email</span>
-                        <span class="font-semibold text-gray-800">raditya@email.com</span>
-                    </div>
-                    <div class="py-2">
-                        <span class="text-gray-500 block mb-1">No. Telepon</span>
-                        <span class="font-semibold text-gray-800">081234567890</span>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Transfer Bank Manual --}}
-            <div class="bg-white rounded-2xl p-5 shadow-sm mb-4 scroll-anim delay-2">
-                <div class="flex items-center gap-2 mb-4">
-                    <div class="w-8 h-8 rounded-full bg-[#2d5a4a] flex items-center justify-center text-white">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
-                            <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM14 13a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-sm font-bold text-gray-800">Transfer Bank Manual</h3>
-                </div>
-
-                <div class="bg-gray-50 rounded-xl p-4 mb-4">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center gap-2">
-                            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">BCA</div>
-                            <div>
-                                <p class="text-[10px] text-gray-500">Bank</p>
-                                <p class="text-sm font-bold text-gray-800">BCA</p>
-                            </div>
-                        </div>
-                        <button class="copy-btn" onclick="copyRekening('1234567890', this)">Salin</button>
-                    </div>
-
-                    <div class="space-y-2 text-xs">
-                        <div>
-                            <span class="text-gray-500 block mb-1">No. Rekening</span>
-                            <div class="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-gray-200">
-                                <span class="font-semibold text-gray-800 font-mono">1234567890</span>
-                            </div>
-                        </div>
-                        <div>
-                            <span class="text-gray-500 block mb-1">Atas Nama</span>
-                            <span class="font-semibold text-gray-800">Jiwanta Thermal Springs</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                    <div class="flex items-start gap-2">
-                        <svg class="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                        </svg>
-                        <p class="text-[10px] text-yellow-800 leading-relaxed">
-                            Transfer sesuai dengan total harga sebelum waktu habis. Simpan bukti transfer untuk upload di bawah.
+                    <img src="{{ asset('images/kolam jiwanta.jpg') }}" alt="Kolam Jiwanta"
+                         class="h-14 w-14 shrink-0 rounded-lg bg-[#8fa89a] object-cover">
+                    <div class="min-w-0">
+                        <span class="inline-block rounded-md bg-[#cdeedb] px-2 py-0.5 text-[10px] font-semibold text-[#0b4a35]">Tiket Masuk &amp; Kolam</span>
+                        <h2 class="text-lg font-bold leading-tight text-[#0b2e22]">Tiket Renang Premier</h2>
+                        <p class="mt-0.5 flex items-center gap-1 text-xs text-gray-500">
+                            <svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
+                            </svg>
+                            2 Pengunjung Dewasa
                         </p>
                     </div>
                 </div>
-            </div>
 
-            {{-- Bukti Pembayaran --}}
-            <div class="bg-white rounded-2xl p-5 shadow-sm mb-4 scroll-anim delay-3">
-                <div class="flex items-center gap-2 mb-4">
-                    <div class="w-8 h-8 rounded-full bg-[#2d5a4a] flex items-center justify-center text-white">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                <div class="mt-4 space-y-2 rounded-xl bg-[#eef0ff] p-3">
+                    <div class="flex items-center gap-2">
+                        <svg class="h-4 w-4 shrink-0 text-[#0b2e22]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
+                        <span class="text-xs font-bold text-[#0b2e22]">Minggu, 20 September 2026</span>
                     </div>
-                    <h3 class="text-sm font-bold text-gray-800">Bukti Pembayaran</h3>
+                    <div class="flex items-start gap-2">
+                        <svg class="mt-0.5 h-4 w-4 shrink-0 text-[#0b2e22]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <span class="text-xs leading-snug text-gray-600">Jiwanta Ciwidey Resort, Jl. Raya Ciwidey - Patengan KM 11</span>
+                    </div>
                 </div>
 
-                <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
-                    <input type="file" id="fileInput" class="hidden" accept="image/*" onchange="handleFileUpload(event)">
+                <div class="mt-4 space-y-1.5 text-xs text-gray-600">
+                    <div class="flex justify-between">
+                        <span>Harga Satuan (x2)</span>
+                        <span>Rp 75.000 x 2</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Subtotal Tiket</span>
+                        <span>Rp 150.000</span>
+                    </div>
+                </div>
 
-                    <div id="uploadPlaceholder">
-                        <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-100 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                            </svg>
+                <div class="my-3 h-px bg-[#dfe2f8]"></div>
+
+                <div class="flex items-end justify-between">
+                    <div class="max-w-[45%]">
+                        <p class="text-xs font-semibold text-[#0b2e22]">Total Jumlah Transfer</p>
+                        <p class="mt-1 text-[10px] leading-relaxed text-gray-400">Harus transfer persis hingga digit terakhir</p>
+                    </div>
+                    <div class="text-right leading-none text-[#0b2e22]">
+                        <p class="text-3xl font-extrabold">Rp</p>
+                        <p class="text-[32px] font-extrabold tracking-tight">150.000</p>
+                    </div>
+                </div>
+            </section>
+
+            {{-- ========== DATA PEMESAN ========== --}}
+            <section class="rounded-2xl bg-white p-4 shadow-sm">
+                <div class="mb-3 flex items-center justify-between">
+                    <h3 class="flex items-center gap-2 text-lg font-bold text-[#0b2e22]">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        Data Pemesan
+                    </h3>
+                    <span class="rounded-full bg-[#cdeedb] px-2.5 py-0.5 text-[10px] font-semibold text-[#0b4a35]">Terdaftar</span>
+                </div>
+
+                <div class="space-y-2.5">
+                    <div class="rounded-xl bg-[#eef0ff] px-3 py-2">
+                        <p class="text-[10px] font-semibold text-gray-500">Nama Lengkap</p>
+                        <p class="text-sm font-semibold text-[#0b2e22]">Ahmad Fadillah</p>
+                    </div>
+                    <div class="rounded-xl bg-[#eef0ff] px-3 py-2">
+                        <p class="text-[10px] font-semibold text-gray-500">No. WhatsApp</p>
+                        <p class="text-sm font-semibold text-[#0b2e22]">0812-3456-7890</p>
+                    </div>
+                    <div class="rounded-xl bg-[#eef0ff] px-3 py-2">
+                        <p class="text-[10px] font-semibold text-gray-500">Email Konfirmasi</p>
+                        <p class="text-sm font-semibold text-[#0b2e22]">ahmad.fadillah@example.com</p>
+                    </div>
+                </div>
+            </section>
+
+            {{-- ========== TRANSFER BANK MANUAL ========== --}}
+            <section class="rounded-2xl bg-white p-4 shadow-sm">
+                <h3 class="flex items-center gap-2 text-lg font-bold text-[#0b2e22]">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 10l9-6 9 6M5 10v8m4-8v8m6-8v8m4-8v8M3 21h18"/>
+                    </svg>
+                    Transfer Bank Manual
+                </h3>
+                <p class="mt-0.5 mb-3 text-xs text-gray-500">Pilih salah satu rekening resmi Jiwanta di bawah ini:</p>
+
+                {{-- BCA --}}
+                <div class="mb-3 rounded-2xl bg-[#eef0ff] p-3">
+                    <div class="flex items-center justify-between">
+                        <span class="rounded-md bg-[#dbe3fb] px-3 py-1 text-lg font-extrabold text-[#0b2e5a]">BCA</span>
+                        <span class="text-[10px] text-gray-400">Bank Central Asia</span>
+                    </div>
+                    <div class="mt-3 flex items-center justify-between rounded-xl bg-white px-3 py-2.5">
+                        <div>
+                            <p class="text-[10px] font-semibold text-gray-500">Nomor Rekening</p>
+                            <p class="text-xl font-bold tracking-[0.15em] text-[#0b2e22]">8405123499</p>
                         </div>
-                        <p class="text-xs text-gray-600 font-medium mb-1">Upload Bukti Transfer</p>
-                        <p class="text-[10px] text-gray-400 mb-3">Format: JPG, PNG (Max 2MB)</p>
-                        <button type="button" class="bg-[#2d5a4a] text-white px-4 py-2 rounded-full text-xs font-semibold hover:bg-[#234a3d] transition">
-                            Pilih File
+                        <button type="button" data-copy="8405123499"
+                                class="copy-btn flex items-center gap-1.5 rounded-full bg-[#0b2e22] px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-[#12442f] active:scale-95">
+                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                            <span class="copy-label">Salin</span>
                         </button>
                     </div>
-
-                    <div id="filePreview" class="hidden">
-                        <img id="previewImage" src="" alt="Preview" class="max-h-32 mx-auto rounded-lg mb-2 shadow-sm">
-                        <p id="fileName" class="text-xs text-gray-600 font-medium"></p>
-                        <button type="button" onclick="removeFile(event)" class="text-xs text-red-500 hover:text-red-700 mt-2 font-medium">
-                            Hapus File
-                        </button>
-                    </div>
+                    <p class="mt-2 text-xs text-gray-600">a.n Jiwanta Thermall Springs</p>
                 </div>
 
-                <div class="mt-4 flex items-center justify-center">
-                    <span class="status-badge status-pending">
-                        <span class="w-2 h-2 bg-yellow-500 rounded-full pulse-dot"></span>
-                        Menunggu Konfirmasi
+                {{-- MANDIRI --}}
+                <div class="rounded-2xl bg-[#eef0ff] p-3">
+                    <div class="flex items-center justify-between">
+                        <span class="rounded-md bg-[#e3e3f3] px-3 py-1 text-lg font-extrabold text-[#7a5a2e]">MANDIRI</span>
+                        <span class="text-[10px] text-gray-400">Bank Mandiri</span>
+                    </div>
+                    <div class="mt-3 flex items-center justify-between rounded-xl bg-white px-3 py-2.5">
+                        <div>
+                            <p class="text-[10px] font-semibold text-gray-500">Nomor Rekening</p>
+                            <p class="text-xl font-bold tracking-[0.15em] text-[#0b2e22]">1310098765432</p>
+                        </div>
+                        <button type="button" data-copy="1310098765432"
+                                class="copy-btn flex items-center gap-1.5 rounded-full bg-[#0b2e22] px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-[#12442f] active:scale-95">
+                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                            <span class="copy-label">Salin</span>
+                        </button>
+                    </div>
+                    <p class="mt-2 text-xs text-gray-600">a.n Jiwanta Thermall Springs</p>
+                </div>
+            </section>
+
+            {{-- ========== BUKTI PEMBAYARAN ========== --}}
+            <section class="rounded-2xl bg-white p-4 shadow-sm">
+                <div class="mb-3 flex items-start justify-between gap-3">
+                    <h3 class="flex items-center gap-2 text-lg font-bold leading-tight text-[#0b2e22]">
+                        <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span>Bukti<br>Pembayaran</span>
+                    </h3>
+                    <span class="flex items-center gap-1.5 rounded-2xl bg-[#ffd7a8] px-3 py-1.5 text-[10px] font-bold leading-tight text-[#7a4a1a]">
+                        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-[#7a4a1a]"></span>
+                        Menunggu Verifikasi Admin
                     </span>
                 </div>
-            </div>
 
-            {{-- Tombol Kirim --}}
-            <div class="scroll-anim delay-3 mt-6 mb-4">
-                <button onclick="submitTransaction()" class="w-full bg-[#2d5a4a] text-white py-3.5 rounded-full font-semibold flex items-center justify-center gap-2 hover:bg-[#234a3d] transition shadow-lg group">
-                    <span>Kirim & Cek Status Tiket</span>
-                    <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                {{-- File terunggah --}}
+                <div id="fileRow" class="flex items-center gap-3 rounded-xl bg-[#eef0ff] p-2.5">
+                    <div class="relative shrink-0">
+                        <img id="fileThumb" src="{{ asset('images/bukti transfer.jpg') }}" alt="Bukti transfer"
+                             class="h-12 w-12 rounded-lg bg-gray-300 object-cover">
+                        <span class="absolute -right-1 -bottom-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#0b2e22] text-white ring-2 ring-[#eef0ff]">
+                            <svg class="h-2.5 w-2.5" fill="none" stroke="currentColor" stroke-width="3.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p id="fileName" class="truncate text-xs font-bold text-[#0b2e22]">bukti_transfer_bca_ahmad.jpg</p>
+                        <p id="fileMeta" class="text-[10px] text-gray-500">2.4 MB • 20 Sep 2026 14:30 WIB</p>
+                        <p class="mt-0.5 flex items-center gap-1 text-[10px] font-semibold text-[#0b2e22]">
+                            <svg class="h-3 w-3 text-[#0b7a4a]" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Struk Berhasil Diunggah
+                        </p>
+                    </div>
+                    <button type="button" id="editFileBtn" aria-label="Ganti file"
+                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dbe0fa] text-[#0b2e22] transition hover:bg-[#cdd4f6]">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.83a2 2 0 01-.879.513L7 17l.657-3.95A2 2 0 018.17 12.17L9 13z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Area upload --}}
+                <label for="fileInput"
+                       class="mt-3 flex cursor-pointer flex-col items-center rounded-xl bg-[#eef0ff] px-4 py-6 text-center transition hover:bg-[#e5e8fb]">
+                    <input type="file" id="fileInput" accept="image/png,image/jpeg" class="hidden">
+                    <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#cdeedb] text-[#0b2e22]">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </div>
+                    <p class="text-xs font-bold text-[#0b2e22]">Upload Foto Struk / Screenshot Bukti Transfer</p>
+                    <p class="mt-1 text-[10px] text-gray-500">Format JPG, PNG (Maksimal 5MB)</p>
+                </label>
+            </section>
+
+            {{-- ========== TOMBOL KIRIM ========== --}}
+            <div class="pt-1">
+                <button type="button" id="submitBtn"
+                        class="flex w-full items-center justify-center gap-2 rounded-full bg-[#0b2e22] py-4 text-sm font-bold text-white shadow-lg transition hover:bg-[#12442f] active:scale-[0.99] disabled:opacity-70">
+                    <span id="submitLabel">Kirim &amp; Cek Status Tiket</span>
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
                     </svg>
                 </button>
-            </div>
 
-        </div>
+                <a href="https://wa.me/6281234567890" target="_blank" rel="noopener"
+                   class="mt-4 flex items-center justify-center gap-1.5 text-xs font-semibold text-[#7a4a1a] hover:underline">
+                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/>
+                    </svg>
+                    Butuh Bantuan? Hubungi WhatsApp Admin
+                </a>
+            </div>
+        </main>
 
         {{-- ========== BOTTOM NAVIGATION ========== --}}
-        <div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-full max-w-2xl px-4 z-30">
-            <div class="bg-white rounded-full shadow-lg border border-gray-100 px-2 py-2 flex justify-around items-center">
-                <a href="{{ route('dashboard') }}" class="flex flex-col items-center gap-1 px-4 py-1">
-                    <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                        <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
-                    </div>
-                    <span class="text-[10px] text-gray-500">Beranda</span>
-                </a>
-
-                <a href="#" class="flex flex-col items-center gap-1 px-4 py-1">
-                    <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    </div>
-                    <span class="text-[10px] text-gray-500">Reservasi</span>
-                </a>
-
-                <a href="{{ route('transaksi') }}" class="flex flex-col items-center gap-1 px-4 py-1 rounded-full bg-[#c8dcc4]">
-                    <div class="w-8 h-8 rounded-full bg-[#2d5a4a] flex items-center justify-center text-white">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    </div>
-                    <span class="text-[10px] font-bold text-[#2d5a4a]">Transaksi</span>
-                </a>
-
-                <a href="#" class="flex flex-col items-center gap-1 px-4 py-1">
-                    <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
-                    </div>
-                    <span class="text-[10px] text-gray-500">Tiket Saya</span>
-                </a>
-            </div>
-        </div>
-
+        <nav class="fixed bottom-0 left-1/2 z-30 flex w-full max-w-[420px] -translate-x-1/2 items-center justify-around bg-white px-2 pt-3 pb-4 shadow-[0_-4px_16px_rgba(11,46,34,0.06)]">
+            <a href="{{ route('dashboard') }}" class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 20l5-9 3 5 2-3 5 7H3z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v3"/>
+                </svg>
+                <span class="text-[11px] font-semibold">Beranda</span>
+            </a>
+            <a href="#" class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1v-9z"/>
+                </svg>
+                <span class="text-[11px] font-semibold">Reservasi</span>
+            </a>
+            <a href="{{ route('transaksi') }}" class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
+                <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v17l2-1.2 2 1.2 2-1.2 2 1.2 2-1.2 2 1.2 2-1.2V4a2 2 0 00-2-2H6zm2 5h8v2H8V7zm0 4h8v2H8v-2zm0 4h5v2H8v-2z" clip-rule="evenodd"/>
+                </svg>
+                <span class="text-[11px] font-extrabold">Transaksi</span>
+            </a>
+            <a href="#" class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+                </svg>
+                <span class="text-[11px] font-semibold">Tiket Saya</span>
+            </a>
+        </nav>
     </div>
 </div>
 
@@ -407,115 +322,76 @@
 
 @push('scripts')
 <script>
-    // === LOGIKA TRANSAKSI ===
-    let timeLeft = 5 * 60;
-    const countdownElement = document.getElementById('countdown');
+    // === COUNTDOWN (mulai 01:59:44) ===
+    (function () {
+        let timeLeft = 1 * 3600 + 59 * 60 + 44;
+        const el = document.getElementById('countdown');
+        const pad = (n) => String(n).padStart(2, '0');
 
-    function updateCountdown() {
-        const hours = Math.floor(timeLeft / 3600);
-        const minutes = Math.floor((timeLeft % 3600) / 60);
-        const seconds = timeLeft % 60;
-        countdownElement.textContent = String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
-        if (timeLeft > 0) {
-            timeLeft--;
-        } else {
-            countdownElement.textContent = '00:00:00';
-            countdownElement.parentElement.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+        function tick() {
+            const h = Math.floor(timeLeft / 3600);
+            const m = Math.floor((timeLeft % 3600) / 60);
+            const s = timeLeft % 60;
+            el.textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+            if (timeLeft > 0) timeLeft--;
         }
-    }
-    setInterval(updateCountdown, 1000);
-    updateCountdown();
+        tick();
+        setInterval(tick, 1000);
+    })();
 
-    function copyRekening(rekening, btn) {
-        navigator.clipboard.writeText(rekening).then(() => {
-            const originalText = btn.textContent;
-            btn.textContent = 'Tersalin!';
-            btn.classList.add('copied');
-            setTimeout(() => {
-                btn.textContent = originalText;
-                btn.classList.remove('copied');
-            }, 2000);
+    // === SALIN NOMOR REKENING ===
+    document.querySelectorAll('.copy-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const label = btn.querySelector('.copy-label');
+            navigator.clipboard.writeText(btn.dataset.copy).then(() => {
+                label.textContent = 'Tersalin';
+                setTimeout(() => (label.textContent = 'Salin'), 2000);
+            });
         });
-    }
+    });
 
-    function handleFileUpload(event) {
-        const file = event.target.files[0];
-        if (file) {
-            if (file.size > 2 * 1024 * 1024) { alert('Ukuran file maksimal 2MB!'); return; }
-            if (!file.type.startsWith('image/')) { alert('Hanya file gambar yang diperbolehkan!'); return; }
+    // === UPLOAD BUKTI TRANSFER ===
+    const fileInput = document.getElementById('fileInput');
+    document.getElementById('editFileBtn').addEventListener('click', () => fileInput.click());
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('previewImage').src = e.target.result;
-                document.getElementById('fileName').textContent = file.name;
-                document.getElementById('uploadPlaceholder').classList.add('hidden');
-                document.getElementById('filePreview').classList.remove('hidden');
-                document.getElementById('uploadArea').classList.add('has-file');
-            };
-            reader.readAsDataURL(file);
-        }
-    }
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
 
-    function removeFile(event) {
-        event.stopPropagation();
-        document.getElementById('fileInput').value = '';
-        document.getElementById('uploadPlaceholder').classList.remove('hidden');
-        document.getElementById('filePreview').classList.add('hidden');
-        document.getElementById('uploadArea').classList.remove('has-file');
-    }
-
-    function submitTransaction() {
-        if (!document.getElementById('fileInput').files[0]) {
-            alert('Silakan upload bukti pembayaran terlebih dahulu!');
+        if (!['image/jpeg', 'image/png'].includes(file.type)) {
+            alert('Format file harus JPG atau PNG.');
+            fileInput.value = '';
             return;
         }
-        const btn = event.target.closest('button');
-        const originalContent = btn.innerHTML;
-        btn.innerHTML = '<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="ml-2">Mengirim...</span>';
-        btn.disabled = true;
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Ukuran file maksimal 5MB.');
+            fileInput.value = '';
+            return;
+        }
 
+        const now = new Date();
+        const tanggal = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+        const jam = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false }).replace('.', ':');
+
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileMeta').textContent =
+            `${(file.size / 1024 / 1024).toFixed(1)} MB • ${tanggal} ${jam} WIB`;
+        document.getElementById('fileThumb').src = URL.createObjectURL(file);
+    });
+
+    // === KIRIM ===
+    document.getElementById('submitBtn').addEventListener('click', function () {
+        const label = document.getElementById('submitLabel');
+        const original = label.textContent;
+        this.disabled = true;
+        label.textContent = 'Mengirim...';
+
+        // TODO: ganti dengan request ke backend (fetch/axios/form submit)
         setTimeout(() => {
-            btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span class="ml-2">Berhasil Dikirim!</span>';
-            btn.style.background = '#10b981';
-            setTimeout(() => {
-                alert('Bukti pembayaran berhasil dikirim! Silakan tunggu konfirmasi dari admin.');
-                btn.innerHTML = originalContent;
-                btn.style.background = '';
-                btn.disabled = false;
-            }, 1500);
-        }, 2000);
-    }
-
-    // === LOGIKA ANIMASI DASHBOARD (Sama persis) ===
-    document.addEventListener('DOMContentLoaded', () => {
-        const mainWrapper = document.getElementById('main-wrapper');
-        const heroSection = document.querySelector('.bg-white.rounded-b-\\[2rem\\]'); // Menggunakan header putih sebagai acuan tinggi
-        const heroContent = document.querySelectorAll('.bg-white.rounded-2xl'); // Animasi pada card
-
-        const colorStart = { r: 45, g: 90, b: 74 };
-        const colorEnd = { r: 200, g: 220, b: 196 };
-
-        // 1. Scroll Animation
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) entry.target.classList.add('visible');
-            });
-        }, { threshold: 0.1 });
-
-        document.querySelectorAll('.scroll-anim').forEach(el => observer.observe(el));
-
-        // 2. Background Color Transition
-        window.addEventListener('scroll', () => {
-            const scrollY = window.scrollY;
-            const heroHeight = heroSection ? heroSection.offsetHeight : 200;
-            let progress = Math.min(scrollY / heroHeight, 1);
-
-            const r = Math.round(colorStart.r + (colorEnd.r - colorStart.r) * progress);
-            const g = Math.round(colorStart.g + (colorEnd.g - colorStart.g) * progress);
-            const b = Math.round(colorStart.b + (colorEnd.b - colorStart.b) * progress);
-
-            mainWrapper.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
-        });
+            label.textContent = original;
+            this.disabled = false;
+            window.location.href = "{{ route('transaksi') }}";
+        }, 1500);
     });
 </script>
 @endpush

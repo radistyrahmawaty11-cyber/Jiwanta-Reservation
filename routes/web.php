@@ -13,8 +13,18 @@ Route::get('/register', function () {
 })->name('register');
 
 // Halaman Dashboard (setelah login)
-Route::get('/dashboard', function () {
+Route::get('/pengunjung/dashboard', function () {
     return view('pengunjung.dashboard');
+})->name('dashboard');
+
+// Halaman Dashboard (setelah login)
+Route::get('/admin/dashboard', function () {
+    return view('admin.dashboard');
+})->name('dashboard');
+
+// Halaman Dashboard (setelah login)
+Route::get('/petugas/dashboard', function () {
+    return view('petugas.dashboard');
 })->name('dashboard');
 
 // Proses Login (nanti ditambah logic)
