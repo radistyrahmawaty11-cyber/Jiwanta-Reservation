@@ -35,11 +35,12 @@
         'door'      => 'M6 21V4h9v17M4 21h16M12 12h.01',
         'idcard'    => 'M4 6h16v12H4zM8.5 11a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM6 15c.5-1.5 4.5-1.5 5 0M14 10h4M14 13h3',
         'tree'      => 'M12 3l4 6h-2.5l3.5 5h-3l3 5H7l3-5H7l3.5-5H8l4-6z',
+        'x'         => 'M6 6l12 12M18 6L6 18',
     ];
 
     $nav = [
         'Navigasi Utama' => [['Dashboard', 'dashboard', true, null], ['Verifikasi & Transaksi', 'receipt', false, 14]],
-        'Manajemen Resort' => [['Kelola Tiket', 'ticket', false, null], ['Kelola Cabin Suite', 'cabin', false, null], ['Kelola Fasilitas Resort', 'pool', false, null]],
+        'Manajemen Resort' => [['Kelola Tiket', 'ticket', false, null], ['Kelola Cabin Suite', 'cabin', false, null]],
         'Administrasi & Sistem' => [['Manajemen Pengguna', 'users', false, null], ['Laporan & Export', 'chart', false, null], ['Pengaturan Profil', 'gear', false, null]],
     ];
 
@@ -71,6 +72,13 @@
 
     $card = 'rounded-2xl bg-white shadow-sm border border-slate-200';
     $cap = 'text-[9px] font-bold uppercase leading-snug tracking-wide text-slate-600';
+
+    // Gaya form & tombol untuk jendela (modal) Walk-in dan Unduh Laporan
+    $inp = 'w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-[12px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#0B3A22] focus:ring-2 focus:ring-[#0B3A22]/15';
+    $lbl = 'mb-1 block text-[11px] font-semibold text-slate-700';
+    $err = 'mt-1 hidden text-[10px] font-medium text-red-600';
+    $btnP = 'inline-flex items-center justify-center gap-2 rounded-lg bg-[#0B3A22] px-5 py-2.5 text-[12px] font-bold text-white transition hover:bg-[#124c2f] active:scale-95 disabled:cursor-wait disabled:opacity-60';
+    $btnG = 'inline-flex items-center justify-center gap-2 rounded-lg bg-slate-100 px-5 py-2.5 text-[12px] font-semibold text-slate-700 transition hover:bg-slate-200 active:scale-95';
 @endphp
 
     {{-- ================= LAYOUT CONTAINER ================= --}}
@@ -98,7 +106,7 @@
                     <ul class="space-y-1">
                         @foreach ($items as [$text, $icon, $active, $badge])
                             <li>
-                                <a href="#" class="flex h-[36px] items-center gap-3 rounded-lg px-3 text-[13px] font-medium transition {{ $active ? 'bg-[#0B3A22] text-white' : 'text-slate-700 hover:bg-slate-50' }}">
+                                <a href="{{ route('verifikasi') }}" class="flex h-[36px] items-center gap-3 rounded-lg px-3 text-[13px] font-medium transition {{ $active ? 'bg-[#0B3A22] text-white' : 'text-slate-700 hover:bg-slate-50' }}">
                                     {!! $ic($p[$icon], 'h-4 w-4 shrink-0') !!}
                                     <span class="flex-1">{{ $text }}</span>
                                     @if ($badge)
@@ -144,7 +152,7 @@
                     <span class="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-600 border-2 border-white"></span>
                 </button>
                 <div class="flex items-center gap-3 pl-3 border-l border-slate-200">
-                    <img src="{{ asset('images/avatar.jpg') }}" alt="Profil" class="h-10 w-10 rounded-full bg-[#C9B99A] object-cover border-2 border-white shadow-sm">
+                    <img src="{{ asset('images/profil.jpg') }}" alt="Profil" class="h-10 w-10 rounded-full bg-[#C9B99A] object-cover border-2 border-white shadow-sm">
                     <div>
                         <p class="text-[11px] font-bold leading-tight">Bagas Dananjaya</p>
                         <p class="text-[9px] font-medium uppercase leading-tight text-slate-600">Super Admin Resort</p>
@@ -168,10 +176,10 @@
                         <span class="flex items-center gap-2 rounded-lg bg-white border border-slate-200 px-4 py-2 text-[11px] font-medium shadow-sm">
                             {!! $ic($p['calendar'], 'h-4 w-4') !!} Hari ini: 20 Sep 2026 <span class="h-1.5 w-1.5 rounded-full bg-[#C2762B]"></span>
                         </span>
-                        <button type="button" class="flex items-center gap-2 rounded-lg bg-slate-100 px-4 py-2 text-[11px] font-medium transition hover:bg-slate-200">
+                        <button type="button" data-open="report" class="flex items-center gap-2 rounded-lg bg-slate-100 px-4 py-2 text-[11px] font-medium transition hover:bg-slate-200">
                             {!! $ic($p['download'], 'h-4 w-4') !!} Unduh Laporan Ringkas
                         </button>
-                        <button type="button" class="flex items-center gap-2 rounded-lg bg-[#0B3A22] px-5 py-2 text-[11px] font-bold text-white transition hover:bg-[#124c2f] shadow-sm">
+                        <button type="button" data-open="walkin" class="flex items-center gap-2 rounded-lg bg-[#0B3A22] px-5 py-2 text-[11px] font-bold text-white transition hover:bg-[#124c2f] shadow-sm">
                             {!! $ic($p['plus'], 'h-4 w-4') !!} Reservasi Walk-in
                         </button>
                     </div>
@@ -337,9 +345,9 @@
                                 </div>
 
                                 <div>
-                                    <div class="flex justify-between text-[11px] mb-1"><span class="font-semibold text-slate-700">Kolam Belerang Premier</span><b class="text-[11px] text-[#7A5230]">65 / 100</b></div>
-                                    <div class="h-2 overflow-hidden rounded-full bg-slate-100"><div data-bar style="width: 65%" class="h-full rounded-full bg-[#7A5230] transition-all duration-1000"></div></div>
-                                    <p class="mt-1.5 text-right text-[10px] text-slate-600">Sisa 35 tiket (65%)</p>
+                                    <div class="flex justify-between text-[11px] mb-1"><span class="font-semibold text-slate-700">Kolam Belerang Premier</span><b class="text-[11px] text-[#7A5230]"><span data-q2-used>65</span> / 100</b></div>
+                                    <div class="h-2 overflow-hidden rounded-full bg-slate-100"><div data-q2-bar style="width: 65%" class="h-full rounded-full bg-[#7A5230] transition-all duration-1000"></div></div>
+                                    <p data-q2-text class="mt-1.5 text-right text-[10px] text-slate-600">Sisa 35 tiket (65%)</p>
                                 </div>
 
                                 <button type="button" class="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-slate-100 py-2.5 text-[11px] font-bold transition hover:bg-slate-200">
@@ -396,6 +404,134 @@
     </div>
     </div>
 
+    {{-- ================= MODAL: RESERVASI WALK-IN ================= --}}
+    <div data-modal="walkin" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="wk-title">
+        <div data-close class="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"></div>
+        <form id="walkin-form" novalidate data-panel class="relative w-full max-w-lg scale-95 overflow-hidden rounded-2xl bg-white opacity-0 shadow-2xl transition duration-200">
+            <div class="flex items-start justify-between border-b border-slate-100 px-6 py-4">
+                <div>
+                    <h3 id="wk-title" class="text-[16px] font-bold text-slate-900">Reservasi Walk-in</h3>
+                    <p class="mt-0.5 text-[11px] text-slate-500">Catat tamu yang datang langsung ke loket.</p>
+                </div>
+                <button type="button" data-close class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Tutup">{!! $ic($p['x'], 'h-5 w-5') !!}</button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 px-6 py-5">
+                <div class="col-span-2">
+                    <label class="{{ $lbl }}" for="wk-guest">Nama Tamu</label>
+                    <input id="wk-guest" name="guest" type="text" maxlength="60" placeholder="Contoh: Budi Santoso" class="{{ $inp }}">
+                    <p data-err="guest" class="{{ $err }}"></p>
+                </div>
+                <div class="col-span-2">
+                    <label class="{{ $lbl }}" for="wk-phone">No. WhatsApp</label>
+                    <input id="wk-phone" name="phone" type="tel" inputmode="tel" placeholder="+62 812-0000-000" class="{{ $inp }}">
+                    <p data-err="phone" class="{{ $err }}"></p>
+                </div>
+                <div class="col-span-2">
+                    <label class="{{ $lbl }}" for="wk-service">Layanan</label>
+                    <select id="wk-service" name="service" class="{{ $inp }}">
+                        <optgroup label="Tiket Kolam">
+                            <option value="classic">Kolam Air Panas Classic — Rp 45.000/orang</option>
+                            <option value="premier">Belerang Premier VIP — Rp 85.000/orang</option>
+                        </optgroup>
+                        <optgroup label="Cabin Suite">
+                            <option value="pinus">Pinus Cabin Suite — Rp 1.040.000/malam</option>
+                            <option value="magnolia">Magnolia Cabin Suite — Rp 1.040.000/malam</option>
+                            <option value="eukaliptus">Eukaliptus Cabin Suite — Rp 1.040.000/malam</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div>
+                    <label class="{{ $lbl }}" for="wk-date">Tanggal</label>
+                    <input id="wk-date" name="date" type="date" class="{{ $inp }}">
+                    <p data-err="date" class="{{ $err }}"></p>
+                </div>
+                <div data-field="tiket">
+                    <label class="{{ $lbl }}" for="wk-time">Jam Kunjungan</label>
+                    <input id="wk-time" name="time" type="time" class="{{ $inp }}">
+                    <p data-err="time" class="{{ $err }}"></p>
+                </div>
+                <div data-field="cabin" class="hidden">
+                    <label class="{{ $lbl }}" for="wk-nights">Jumlah Malam</label>
+                    <input id="wk-nights" name="nights" type="number" min="1" max="14" value="1" class="{{ $inp }}">
+                    <p data-err="nights" class="{{ $err }}"></p>
+                </div>
+                <div data-field="tiket">
+                    <label class="{{ $lbl }}" for="wk-qty">Jumlah Pengunjung</label>
+                    <input id="wk-qty" name="qty" type="number" min="1" max="30" value="1" class="{{ $inp }}">
+                    <p data-err="qty" class="{{ $err }}"></p>
+                </div>
+                <div>
+                    <label class="{{ $lbl }}" for="wk-status">Status</label>
+                    <select id="wk-status" name="status" class="{{ $inp }}">
+                        @foreach (array_keys($status) as $st)
+                            <option value="{{ $st }}" {{ $st === 'Lunas' ? 'selected' : '' }}>{{ $st }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-span-2 flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
+                    <span class="text-[11px] font-medium text-slate-600">Total Tagihan</span>
+                    <b data-wk-total class="text-[18px] text-[#0B3A22]">Rp 0</b>
+                </div>
+                <p data-wk-error class="col-span-2 hidden rounded-lg bg-red-50 px-3 py-2 text-[11px] font-medium text-red-700"></p>
+            </div>
+
+            <div class="flex justify-end gap-2 border-t border-slate-100 bg-slate-50 px-6 py-4">
+                <button type="button" data-close class="{{ $btnG }}">Batal</button>
+                <button type="submit" class="{{ $btnP }}">{!! $ic($p['check'], 'h-4 w-4') !!} Simpan Reservasi</button>
+            </div>
+        </form>
+    </div>
+
+    {{-- ================= MODAL: UNDUH LAPORAN ================= --}}
+    <div data-modal="report" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="rp-title">
+        <div data-close class="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"></div>
+        <form id="report-form" data-panel class="relative w-full max-w-md scale-95 overflow-hidden rounded-2xl bg-white opacity-0 shadow-2xl transition duration-200">
+            <div class="flex items-start justify-between border-b border-slate-100 px-6 py-4">
+                <div>
+                    <h3 id="rp-title" class="text-[16px] font-bold text-slate-900">Unduh Laporan Ringkas</h3>
+                    <p class="mt-0.5 text-[11px] text-slate-500">Hari ini, 20 Sep 2026. Pilih format dan isi laporan.</p>
+                </div>
+                <button type="button" data-close class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Tutup">{!! $ic($p['x'], 'h-5 w-5') !!}</button>
+            </div>
+
+            <div class="space-y-4 px-6 py-5">
+                <div>
+                    <p class="{{ $lbl }}">Format</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        @foreach ([['csv', 'CSV (Excel)', 'Data tabel, bisa dibuka di Excel'], ['pdf', 'PDF / Cetak', 'Tampilan siap cetak']] as [$v, $t, $d])
+                            <label class="cursor-pointer">
+                                <input type="radio" name="format" value="{{ $v }}" class="peer sr-only" {{ $loop->first ? 'checked' : '' }}>
+                                <span class="block rounded-xl border border-slate-200 p-3 transition peer-checked:border-[#0B3A22] peer-checked:bg-[#0B3A22]/5 peer-checked:ring-2 peer-checked:ring-[#0B3A22]/15">
+                                    <b class="block text-[12px] text-slate-900">{{ $t }}</b><span class="text-[10px] text-slate-500">{{ $d }}</span>
+                                </span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+                <div>
+                    <p class="{{ $lbl }}">Isi laporan</p>
+                    <div class="space-y-2">
+                        @foreach ([['summary', 'Ringkasan pendapatan & tiket'], ['reservations', 'Daftar reservasi'], ['quota', 'Kuota tiket & okupansi kabin']] as [$v, $t])
+                            <label class="flex cursor-pointer items-center gap-2.5 text-[12px] text-slate-700">
+                                <input type="checkbox" name="sections" value="{{ $v }}" checked class="h-4 w-4 rounded border-slate-300 accent-[#0B3A22]"> {{ $t }}
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+                <p data-rp-error class="hidden rounded-lg bg-red-50 px-3 py-2 text-[11px] font-medium text-red-700"></p>
+            </div>
+
+            <div class="flex justify-end gap-2 border-t border-slate-100 bg-slate-50 px-6 py-4">
+                <button type="button" data-close class="{{ $btnG }}">Batal</button>
+                <button type="submit" class="{{ $btnP }}">{!! $ic($p['download'], 'h-4 w-4') !!} Unduh Laporan</button>
+            </div>
+        </form>
+    </div>
+
+    {{-- Notifikasi singkat --}}
+    <div id="toast" class="pointer-events-none fixed bottom-6 right-6 z-[60] translate-y-4 rounded-xl bg-slate-900 px-4 py-3 text-[12px] font-medium text-white opacity-0 shadow-xl transition duration-300" role="status" aria-live="polite"></div>
+
 @endsection
 
 @push('scripts')
@@ -421,13 +557,14 @@
             requestAnimationFrame(tick);
         };
 
-        const S = { revenue: 14850000, sold: 185, q1: 120 };
-        const CAP = 300, Q1_CAP = 200;
+        const S = { revenue: 14850000, sold: 185, q1: 120, q2: 65 };
+        const CAP = 300, Q1_CAP = 200, Q2_CAP = 100;
 
         const render = () => {
             animate($('[data-revenue]'), S.revenue, 1200);
             animate($('[data-sold]'), S.sold);
             animate($('[data-q1-used]'), S.q1);
+            animate($('[data-q2-used]'), S.q2);
             const pct = Math.round((S.sold / CAP) * 100);
             $('[data-sold-bar]').style.width = pct + '%';
             $('[data-sold-pct]').textContent = pct + '% Terisi';
@@ -435,10 +572,13 @@
             const q1pct = Math.round((S.q1 / Q1_CAP) * 100);
             $('[data-q1-bar]').style.width = q1pct + '%';
             $('[data-q1-text]').textContent = 'Sisa ' + (Q1_CAP - S.q1) + ' tiket (' + q1pct + '%)';
+            const q2pct = Math.round((S.q2 / Q2_CAP) * 100);
+            $('[data-q2-bar]').style.width = q2pct + '%';
+            $('[data-q2-text]').textContent = 'Sisa ' + (Q2_CAP - S.q2) + ' tiket (' + q2pct + '%)';
         };
 
-        ['[data-revenue]', '[data-sold]', '[data-q1-used]'].forEach((s) => ($(s).dataset.val = 0));
-        $$('[data-bar], [data-sold-bar], [data-q1-bar]').forEach((bar) => {
+        ['[data-revenue]', '[data-sold]', '[data-q1-used]', '[data-q2-used]'].forEach((s) => ($(s).dataset.val = 0));
+        $$('[data-q2-bar], [data-sold-bar], [data-q1-bar]').forEach((bar) => {
             const w = bar.style.width;
             bar.style.width = '0%';
             requestAnimationFrame(() => requestAnimationFrame(() => (bar.style.width = w)));
@@ -498,6 +638,255 @@
                 render();
             }, 8000);
         }
+
+        // =====================================================================
+        //  MODAL, NOTIFIKASI & UTILITAS (untuk Walk-in dan Unduh Laporan)
+        // =====================================================================
+        const rp = (n) => 'Rp ' + fmt(n);
+        const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const STATUS = @json($status);
+        const TODAY = '2026-09-20'; // samakan dengan "Hari ini" di header
+        const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+        let toastTimer;
+        const toast = (msg) => {
+            const t = $('#toast');
+            t.textContent = msg;
+            t.classList.remove('opacity-0', 'translate-y-4');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => t.classList.add('opacity-0', 'translate-y-4'), 2600);
+        };
+
+        let openName = null, lastFocus = null;
+        const openModal = (name) => {
+            const m = $(`[data-modal="${name}"]`);
+            if (openName) closeModal(true);
+            lastFocus = document.activeElement;
+            openName = name;
+            m.classList.remove('hidden'); m.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
+            const panel = m.querySelector('[data-panel]');
+            requestAnimationFrame(() => requestAnimationFrame(() => panel.classList.remove('opacity-0', 'scale-95')));
+            setTimeout(() => (panel.querySelector('input:not([type=hidden]), select') || panel).focus(), 60);
+        };
+        const closeModal = (instant = false) => {
+            if (!openName) return;
+            const m = $(`[data-modal="${openName}"]`);
+            m.querySelector('[data-panel]').classList.add('opacity-0', 'scale-95');
+            const done = () => { m.classList.add('hidden'); m.classList.remove('flex'); };
+            (instant || reduce) ? done() : setTimeout(done, 180);
+            openName = null;
+            document.body.classList.remove('overflow-hidden');
+            if (lastFocus && lastFocus.focus) lastFocus.focus();
+        };
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('[data-close]')) closeModal();
+            const opener = e.target.closest('[data-open]');
+            if (!opener) return;
+            if (opener.dataset.open === 'walkin') openWalkin();
+            if (opener.dataset.open === 'report') openModal('report');
+        });
+
+        // =====================================================================
+        //  RESERVASI WALK-IN
+        // =====================================================================
+        const SERVICES = {
+            classic:    { lines: ['Kolam Air', 'Panas', 'Classic'], type: 'tiket', price: 45000 },
+            premier:    { lines: ['Belerang', 'Premier', 'VIP'],    type: 'tiket', price: 85000 },
+            pinus:      { lines: ['Pinus', 'Cabin', 'Suite'],       type: 'cabin', price: 1040000 },
+            magnolia:   { lines: ['Magnolia', 'Cabin', 'Suite'],    type: 'cabin', price: 1040000 },
+            eukaliptus: { lines: ['Eukaliptus', 'Cabin', 'Suite'],  type: 'cabin', price: 1040000 },
+        };
+
+        const form = $('#walkin-form');
+        const f = (n) => form.elements[n];
+
+        const updateForm = () => {
+            const s = SERVICES[f('service').value];
+            form.querySelectorAll('[data-field]').forEach((el) => el.classList.toggle('hidden', el.dataset.field !== s.type));
+            const n = Number(s.type === 'tiket' ? f('qty').value : f('nights').value) || 0;
+            $('[data-wk-total]').textContent = rp(s.price * n);
+        };
+        ['service', 'qty', 'nights'].forEach((n) => f(n).addEventListener('input', updateForm));
+
+        const clearErrors = () => {
+            form.querySelectorAll('[data-err]').forEach((el) => { el.textContent = ''; el.classList.add('hidden'); });
+            form.querySelectorAll('input, select').forEach((el) => el.classList.remove('border-red-400'));
+            $('[data-wk-error]').classList.add('hidden');
+        };
+
+        const openWalkin = () => {
+            clearErrors(); form.reset();
+            f('date').value = TODAY;
+            f('time').value = new Date().toTimeString().slice(0, 5);
+            f('status').value = 'Lunas';
+            updateForm();
+            openModal('walkin');
+        };
+
+        const splitName = (name) => {
+            const w = name.trim().split(/\s+/);
+            if (w.length < 2) return [name.trim()];
+            const k = Math.ceil(w.length / 2);
+            return [w.slice(0, k).join(' '), w.slice(k).join(' ')];
+        };
+        const splitPhone = (ph) => {
+            const i = ph.indexOf('-');
+            return i > 0 && i < ph.length - 1 ? [ph.slice(0, i + 1), ph.slice(i + 1)] : [ph];
+        };
+        const dateLines = (s, d) => {
+            const dt = new Date(d.date + 'T00:00:00');
+            if (s.type === 'tiket') return [`${dt.getDate()} ${MON[dt.getMonth()]}`, `${dt.getFullYear()},`, `${d.time} WIB`];
+            const out = new Date(dt); out.setDate(out.getDate() + d.nights);
+            const left = dt.getMonth() === out.getMonth() ? `${dt.getDate()}` : `${dt.getDate()} ${MON[dt.getMonth()]}`;
+            return [`${left} - ${out.getDate()} ${MON[out.getMonth()]}`, `(${d.nights} Malam)`];
+        };
+        const nextCode = () => {
+            const nums = [...$$('#reservations [data-type]')].map((r) => parseInt(r.children[0].textContent.replace(/\D/g, ''), 10) || 0);
+            return Math.max(8000, ...nums) + 1;
+        };
+        const lines = (arr) => arr.map(esc).join('<br>');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            clearErrors();
+            const d = {
+                guest: f('guest').value.trim(), phone: f('phone').value.trim(), service: f('service').value,
+                date: f('date').value, time: f('time').value, qty: Number(f('qty').value) || 0,
+                nights: Number(f('nights').value) || 0, status: f('status').value,
+            };
+            const s = SERVICES[d.service];
+
+            const errs = {};
+            if (d.guest.length < 3) errs.guest = 'Nama tamu minimal 3 karakter.';
+            if (!/^\+?[0-9][0-9\s-]{7,16}$/.test(d.phone)) errs.phone = 'Nomor tidak valid (contoh: +62 812-0000-000).';
+            if (!d.date) errs.date = 'Tanggal wajib diisi.';
+            if (s.type === 'tiket') {
+                if (!d.time) errs.time = 'Jam kunjungan wajib diisi.';
+                if (!(d.qty >= 1 && d.qty <= 30)) errs.qty = 'Jumlah 1 - 30 orang.';
+            } else if (!(d.nights >= 1 && d.nights <= 14)) errs.nights = 'Jumlah malam 1 - 14.';
+            if (Object.keys(errs).length) {
+                Object.entries(errs).forEach(([k, msg]) => {
+                    const el = form.querySelector(`[data-err="${k}"]`);
+                    el.textContent = msg; el.classList.remove('hidden'); f(k).classList.add('border-red-400');
+                });
+                return;
+            }
+
+            // Reservasi berstatus Menunggu belum menghitung kuota & pendapatan
+            const counted = d.status !== 'Menunggu';
+            if (counted && s.type === 'tiket') {
+                const isClassic = d.service === 'classic';
+                const left = isClassic ? Q1_CAP - S.q1 : Q2_CAP - S.q2;
+                const err = $('[data-wk-error]');
+                if (d.qty > left) { err.textContent = `Kuota ${isClassic ? 'Classic' : 'Premier'} tidak cukup. Sisa ${left} tiket.`; err.classList.remove('hidden'); return; }
+                if (S.sold + d.qty > CAP) { err.textContent = `Kapasitas kolam harian penuh. Sisa ${CAP - S.sold} slot.`; err.classList.remove('hidden'); return; }
+            }
+
+            // Tambahkan baris ke tabel (tampilan sama dengan baris yang sudah ada)
+            const [bg, dot] = STATUS[d.status];
+            const row = document.createElement('div');
+            row.dataset.type = s.type;
+            row.className = 'grid grid-cols-[60px_120px_100px_100px_90px_1fr] items-center px-5 py-4 transition hover:bg-slate-50 border-b border-slate-100 last:border-0';
+            row.innerHTML = `
+                <span class="text-[10px] font-bold">#JW-<br>${nextCode()}</span>
+                <span>
+                    <span class="block text-[11px] font-semibold">${lines(splitName(d.guest))}</span>
+                    <span class="mt-0.5 block text-[10px] text-slate-500">${lines(splitPhone(d.phone))}</span>
+                </span>
+                <span class="text-[11px] leading-relaxed">${lines(s.lines)}</span>
+                <span class="text-[10px] leading-relaxed">${lines(dateLines(s, d))}</span>
+                <span><span class="inline-flex items-center gap-1.5 rounded-full ${bg} px-2.5 py-1 text-[9px] font-bold"><span class="h-1.5 w-1.5 rounded-full ${dot}"></span>${esc(d.status)}</span></span>
+                <button type="button" class="justify-self-center text-slate-400 hover:text-slate-600" aria-label="Aksi">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+                </button>`;
+
+            // Ikuti tab filter yang sedang aktif
+            const activeTab = [...$$('[data-filter]')].find((t) => t.classList.contains('bg-[#0B3A22]'));
+            if (activeTab && activeTab.dataset.filter !== 'all' && activeTab.dataset.filter !== s.type) row.classList.add('hidden');
+            if (!reduce) row.classList.add('opacity-0');
+            $('#reservations').prepend(row);
+            requestAnimationFrame(() => requestAnimationFrame(() => row.classList.remove('opacity-0')));
+
+            if (counted) {
+                S.revenue += s.price * (s.type === 'tiket' ? d.qty : d.nights);
+                if (s.type === 'tiket') {
+                    S.sold += d.qty;
+                    if (d.service === 'classic') S.q1 += d.qty; else S.q2 += d.qty;
+                }
+                render();
+            }
+
+            closeModal();
+            toast(`Reservasi walk-in #JW-${row.children[0].textContent.replace(/\D/g, '')} ditambahkan`);
+        });
+
+        // =====================================================================
+        //  UNDUH LAPORAN
+        // =====================================================================
+        const rForm = $('#report-form');
+
+        // Teks sel tabel: <br> diganti pemisah, tag dibuang
+        const cellText = (el, sep) => el.innerHTML.split(/<br\s*\/?>/i).map((s) => s.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').trim()).join(sep).replace(/\s+/g, ' ').trim();
+        const readReservations = () => [...$$('#reservations [data-type]')].map((r) => {
+            const c = r.children, who = c[1].children;
+            return [cellText(c[0], ''), cellText(who[0], ' '), cellText(who[1], ''), cellText(c[2], ' '), cellText(c[3], ' '), cellText(c[4], ' ')];
+        });
+
+        const buildReport = (sections) => {
+            const out = { title: 'Laporan Ringkas Operasional - Jiwanta Ciwidey', period: 'Hari ini, 20 Sep 2026', blocks: [] };
+            if (sections.includes('summary')) out.blocks.push({ name: 'Ringkasan', head: ['Indikator', 'Nilai'], rows: [
+                ['Pendapatan hari ini', rp(S.revenue)], ['Tiket terjual', `${S.sold} / ${CAP}`], ['Okupansi kabin', '3 / 3 (100%)'], ['Struk perlu verifikasi', $('[data-batch]').textContent],
+            ] });
+            if (sections.includes('reservations')) out.blocks.push({ name: 'Daftar Reservasi', head: ['Kode', 'Nama Tamu', 'No. WhatsApp', 'Layanan', 'Jadwal', 'Status'], rows: readReservations() });
+            if (sections.includes('quota')) out.blocks.push({ name: 'Kuota & Okupansi', head: ['Kolam / Unit', 'Terjual', 'Kapasitas', 'Sisa'], rows: [
+                ['Kolam Air Panas Classic', S.q1, Q1_CAP, Q1_CAP - S.q1], ['Kolam Belerang Premier', S.q2, Q2_CAP, Q2_CAP - S.q2], ['Cabin Suite (3 unit)', 3, 3, 0],
+            ] });
+            return out;
+        };
+
+        const downloadCSV = (rep) => {
+            const cell = (v) => `"${String(v).replace(/"/g, '""')}"`;
+            const rows = [[rep.title], ['Periode', rep.period], ['Dibuat', new Date().toLocaleString('id-ID')], []];
+            rep.blocks.forEach((b) => rows.push([b.name.toUpperCase()], b.head, ...b.rows, []));
+            const csv = '\uFEFF' + rows.map((r) => r.map(cell).join(',')).join('\r\n');
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+            a.download = `laporan-ringkas-${TODAY}.csv`;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        };
+
+        const printPDF = (rep) => {
+            const w = window.open('', '_blank');
+            if (!w) throw new Error('Pop-up diblokir browser. Izinkan pop-up lalu coba lagi.');
+            const table = (b) => `<h2>${esc(b.name)}</h2><table><thead><tr>${b.head.map((h) => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${b.rows.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+            w.document.write(`<!doctype html><html lang="id"><head><meta charset="utf-8"><title>${esc(rep.title)}</title><style>
+                body{font:13px/1.5 system-ui,sans-serif;color:#0b3a22;padding:32px}h1{font-size:20px;margin:0}p{margin:2px 0 18px;color:#555}
+                h2{font-size:14px;margin:22px 0 8px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #d8dde8;padding:6px 8px;text-align:left;font-size:12px}
+                th{background:#eef1fd}</style></head><body>
+                <h1>${esc(rep.title)}</h1><p>Periode: ${esc(rep.period)} &bull; Dibuat: ${esc(new Date().toLocaleString('id-ID'))}</p>${rep.blocks.map(table).join('')}</body></html>`);
+            w.document.close(); w.focus();
+            setTimeout(() => w.print(), 300);
+        };
+
+        rForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const fd = new FormData(rForm);
+            const sections = fd.getAll('sections'), format = fd.get('format');
+            const box = $('[data-rp-error]');
+            box.classList.add('hidden');
+            if (!sections.length) { box.textContent = 'Pilih minimal satu isi laporan.'; box.classList.remove('hidden'); return; }
+            try {
+                const rep = buildReport(sections);
+                format === 'pdf' ? printPDF(rep) : downloadCSV(rep);
+                closeModal();
+                toast(format === 'pdf' ? 'Laporan dibuka untuk dicetak' : 'Laporan CSV diunduh');
+            } catch (err) {
+                box.textContent = err.message; box.classList.remove('hidden');
+            }
+        });
     });
 </script>
 @endpush
