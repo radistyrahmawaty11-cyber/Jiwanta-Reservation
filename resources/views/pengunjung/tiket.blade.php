@@ -275,7 +275,7 @@
                     </svg>
                     <span class="text-[10.5px] font-bold">Transaksi</span>
                 </a>
-                <a href="#" aria-current="page" class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
+                <a href="{{ route('tiket') }}" aria-current="page" class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
                     <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
                         <path fill-rule="evenodd" d="M4 6a2 2 0 012-2h12a2 2 0 012 2v3a2.5 2.5 0 000 5v3a2 2 0 01-2 2H6a2 2 0 01-2-2v-3a2.5 2.5 0 000-5V6zm9 1v2h2V7h-2zm0 4v2h2v-2h-2zm0 4v2h2v-2h-2z" clip-rule="evenodd"/>
                     </svg>
