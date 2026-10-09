@@ -1,8 +1,10 @@
-@extends('layouts.dashboard')
+@extends('layouts.pengunjung')
 
 @section('title', 'Reservasi - Jiwanta')
+@section('page-label', 'Reservasi')
+@section('frame-class') relative mx-auto min-h-screen w-full max-w-[390px] overflow-x-clip bg-[#F9F8FF] pb-[calc(env(safe-area-inset-bottom,0px)_+_192px)] shadow-2xl @endsection
 
-@section('content')
+@section('page-content')
 
 @php
     // Tab awal: /reservasi (tiket) atau /reservasi?tab=cabin
@@ -101,30 +103,6 @@
 
     $soft = 'shadow-[0_2px_10px_rgba(15,69,39,0.06)]';
 @endphp
-
-<div class="min-h-screen w-full bg-slate-200">
-    <div class="relative mx-auto min-h-screen w-full max-w-md bg-[#F9F8FF] pb-44 shadow-2xl">
-
-        {{-- ========== HEADER + TOGGLE (menempel saat scroll) ========== --}}
-        <div id="rsv-head" class="sticky top-0 z-40 bg-[#F9F8FF]/90 backdrop-blur transition-shadow duration-300">
-            <header class="flex items-center justify-between px-5 py-3">
-                <span class="text-[18px] font-bold tracking-tight text-[#0B3A22]">Jiwanta</span>
-                <div class="flex items-center gap-3">
-                    <span class="text-[12px] font-medium text-slate-700">Reservasi</span>
-                    <img src="{{ asset('images/avatar.jpg') }}" alt="Profil" class="h-8 w-8 rounded-full bg-[#C9B99A] object-cover">
-                </div>
-            </header>
-            <div class="px-4 pb-3">
-                <div class="flex rounded-full bg-[#DDE6FB] p-1" role="tablist" aria-label="Jenis reservasi">
-                    @foreach ($tabs as [$key, $label, $icon])
-                        <button type="button" role="tab" data-tab-btn="{{ $key }}" aria-selected="{{ $tab === $key ? 'true' : 'false' }}"
-                                class="flex flex-1 items-center justify-center gap-2 rounded-full py-3 text-[13px] font-semibold transition duration-300 active:scale-95 {{ $tab === $key ? 'bg-[#0B3A22] text-white shadow-md' : 'text-[#0B3A22] hover:bg-white/50' }}">
-                            {!! $ic($icon) !!} {{ $label }}
-                        </button>
-                    @endforeach
-                </div>
-            </div>
-        </div>
 
         <form id="reservasi-form" method="POST" action="{{ url('/reservasi/checkout') }}">
             @csrf
@@ -282,54 +260,32 @@
             </main>
 
             {{-- ========== CHECKOUT BAR ========== --}}
-            <div class="fixed bottom-[68px] left-1/2 z-40 w-full max-w-md -translate-x-1/2 px-4">
+            <div class="fixed bottom-[calc(env(safe-area-inset-bottom,0px)_+_78px)] left-1/2 z-40 w-full max-w-[390px] -translate-x-1/2 px-4">
                 <div class="flex items-center justify-between gap-3 rounded-2xl bg-white p-3.5 shadow-[0_8px_28px_rgba(15,69,39,0.16)]">
                     <div class="min-w-0">
                         <p class="text-[9px] font-bold uppercase leading-tight tracking-wide text-slate-600">Total<br>Pembayaran</p>
                         <p data-total class="whitespace-nowrap text-[26px] font-bold leading-tight text-[#0B3A22]">Rp 150.000</p>
                         <p data-total-sub class="truncate text-[10px] text-slate-600">2× Tiket Premier • 20 Sep</p>
                     </div>
-                    <a id="checkout-btn" href="{{ route('transaksi') }}" class="flex shrink-0 items-center gap-2 rounded-full bg-[#0B3A22] px-5 py-4 text-[13px] font-bold text-white shadow-lg transition hover:bg-[#124c2f] active:scale-95">
-                    <span data-btn-label>Lanjutkan ke Checkout</span> {!! $ic('arrow', 'h-4 w-4', '2.2') !!}
-                    </a>
+                    <button type="submit" id="checkout-btn" class="flex shrink-0 cursor-pointer items-center gap-2 rounded-full bg-[#0B3A22] px-5 py-4 text-[13px] font-bold text-white shadow-lg transition hover:bg-[#124c2f] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40">
+                    <span data-btn-label>Checkout</span> {!! $ic('arrow', 'h-4 w-4', '2.2') !!}
+                    </button>
                 </div>
             </div>
         </form>
 
-        {{-- ========== BOTTOM NAV ========== --}}
-        <nav class="fixed bottom-0 left-1/2 z-30 w-full max-w-[390px] -translate-x-1/2 bg-white pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-4px_16px_rgba(11,46,34,0.06)]" aria-label="Navigasi utama">
-            <div class="flex items-center justify-around px-2 pt-3 pb-3.5">
-                <a href="{{ route('dashboard') }}" class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
-                    <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 3l4.2 6.2h-2l3.3 4.6h-2.3L15 18.5H1l3.8-4.7H2.6L6 9.2H4z"/>
-                        <path d="M17 8l3.6 5.2h-1.8L22 17.5h-4.5v3H16v-3h-1.4z" opacity=".85"/>
-                        <path d="M7 18.5h2V21H7z"/>
-                    </svg>
-                    <span class="text-[10.5px] font-bold">Beranda</span>
-                </a>
-                <a href="{{ route('reservasi') }}" class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1v-9z"/>
-                    </svg>
-                    <span class="text-[10.5px] font-bold">Reservasi</span>
-                </a>
-                <a href="{{ route('transaksi') }}" class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 3h12v18l-3-2-3 2-3-2-3 2V3zM9 8h6M9 12h6"/>
-                    </svg>
-                    <span class="text-[10.5px] font-bold">Transaksi</span>
-                </a>
-                <a href="{{ route('tiket') }}" aria-current="page" class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
-                    <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                        <path fill-rule="evenodd" d="M4 6a2 2 0 012-2h12a2 2 0 012 2v3a2.5 2.5 0 000 5v3a2 2 0 01-2 2H6a2 2 0 01-2-2v-3a2.5 2.5 0 000-5V6zm9 1v2h2V7h-2zm0 4v2h2v-2h-2zm0 4v2h2v-2h-2z" clip-rule="evenodd"/>
-                    </svg>
-                    <span class="text-[10.5px] font-extrabold">Tiket Saya</span>
-                </a>
+@endsection
+@section('subheader')
+            <div class="px-4 pb-3">
+                <div class="flex rounded-full bg-[#DDE6FB] p-1" role="tablist" aria-label="Jenis reservasi">
+                    @foreach ($tabs as [$key, $label, $icon])
+                        <button type="button" role="tab" data-tab-btn="{{ $key }}" aria-selected="{{ $tab === $key ? 'true' : 'false' }}"
+                                class="flex flex-1 items-center justify-center gap-2 rounded-full py-3 text-[13px] font-semibold transition duration-300 active:scale-95 {{ $tab === $key ? 'bg-[#0B3A22] text-white shadow-md' : 'text-[#0B3A22] hover:bg-white/50' }}">
+                            {!! $ic($icon) !!} {{ $label }}
+                        </button>
+                    @endforeach
+                </div>
             </div>
-        </nav>
-    </div>
-</div>
-
 @endsection
 
 @push('scripts')
@@ -586,7 +542,7 @@
         if (LIVE_DEMO) setInterval(refresh, 20000);
 
         // Bayangan header saat scroll
-        const head = $('#rsv-head');
+        const head = $('#top-header');
         const onScroll = () => head.classList.toggle('shadow-[0_6px_16px_rgba(15,69,39,0.08)]', window.scrollY > 8);
         window.addEventListener('scroll', onScroll, { passive: true });
         onScroll();
