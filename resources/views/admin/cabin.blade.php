@@ -1,8 +1,8 @@
-@extends('layouts.dashboard')
+@extends('layouts.admin')
 
 @section('title', 'Kelola Cabin Suite & Shorts - Jiwanta')
 
-@section('content')
+@section('page-content')
 
 <style>
     @keyframes jw-grow{from{opacity:0;transform:scaleX(.2)}to{opacity:1;transform:scaleX(1)}}
@@ -80,6 +80,7 @@
     $cap = 'text-[9px] font-bold uppercase leading-snug tracking-wide text-slate-600';
 @endphp
 
+<<<<<<< HEAD
     {{-- ================= LAYOUT CONTAINER ================= --}}
     <div class="min-w-full bg-slate-50 flex">
 
@@ -167,6 +168,8 @@
         {{-- Content Area --}}
         <main class="flex-1 p-6 overflow-y-auto">
             <div class="max-w-7xl mx-auto space-y-6">
+=======
+>>>>>>> 593d6fbd28a469abbe6a7d9a1a3b10fd1a150a7a
 
                 {{-- Header Section --}}
                 <div class="flex items-start justify-between">
@@ -280,6 +283,7 @@
                     </div>
 
                     <div id="units" class="mt-5 flex flex-wrap justify-center gap-4">
+<<<<<<< HEAD
                         @foreach ($cabins as $cabin)
                             <article data-unit="{{ $cabin->jenis_cabin }}" data-reveal class="group relative w-[260px] overflow-hidden rounded-2xl bg-white shadow-md border border-slate-100 hover:shadow-xl">
                                 <span data-shine class="pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-300 bg-[radial-gradient(220px_circle_at_var(--mx,50%)_var(--my,50%),rgba(255,255,255,0.28),transparent_65%)]"></span>
@@ -297,6 +301,19 @@
                                     </span>
                                     <span class="absolute right-3 top-3 rounded-md bg-[#0B3A22] px-2 py-1 text-[9px] font-bold text-white">Unit {{ $cabin->id }}</span>
                                     <h3 class="absolute bottom-3 left-3 text-[16px] font-bold text-white">{{ $cabin->nama_cabin }}</h3>
+=======
+                        @foreach ($units as $u)
+                            <article data-unit="{{ $u['key'] }}" data-reveal class="group relative w-[260px] overflow-hidden rounded-2xl bg-white shadow-md border border-slate-100 hover:shadow-xl">
+                                <span data-shine class="pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-300 bg-[radial-gradient(220px_circle_at_var(--mx,50%)_var(--my,50%),rgba(255,255,255,0.28),transparent_65%)]"></span>
+                                <div class="relative h-[158px] overflow-hidden bg-[#1d3b2a]">
+                                    <img data-img src="{{ asset($u['img']) }}" alt="{{ $u['title'] }}" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-[#0B3A22]/80 via-transparent to-black/10"></div>
+                                    <span data-badge class="absolute left-3 top-3 z-10 inline-flex cursor-pointer select-none items-center gap-1.5 rounded-full {{ $u['badge'][1] }} px-2.5 py-1 text-[9px] font-bold transition hover:brightness-95">
+                                        <span class="h-1.5 w-1.5 animate-pulse rounded-full {{ $u['badge'][2] }}"></span><span data-badge-text>{{ $u['badge'][0] }}</span>
+                                    </span>
+                                    <span class="absolute right-3 top-3 rounded-md bg-[#0B3A22] px-2 py-1 text-[9px] font-bold text-white">{{ $u['no'] }}</span>
+                                    <h3 data-title class="absolute bottom-3 left-3 text-[16px] font-bold text-white">{{ $u['title'] }}</h3>
+>>>>>>> 593d6fbd28a469abbe6a7d9a1a3b10fd1a150a7a
                                 </div>
 
                                 <div class="p-4">
@@ -337,12 +354,18 @@
                         @endforeach
                     </div>
                 </section>
+<<<<<<< HEAD
             </div>
         </main>
     </div>
     </div>
 
     {{-- Modal --}}
+=======
+@endsection
+@section('overlays')
+    {{-- Modal (Atur Tarif / Detail Booking / Walk-in / Edit Unit / Tambah Unit) --}}
+>>>>>>> 593d6fbd28a469abbe6a7d9a1a3b10fd1a150a7a
     <div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4">
         <div data-m-box class="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
             <div class="flex items-start justify-between">
@@ -362,7 +385,6 @@
 
     {{-- Toast --}}
     <div id="toasts" class="fixed bottom-6 right-6 z-[60] space-y-2"></div>
-
 @endsection
 
 @push('scripts')
@@ -413,7 +435,7 @@
             setTimeout(() => { t.classList.add('opacity-0', 'translate-x-6'); setTimeout(() => t.remove(), 300); }, 3200);
         };
         const flash = (el) => { if (!el) return; el.classList.remove('jw-flash'); void el.offsetWidth; el.classList.add('jw-flash'); };
-        const bell = () => { const b = $('[data-notif]').parentElement; b.classList.remove('jw-wiggle'); void b.offsetWidth; b.classList.add('jw-wiggle'); };
+        const bell = () => { const b = $('[data-bell]'); b.classList.remove('jw-wiggle'); void b.offsetWidth; b.classList.add('jw-wiggle'); };
         const tween = (el, to, dur = 800) => {
             if (!el) return;
             const from = Number(el.dataset.v ?? 0);

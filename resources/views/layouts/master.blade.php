@@ -42,9 +42,8 @@
 
     @stack('styles')
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="@yield('body-class', 'min-h-screen')">
 
-    {{-- Container Mobile Frame --}}
     @yield('content')
 
     @stack('scripts')

@@ -1,6 +1,10 @@
-@extends('layouts.dashboard')
+@extends('layouts.pengunjung')
 
 @section('title', 'Transaksi - Jiwanta')
+@section('page-label', 'Transaksi')
+@section('outer-class') bg-[#f1f1fa] @endsection
+@section('page-class') font-['Plus_Jakarta_Sans',ui-sans-serif,system-ui,sans-serif] text-[#0b2e22] antialiased @endsection
+@section('frame-class') relative mx-auto min-h-screen w-full max-w-[390px] bg-[#f8f8ff] pb-[120px] @endsection
 
 {{-- Font desain: Plus Jakarta Sans (aman jika layout belum punya @stack('styles'), hanya tidak terpakai) --}}
 @push('styles')
@@ -9,19 +13,57 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 @endpush
 
-@section('content')
+@section('page-content')
 
-<div class="min-h-screen w-full bg-[#f1f1fa] font-['Plus_Jakarta_Sans',ui-sans-serif,system-ui,sans-serif] text-[#0b2e22] antialiased">
-    <div class="relative mx-auto min-h-screen w-full max-w-[390px] bg-[#f8f8ff] pb-[120px]">
+@php
+    // Pesanan dari session (POST /reservasi/checkout). Tanpa pesanan -> data demo lama.
+    $order = $order ?? null;
 
-        {{-- ========== HEADER ========== --}}
-       <header id="top-header" class="sticky top-0 z-40 flex items-center justify-between bg-[#F9F8FF]/85 px-5 py-3 backdrop-blur transition-shadow duration-300">
-            <span class="text-[19px] font-bold tracking-tight text-[#0B3A22]">Jiwanta</span>
-            <div class="flex items-center gap-3">
-                <span class="text-[13px] font-medium text-slate-600">Transaksi</span>
-                <img src="{{ asset('images/profil.jpg') }}" alt="Profil" class="h-9 w-9 rounded-full bg-[#C9B99A] object-cover">
-            </div>
-        </header>
+    $hari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    $bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+    if ($order) {
+        $judul = $order['judul'];
+        $badge = $order['badge'];
+        $tamu = $order['tamu'];
+        $hargaLabel = $order['harga_label'];
+        $hargaValue = $order['harga_value'];
+        $subtotalLabel = $order['subtotal_label'];
+        $subtotalValue = 'Rp '.number_format($order['total'], 0, ',', '.');
+        $totalFormatted = number_format($order['total'], 0, ',', '.');
+
+        $d = \Illuminate\Support\Carbon::parse($order['tanggal']);
+        $tanggalLong = $hari[$d->dayOfWeek].', '.$d->day.' '.$bulan[$d->month - 1].' '.$d->year;
+
+        $gambar = ($order['tipe'] === 'cabin')
+            ? asset($order['unit'] === 'shorts' ? 'images/cabin-shorts.jpg' : 'images/cabin-suite.jpg')
+            : asset('images/kolam jiwanta.jpg');
+        $gambarAlt = $order['tipe'] === 'cabin' ? $judul : 'Kolam Jiwanta';
+    } else {
+        $judul = 'Tiket Renang Premier';
+        $badge = 'Tiket Masuk & Kolam';
+        $tamu = '2 Pengunjung Dewasa';
+        $tanggalLong = 'Minggu, 20 September 2026';
+        $hargaLabel = 'Harga Satuan (x2)';
+        $hargaValue = 'Rp 75.000 x 2';
+        $subtotalLabel = 'Subtotal Tiket';
+        $subtotalValue = 'Rp 150.000';
+        $totalFormatted = '150.000';
+        $gambar = asset('images/kolam jiwanta.jpg');
+        $gambarAlt = 'Kolam Jiwanta';
+    }
+
+    // Status kiriman bukti (POST /transaksi/kirim) -> tampil konsisten saat halaman dibuka ulang
+    $sudahKirim = $order && ($order['status'] ?? '') === 'terkirim';
+    $monT = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    $namaBukti = ($sudahKirim && !empty($order['bukti_nama'])) ? $order['bukti_nama'] : 'bukti_transfer_bca_ahmad.jpg';
+    if ($sudahKirim && !empty($order['dikirim_at'])) {
+        $t = \Illuminate\Support\Carbon::parse($order['dikirim_at']);
+        $metaBukti = 'Terunggah '.$t->day.' '.$monT[$t->month - 1].' '.$t->year.' '.sprintf('%02d:%02d', $t->hour, $t->minute).' WIB';
+    } else {
+        $metaBukti = '2.4 MB • 20 Sep 2026 14:30 WIB';
+    }
+@endphp
 
         <main class="space-y-4 px-3.5">
 
@@ -81,16 +123,16 @@
             {{-- ========== DETAIL TIKET ========== --}}
             <section class="rounded-2xl bg-white p-4 shadow-[0_4px_24px_-6px_rgba(30,41,90,0.10)]">
                 <div class="flex items-center gap-3">
-                    <img src="{{ asset('images/kolam jiwanta.jpg') }}" alt="Kolam Jiwanta"
+                    <img src="{{ $gambar }}" alt="{{ $gambarAlt }}"
                          class="h-[52px] w-[52px] shrink-0 rounded-lg bg-[#8fa89a] object-cover">
                     <div class="min-w-0">
-                        <span class="inline-block rounded-md bg-[#cdeedb] px-2 py-[3px] text-[9.5px] font-bold text-[#0b4a35]">Tiket Masuk &amp; Kolam</span>
-                        <h2 class="mt-0.5 text-[17px] font-extrabold leading-tight text-[#0b2e22]">Tiket Renang Premier</h2>
+                        <span class="inline-block rounded-md bg-[#cdeedb] px-2 py-[3px] text-[9.5px] font-bold text-[#0b4a35]">{{ $badge }}</span>
+                        <h2 class="mt-0.5 text-[17px] font-extrabold leading-tight text-[#0b2e22]">{{ $judul }}</h2>
                         <p class="mt-0.5 flex items-center gap-1.5 text-[11.5px] font-medium text-gray-500">
                             <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                             </svg>
-                            2 Pengunjung Dewasa
+                            {{ $tamu }}
                         </p>
                     </div>
                 </div>
@@ -100,7 +142,7 @@
                         <svg class="h-4 w-4 shrink-0 text-[#0b2e22]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
-                        <span class="text-[12.5px] font-bold text-[#0b2e22]">Minggu, 20 September 2026</span>
+                        <span class="text-[12.5px] font-bold text-[#0b2e22]">{{ $tanggalLong }}</span>
                     </div>
                     <div class="flex items-start gap-2.5">
                         <svg class="mt-0.5 h-4 w-4 shrink-0 text-[#0b2e22]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -113,12 +155,12 @@
 
                 <div class="mt-4 space-y-1.5 text-[12px] text-[#0b2e22]/80">
                     <div class="flex justify-between">
-                        <span>Harga Satuan (x2)</span>
-                        <span class="tabular-nums">Rp 75.000 x 2</span>
+                        <span>{{ $hargaLabel }}</span>
+                        <span class="tabular-nums">{{ $hargaValue }}</span>
                     </div>
                     <div class="flex justify-between">
-                        <span>Subtotal Tiket</span>
-                        <span class="tabular-nums">Rp 150.000</span>
+                        <span>{{ $subtotalLabel }}</span>
+                        <span class="tabular-nums">{{ $subtotalValue }}</span>
                     </div>
                 </div>
 
@@ -131,7 +173,7 @@
                     </div>
                     <div class="text-right leading-none text-[#0b2e22]">
                         <p class="text-[22px] font-extrabold">Rp</p>
-                        <p class="mt-0.5 text-[30px] font-extrabold tabular-nums tracking-tight">150.000</p>
+                        <p class="mt-0.5 text-[30px] font-extrabold tabular-nums tracking-tight">{{ $totalFormatted }}</p>
                     </div>
                 </div>
             </section>
@@ -231,12 +273,12 @@
                     </h3>
 
                     {{-- Status: menunggu --}}
-                    <span id="statusWaiting" class="flex items-center gap-1.5 rounded-2xl bg-[#ffd7a8] px-3 py-1.5 text-[10.5px] font-bold leading-tight text-[#7a4a1a]">
+                    <span id="statusWaiting" class="{{ $sudahKirim ? 'hidden' : 'flex' }} items-center gap-1.5 rounded-2xl bg-[#ffd7a8] px-3 py-1.5 text-[10.5px] font-bold leading-tight text-[#7a4a1a]">
                         <span class="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-[#7a4a1a]"></span>
                         <span>Menunggu Verifikasi<br>Admin</span>
                     </span>
                     {{-- Status: sedang diverifikasi (muncul setelah kirim) --}}
-                    <span id="statusVerifying" class="hidden items-center gap-1.5 rounded-2xl bg-[#cdeedb] px-3 py-1.5 text-[10.5px] font-bold leading-tight text-[#0b4a35]">
+                    <span id="statusVerifying" class="{{ $sudahKirim ? 'flex' : 'hidden' }} items-center gap-1.5 rounded-2xl bg-[#cdeedb] px-3 py-1.5 text-[10.5px] font-bold leading-tight text-[#0b4a35]">
                         <span class="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-[#0b4a35]"></span>
                         <span>Sedang Diverifikasi<br>Admin</span>
                     </span>
@@ -254,8 +296,8 @@
                         </span>
                     </div>
                     <div class="min-w-0 flex-1">
-                        <p id="fileName" class="truncate text-[12.5px] font-extrabold text-[#0b2e22]">bukti_transfer_bca_ahmad.jpg</p>
-                        <p id="fileMeta" class="mt-0.5 text-[10.5px] text-gray-500">2.4 MB • 20 Sep 2026 14:30 WIB</p>
+                        <p id="fileName" class="truncate text-[12.5px] font-extrabold text-[#0b2e22]">{{ $namaBukti }}</p>
+                        <p id="fileMeta" class="mt-0.5 text-[10.5px] text-gray-500">{{ $metaBukti }}</p>
                         <p class="mt-0.5 flex items-center gap-1 text-[10.5px] font-bold text-[#0b2e22]">
                             <svg class="h-3.5 w-3.5 text-[#0b2e22]" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12 2l2.4 1.7 2.9-.1 1 2.7 2.4 1.7-.9 2.8.9 2.8-2.4 1.7-1 2.7-2.9-.1L12 22l-2.4-1.7-2.9.1-1-2.7L3.3 16l.9-2.8-.9-2.8 2.4-1.7 1-2.7 2.9.1z"/>
@@ -311,44 +353,11 @@
             </div>
         </main>
 
-        {{-- ========== BOTTOM NAVIGATION ========== --}}
-        <nav class="fixed bottom-0 left-1/2 z-30 w-full max-w-[390px] -translate-x-1/2 bg-white pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-4px_16px_rgba(11,46,34,0.06)]" aria-label="Navigasi utama">
-            <div class="flex items-center justify-around px-2 pt-3 pb-3.5">
-                <a href="{{ route('dashboard') }}" class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
-                    <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 3l4.2 6.2h-2l3.3 4.6h-2.3L15 18.5H1l3.8-4.7H2.6L6 9.2H4z"/>
-                        <path d="M17 8l3.6 5.2h-1.8L22 17.5h-4.5v3H16v-3h-1.4z" opacity=".85"/>
-                        <path d="M7 18.5h2V21H7z"/>
-                    </svg>
-                    <span class="text-[10.5px] font-bold">Beranda</span>
-                </a>
-                <a href="#" class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1v-9z"/>
-                    </svg>
-                    <span class="text-[10.5px] font-bold">Reservasi</span>
-                </a>
-                <a href="{{ route('transaksi') }}" aria-current="page" class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
-                    <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                        <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v17l2-1.2 2 1.2 2-1.2 2 1.2 2-1.2 2 1.2 2-1.2V4a2 2 0 00-2-2H6zm2 5h8v2H8V7zm0 4h8v2H8v-2zm0 4h5v2H8v-2z" clip-rule="evenodd"/>
-                    </svg>
-                    <span class="text-[10.5px] font-extrabold">Transaksi</span>
-                </a>
-                <a href="{{ route('tiket') }}" class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
-                    </svg>
-                    <span class="text-[10.5px] font-bold">Tiket Saya</span>
-                </a>
-            </div>
-        </nav>
-
+@endsection
+@section('overlays')
         {{-- ========== TOAST ========== --}}
         <div id="toast" role="status"
              class="pointer-events-none fixed left-1/2 top-4 z-50 w-[calc(100%-32px)] max-w-[358px] -translate-x-1/2 -translate-y-3 rounded-xl bg-[#0b2e22] px-4 py-3 text-center text-[12.5px] font-semibold text-white opacity-0 shadow-[0_10px_24px_-8px_rgba(11,46,34,0.55)] transition duration-300"></div>
-    </div>
-</div>
-
 @endsection
 
 @push('scripts')
@@ -497,7 +506,7 @@
         verifying.classList.toggle('flex', v);
     }
 
-    /* ---------- Kirim & cek status ---------- */
+    /* ---------- Kirim bukti -> tandai session -> buka Tiket Saya ---------- */
     $('submitBtn').addEventListener('click', async function () {
         if (expired) return;
         const btn = this;
@@ -506,27 +515,28 @@
         $('submitArrow').classList.add('hidden');
         $('submitSpin').classList.remove('hidden');
 
-        /* TODO: ganti dengan request ke backend, contoh:
-         *
-         * const fd = new FormData();
-         * if (uploaded) fd.append('bukti', uploaded);
-         * await fetch("{{ url('/transaksi/bukti') }}", {
-         *     method: 'POST',
-         *     headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
-         *     body: fd,
-         * });
-         */
-        await new Promise((r) => setTimeout(r, 1400));
-
-        showStatus('verifying');
-        toast('Bukti terkirim. Admin sedang memverifikasi pembayaran Anda.');
-        $('submitLabel').textContent = 'Kirim & Cek Status Tiket';
-        $('submitArrow').classList.remove('hidden');
-        $('submitSpin').classList.add('hidden');
-        btn.disabled = false;
-
-        // Jika ingin pindah halaman setelah sukses:
-        // window.location.href = "{{ route('transaksi') }}";
+        try {
+            const res = await fetch("{{ url('/transaksi/kirim') }}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ bukti: uploaded ? uploaded.name : null })
+            });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            showStatus('verifying');
+            toast('Bukti terkirim. Membuka Tiket Saya...');
+            window.location.href = data.url;
+        } catch (err) {
+            toast('Gagal mengirim bukti. Silakan coba lagi.');
+            $('submitLabel').textContent = 'Kirim & Cek Status Tiket';
+            $('submitArrow').classList.remove('hidden');
+            $('submitSpin').classList.add('hidden');
+            btn.disabled = false;
+        }
     });
 })();
 </script>

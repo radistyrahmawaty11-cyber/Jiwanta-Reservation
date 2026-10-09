@@ -1,8 +1,10 @@
-@extends('layouts.dashboard')
+@extends('layouts.pengunjung')
 
 @section('title', 'Tiket Saya - Jiwanta')
+@section('page-label', 'Tiket Saya')
+@section('frame-class') relative mx-auto min-h-screen w-full max-w-[390px] overflow-x-clip bg-[#F9F8FF] pb-32 shadow-2xl @endsection
 
-@section('content')
+@section('page-content')
 
 @php
     // ---------- Helper ----------
@@ -15,6 +17,7 @@
         'copy'     => 'M9 9h10v11H9zM6 15H5a1 1 0 01-1-1V4a1 1 0 011-1h9a1 1 0 011 1v1',
         'copied'   => 'M5 13l4 4L19 7',
         'signal'   => 'M12 12h.01M8.5 8.5a5 5 0 000 7M15.5 8.5a5 5 0 010 7M5.5 5.5a9 9 0 000 13M18.5 5.5a9 9 0 010 13',
+        'clock'    => 'M12 8v4l2 2M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
         'star'     => 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9L12 3z',
         'users'    => 'M17 20v-1a4 4 0 00-4-4H7a4 4 0 00-4 4v1M10 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM21 20v-1a4 4 0 00-3-3.9M16 4.1a3.5 3.5 0 010 6.8',
         'scan'     => 'M4 8V5a1 1 0 011-1h3M16 4h3a1 1 0 011 1v3M20 16v3a1 1 0 01-1 1h-3M8 20H5a1 1 0 01-1-1v-3M9 9h2v2H9zM13 9h2v2h-2zM9 13h2v2H9zM14 14h1v1h-1z',
@@ -26,7 +29,9 @@
     $reveal   = 'opacity-0 translate-y-8 transition duration-700 ease-out';
     $revealSm = 'opacity-0 translate-y-3 transition duration-500 ease-out';
 
-    // ---------- Data tiket (ganti dengan data dari controller) ----------
+    // ---------- Data tiket: ikut pesanan di session; tanpa pesanan -> data demo ----------
+    $order = $order ?? null;
+    $monShort = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
     $ticket = [
         'code'     => 'JW-20260920-001',
         'name'     => 'Ahmad Fadillah',
@@ -41,7 +46,49 @@
         'includes' => 'Termasuk: Semua Fasilitas Area Classic',
         'total'    => 150000,
         'method'   => 'Lunas via Transfer BCA',
+        'status'   => 'lunas',
+        'pass'     => 'PREMIER<br>PASS',
     ];
+
+    if ($order) {
+        $isCabin = ($order['tipe'] ?? 'tiket') === 'cabin';
+        $d = \Illuminate\Support\Carbon::parse($order['tanggal']);
+
+        $ticket['code'] = $order['kode'];
+        $ticket['date'] = $d->day.' '.$monShort[$d->month - 1].' '.$d->year;
+        $ticket['open_at'] = $d->format('Y-m-d').'T08:00:00+07:00';
+        $ticket['close_at'] = $d->format('Y-m-d').'T18:00:00+07:00';
+        $ticket['type'] = $order['judul'];
+        $ticket['total'] = $order['total'];
+
+        if ($isCabin) {
+            $ticket['guests'] = ($order['unit'] ?? 'suite') === 'shorts' ? '4' : '4-5';
+            $ticket['guest_type'] = $order['tamu'];
+            $ticket['hours'] = 'Check-in 14.00 WIB';
+            $ticket['includes'] = 'Termasuk: Akses Kolam Panas & Fasilitas Cabin';
+            $ticket['pass'] = 'CABIN<br>SUITE';
+        } else {
+            $kategori = ($order['kategori'] ?? 'premier') === 'classic' ? 'Classic' : 'Premier';
+            $ticket['guests'] = (string) ($order['jumlah'] ?? 2);
+            $ticket['guest_type'] = 'Dewasa Reguler';
+            $ticket['hours'] = '08.00 - 18.00 WIB';
+            $ticket['includes'] = 'Termasuk: Semua Fasilitas Area '.$kategori;
+            $ticket['pass'] = strtoupper($kategori).'<br>PASS';
+        }
+
+        $ticket['status'] = ($order['status'] ?? '') === 'terkirim' ? 'terkirim' : 'pending';
+        $ticket['method'] = $ticket['status'] === 'terkirim'
+            ? 'Transfer Bank • Menunggu Verifikasi'
+            : 'Belum Dikirim';
+    }
+
+    $statusLabel = [
+        'lunas'    => 'LUNAS & DIKONFIRMASI',
+        'terkirim' => 'MENUNGGU VERIFIKASI',
+        'pending'  => 'MENUNGGU PEMBAYARAN',
+    ][$ticket['status']] ?? 'LUNAS & DIKONFIRMASI';
+    $statusIcon = $ticket['status'] === 'lunas' ? $p['check'] : $p['clock'];
+    $statusColor = $ticket['status'] === 'lunas' ? 'text-[#B5F0BE]' : 'text-[#FDD9B0]';
 
     // ---------- QR (placeholder visual, deterministik dari kode booking) ----------
     // Produksi: ganti dengan QR asli, mis. simplesoftwareio/simple-qrcode
@@ -77,27 +124,15 @@
     $shadow = 'shadow-[0_4px_18px_rgba(15,69,39,0.08)]';
 @endphp
 
-<div class="min-h-screen w-full bg-slate-200">
-    <div class="relative mx-auto min-h-screen w-full max-w-[390px] overflow-x-clip bg-[#F9F8FF] pb-32 shadow-2xl">
-
-        {{-- ========== HEADER (menempel saat scroll) ========== --}}
-        <header id="top-header" class="sticky top-0 z-40 flex items-center justify-between bg-[#F9F8FF]/85 px-5 py-3 backdrop-blur transition-shadow duration-300">
-            <span class="text-[19px] font-bold tracking-tight text-[#0B3A22]">Jiwanta</span>
-            <div class="flex items-center gap-3">
-                <span class="text-[13px] font-medium text-slate-600">Tiket Saya</span>
-                <img src="{{ asset('images/profil.jpg') }}" alt="Profil" class="h-9 w-9 rounded-full bg-[#C9B99A] object-cover">
-            </div>
-        </header>
-
         <main class="px-4 pt-2">
 
             {{-- ========== STATUS RESERVASI ========== --}}
             <section data-reveal class="{{ $reveal }} flex items-center justify-between rounded-2xl bg-[#0B3A22] px-4 py-3.5 text-white">
                 <div class="flex items-center gap-3">
-                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-[#B5F0BE]">{!! $ic($p['check'], 'h-6 w-6', '2') !!}</span>
+                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 {!! $statusColor !!}">{!! $ic($statusIcon, 'h-6 w-6', '2') !!}</span>
                     <div>
                         <p class="text-[9px] font-semibold uppercase tracking-wider text-white/70">Status Reservasi</p>
-                        <p class="text-[17px] font-bold leading-tight">LUNAS &amp; DIKONFIRMASI</p>
+                        <p class="text-[17px] font-bold leading-tight">{{ $statusLabel }}</p>
                     </div>
                 </div>
                 <span id="gate-pill" class="ml-2 shrink-0 whitespace-nowrap rounded-full bg-white/15 px-2.5 py-1.5 text-[10px] font-semibold text-white transition-colors duration-500">Gate Siap Masuk</span>
@@ -115,7 +150,7 @@
                             <p class="mt-0.5 text-[10px] leading-tight text-white/75">Eco Luxury Hot Springs &amp;<br>Forest</p>
                         </div>
                     </div>
-                    <span class="rounded-full bg-[#FDD9B0] px-3.5 py-2 text-center text-[9px] font-extrabold leading-tight tracking-wide text-[#8B5E34]">PREMIER<br>PASS</span>
+                    <span class="rounded-full bg-[#FDD9B0] px-3.5 py-2 text-center text-[9px] font-extrabold leading-tight tracking-wide text-[#8B5E34]">{!! $ticket['pass'] !!}</span>
                 </div>
 
                 {{-- Kode booking --}}
@@ -252,40 +287,6 @@
             Kode booking tersalin
         </div>
 
-        {{-- ========== BOTTOM NAV ========== --}}
-        <nav class="fixed bottom-0 left-1/2 z-30 w-full max-w-[390px] -translate-x-1/2 bg-white pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-4px_16px_rgba(11,46,34,0.06)]" aria-label="Navigasi utama">
-            <div class="flex items-center justify-around px-2 pt-3 pb-3.5">
-                <a href="{{ route('dashboard') }}" class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
-                    <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 3l4.2 6.2h-2l3.3 4.6h-2.3L15 18.5H1l3.8-4.7H2.6L6 9.2H4z"/>
-                        <path d="M17 8l3.6 5.2h-1.8L22 17.5h-4.5v3H16v-3h-1.4z" opacity=".85"/>
-                        <path d="M7 18.5h2V21H7z"/>
-                    </svg>
-                    <span class="text-[10.5px] font-bold">Beranda</span>
-                </a>
-                <a href="{{ route('reservasi') }}" class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1v-9z"/>
-                    </svg>
-                    <span class="text-[10.5px] font-bold">Reservasi</span>
-                </a>
-                <a href="{{ route('transaksi') }}" class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 3h12v18l-3-2-3 2-3-2-3 2V3zM9 8h6M9 12h6"/>
-                    </svg>
-                    <span class="text-[10.5px] font-bold">Transaksi</span>
-                </a>
-                <a href="{{ route('tiket') }}" aria-current="page" class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
-                    <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                        <path fill-rule="evenodd" d="M4 6a2 2 0 012-2h12a2 2 0 012 2v3a2.5 2.5 0 000 5v3a2 2 0 01-2 2H6a2 2 0 01-2-2v-3a2.5 2.5 0 000-5V6zm9 1v2h2V7h-2zm0 4v2h2v-2h-2zm0 4v2h2v-2h-2z" clip-rule="evenodd"/>
-                    </svg>
-                    <span class="text-[10.5px] font-extrabold">Tiket Saya</span>
-                </a>
-            </div>
-        </nav>
-    </div>
-</div>
-
 @endsection
 
 @push('scripts')
@@ -354,7 +355,7 @@
         const pill = document.getElementById('gate-pill');
         const openAt  = new Date('{{ $ticket['open_at'] }}').getTime();
         const closeAt = new Date('{{ $ticket['close_at'] }}').getTime();
-        const FORCE_ACTIVE = true; // <- set false di produksi; true = selalu tampil "Gate Siap Masuk" untuk demo
+        const FORCE_ACTIVE = {{ $ticket['status'] === 'lunas' ? 'true' : 'false' }}; // demo data lunas -> selalu "Gate Siap Masuk"; pesanan session -> ikut jam buka
         const pad = (n) => String(n).padStart(2, '0');
 
         const updateGate = () => {
