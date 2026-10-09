@@ -24,11 +24,19 @@
     <form action="{{ route('login.process') }}" method="POST" class="space-y-4">
         @csrf
 
+        {{-- ✅ TAMBAHAN: Menampilkan Pesan Error Jika Login Gagal --}}
+        @if ($errors->any())
+            <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm text-center font-medium">
+                {{ $errors->first() }}
+            </div>
+        @endif
+
         {{-- Input WhatsApp/Email --}}
+        {{-- ✅ PERBAIKAN: name diubah dari "whatsapp" menjadi "email" agar dibaca oleh AuthController --}}
         <x-input-field
             label="No. WhatsApp / Email"
-            name="whatsapp"
-            placeholder="Contoh: 082134 atau nama@"
+            name="email"
+            placeholder="Contoh: 082134 atau nama@email.com"
             :required="true"
             icon='<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" /></svg>'
         />
