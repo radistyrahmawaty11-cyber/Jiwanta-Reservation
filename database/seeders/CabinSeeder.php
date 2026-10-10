@@ -10,21 +10,48 @@ class CabinSeeder extends Seeder
     public function run(): void
     {
         Cabin::create([
-            'nama_cabin' => 'Cabin Suite Mawar',
+            'nama_cabin' => 'Cabin Suite Pinus',
+            'jenis_cabin' => 'suite',
+            'kapasitas' => 5,
+            'harga_per_malam' => 1040000,
+            'status' => 'tersedia',
+            'deskripsi' => 'Cabin suite dengan pemandangan hutan pinus dan hot spring pribadi.',
+        ]);
+
+        Cabin::create([
+            'nama_cabin' => 'Cabin Suite Magnolia',
             'jenis_cabin' => 'suite',
             'kapasitas' => 4,
-            'harga_per_malam' => 1250000,
+            'harga_per_malam' => 1040000,
             'status' => 'tersedia',
-            'deskripsi' => 'Cabin suite dengan pemandangan hutan dan hot spring pribadi.',
+            'deskripsi' => 'Cabin suite keluarga dengan balkon menghadap lembah Ciwidey.',
+        ]);
+
+        Cabin::create([
+            'nama_cabin' => 'Cabin Suite Eukaliptus',
+            'jenis_cabin' => 'suite',
+            'kapasitas' => 4,
+            'harga_per_malam' => 1040000,
+            'status' => 'dipesan',
+            'deskripsi' => 'Cabin suite premium dengan area api unggun pribadi.',
         ]);
 
         Cabin::create([
             'nama_cabin' => 'Cabin Shorts Melati',
             'jenis_cabin' => 'shorts',
-            'kapasitas' => 2,
-            'harga_per_malam' => 750000,
+            'kapasitas' => 4,
+            'harga_per_malam' => 340000,
             'status' => 'tersedia',
-            'deskripsi' => 'Cabin cozy untuk pasangan dengan dek pribadi.',
+            'deskripsi' => 'Cabin shorts untuk keluarga kecil dengan dek pribadi.',
+        ]);
+
+        Cabin::create([
+            'nama_cabin' => 'Cabin Shorts Anggrek',
+            'jenis_cabin' => 'shorts',
+            'kapasitas' => 4,
+            'harga_per_malam' => 340000,
+            'status' => 'tersedia',
+            'deskripsi' => 'Cabin shorts nyaman dekat area kolam utama.',
         ]);
     }
 }

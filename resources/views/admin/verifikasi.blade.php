@@ -1,6 +1,7 @@
-@extends('layouts.dashboard')
+@extends('layouts.admin')
 
-@section('title', 'Verifikasi & Transaksi - Jiwanta')
+@section('title', 'Verifikasi - Jiwanta')
+@section('page-class') bg-[#F9F8FF] font-['Plus_Jakarta_Sans',ui-sans-serif,system-ui,sans-serif] text-slate-900 antialiased @endsection
 
 {{-- Font desain: Plus Jakarta Sans (aman jika layout belum punya @stack('styles'), hanya tidak terpakai) --}}
 @push('styles')
@@ -9,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 @endpush
 
-@section('content')
+@section('page-content')
 
 @php
     // ---------- Helper ----------
@@ -64,7 +65,7 @@
     $soft  = 'bg-[#EEF1FC]';
     $card  = 'rounded-2xl bg-white shadow-[0_4px_18px_rgba(15,69,39,0.08)]';
 
-    $banks = [['all', 'Semua'], ['BCA', 'BCA'], ['BNI', 'BNI'], ['Mandiri', 'Mandiri'], ['QRIS', 'QRIS']];
+    $banks = [['all', 'Semua'], ['BCA', 'BCA'], ['Mandiri', 'Mandiri']];
 
     // ---------- Data antrean (ganti dengan data dari controller) ----------
     // act: quick = Pratinjau + Cepat Verifikasi | proof = Buka Bukti Transfer | reupload = Minta Upload Ulang
@@ -89,8 +90,8 @@
         [
             'id' => 'JW-20260920-009', 'name' => 'Danang Wijaya', 'email' => 'danang.wijaya@gmail.com', 'phone' => '+62 821-9988-1210',
             'service' => ['4× Classic Ticket', '+ Gazebo Pinus'], 'unit' => '4x Classic Ticket + Gazebo Pinus', 'session' => 'Sesi Pagi (08:00 - 11:00)',
-            'amount' => 360120, 'method' => 'BNI', 'channel' => 'BNI Virtual Account', 'pay' => 'BNI Virtual Account',
-            'sender' => ['Danang Wijaya', 'BNI • 0456-1129-03'], 'dest' => ['Jiwanta Wisata Mandiri', 'BNI • 8808-0123-45'],
+            'amount' => 360120, 'method' => 'Mandiri', 'channel' => 'Mandiri Transfer / Manual', 'pay' => 'Mandiri Transfer',
+            'sender' => ['Danang Wijaya', 'Mandiri • 0456-1129-03'], 'dest' => ['Jiwanta Wisata Mandiri', 'Mandiri • 1310-0987-65'],
             'file' => 'bukti-transfer-009.jpg', 'proof' => $proof, 'ocr' => 97, 'mins' => 18,
             'tag' => 'Tiket Rombongan', 'tone' => 'lav', 'dot' => 'bg-slate-400', 'act' => 'proof', 'problem' => false, 'note' => '',
         ],
@@ -105,105 +106,9 @@
         ],
     ];
 
-    $history = [
-        ['t' => '10:02', 'id' => 'JW-20260920-098', 'name' => 'Dewi Maharani',      'unit' => '2x Premier Onsen Hot Spring',   'method' => 'BCA',     'amount' => 170000],
-        ['t' => '09:54', 'id' => 'JW-20260920-097', 'name' => 'Bambang Hariyanto',  'unit' => 'Camellia Family Cabin (1 Malam)', 'method' => 'BCA',     'amount' => 1850320],
-        ['t' => '09:48', 'id' => 'JW-20260920-096', 'name' => 'Priscilla Chandra',  'unit' => '4x Classic Ticket Onsen',        'method' => 'Mandiri', 'amount' => 180115],
-        ['t' => '09:30', 'id' => 'JW-20260920-095', 'name' => 'Kurniawan Tejo',     'unit' => 'Private Spa Cabana Sesi Pagi',   'method' => 'BCA',     'amount' => 450401],
-        ['t' => '09:12', 'id' => 'JW-20260920-094', 'name' => 'Nadira Alatas',      'unit' => '1x Classic Ticket Hot Spring',   'method' => 'Mandiri', 'amount' => 45109],
-    ];
-
     $first = $queue[0];
 @endphp
 
-    {{-- ================= LAYOUT CONTAINER ================= --}}
-    <div class="min-w-full bg-[#F9F8FF] flex font-['Plus_Jakarta_Sans',ui-sans-serif,system-ui,sans-serif] text-slate-900 antialiased">
-
-    {{-- ================= SIDEBAR ================= --}}
-    <aside class="w-[240px] shrink-0 bg-white border-r border-slate-200 flex flex-col">
-        <div class="px-5 pt-6 pb-4">
-            <div class="flex items-center gap-3">
-                <span class="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-lg bg-[#0B3A22] text-[#B5F0BE]">{!! $ic($p['tree'], 'h-5 w-5') !!}</span>
-                <div class="leading-tight">
-                    <p class="text-[10px] font-bold tracking-wide">JIWANTA</p>
-                    <p class="text-[6px] font-semibold uppercase tracking-wider text-slate-600">Ciwidey Resort</p>
-                </div>
-                <div class="leading-tight">
-                    <p class="text-[13px] font-bold text-[#0B3A22]">Jiwanta</p>
-                    <p class="text-[8px] font-bold uppercase tracking-wider text-[#8B5E34]">Admin Panel</p>
-                </div>
-            </div>
-            <span class="mt-4 inline-flex items-center gap-2 rounded-full {{ $mint }} px-3 py-1.5 text-[10px] font-bold">
-                <span class="h-2 w-2 rounded-full bg-[#0B3A22]"></span> Sistem Operasional Aktif
-            </span>
-        </div>
-
-
-        <nav class="flex-1 px-4 space-y-6 overflow-y-auto">
-            @foreach ($nav as $label => $items)
-                <div>
-                    <p class="mb-2 px-2 text-[9px] font-bold uppercase tracking-wider text-slate-500">{{ $label }}</p>
-                    <ul class="space-y-1">
-                        @foreach ($items as [$text, $icon, $active, $badge])
-                            <li>
-                                <a href="{{ route('tiket-renang') }}" class="flex h-[36px] items-center gap-3 rounded-lg px-3 text-[13px] font-medium transition {{ $active ? 'bg-[#0B3A22] text-white' : 'text-slate-700 hover:bg-slate-50' }}">
-                                    {!! $ic($p[$icon], 'h-4 w-4 shrink-0') !!}
-                                    <span class="flex-1">{{ $text }}</span>
-                                    @if ($badge)
-                                        <span data-c="pending" class="rounded-full {{ $peach }} px-2 py-0.5 text-[10px] font-bold text-[#6B4520]">{{ $badge }}</span>
-                                    @endif
-                                </a>
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endforeach
-        </nav>
-
-        <div class="border-t border-slate-200 p-4">
-            <div class="mb-3 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
-                <span class="flex items-center gap-2 text-[10px] font-semibold text-slate-700">{!! $ic($p['clock'], 'h-3.5 w-3.5') !!} Shift Pagi 07:00 - 15:00</span>
-                <span class="h-2 w-2 rounded-full bg-[#0B3A22]"></span>
-            </div>
-            <button type="button" class="flex w-full items-center justify-center gap-2 rounded-lg bg-[#DDE6FB] py-2.5 text-[11px] font-bold text-red-700 transition hover:bg-[#cfd9f7]">
-                {!! $ic($p['logout'], 'h-4 w-4') !!} Keluar Sistem
-            </button>
-        </div>
-    </aside>
-
-    {{-- ================= MAIN CONTENT ================= --}}
-    <div class="flex-1 flex flex-col min-w-0">
-
-        {{-- Topbar --}}
-        <header class="h-[60px] bg-white/80 backdrop-blur border-b border-slate-200 px-6 flex items-center justify-between shrink-0">
-            <div class="flex items-center gap-2">
-                <p class="text-[11px] text-slate-600">Sistem Jiwanta</p>
-                <span class="text-slate-400">/</span>
-                <b class="text-[11px] font-semibold text-[#0B3A22]">Panel Kendali Utama</b>
-            </div>
-            <div class="flex items-center gap-3">
-                <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-[10px] font-medium">{!! $ic($p['snow'], 'h-3.5 w-3.5') !!} Ciwidey 18°C Kabut Sejuk</span>
-                <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-[10px] font-medium">
-                    <span class="relative flex h-2 w-2"><span class="absolute h-full w-full animate-ping rounded-full bg-[#0B3A22] opacity-60"></span><span class="relative h-2 w-2 rounded-full bg-[#0B3A22]"></span></span>
-                    Gate Turnstile Online
-                </span>
-                <button type="button" class="relative h-10 w-10 flex items-center justify-center rounded-full bg-slate-100 transition hover:bg-slate-200" aria-label="Notifikasi">
-                    {!! $ic($p['bell'], 'h-5 w-5') !!}
-                    <span class="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-600 border-2 border-white"></span>
-                </button>
-                <div class="flex items-center gap-3 pl-3 border-l border-slate-200">
-                    <img src="{{ asset('images/profil.jpg') }}" alt="Profil" class="h-10 w-10 rounded-full bg-[#C9B99A] object-cover border-2 border-white shadow-sm">
-                    <div>
-                        <p class="text-[11px] font-bold leading-tight">Bagas Dananjaya</p>
-                        <p class="text-[9px] font-medium uppercase leading-tight text-slate-600">Super Admin Resort</p>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        {{-- Content Area --}}
-        <main class="flex-1 p-6 overflow-y-auto">
-            <div class="max-w-7xl mx-auto space-y-6">
 
                 {{-- Header Section --}}
                 <div class="flex items-start justify-between gap-6">
@@ -212,7 +117,7 @@
                             <span class="rounded-md {{ $peach }} px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-[#6B4520]">Gate Finance Desk</span>
                             <span class="text-[10px] text-slate-600">Realtime OCR Sync Active</span>
                         </p>
-                        <h1 class="text-[32px] font-bold leading-tight text-[#0B3A22]">Verifikasi Pembayaran &amp; Riwayat Transaksi</h1>
+                        <h1 class="text-[32px] font-bold leading-tight text-[#0B3A22]">Verifikasi Pembayaran</h1>
                         <p class="mt-2 text-[13px] leading-relaxed text-slate-600">Validasi bukti transfer bank manual, pencocokan kode unik 3 digit, dan penerbitan tiket QR otomatis ke WhatsApp tamu.</p>
                     </div>
 
@@ -388,54 +293,10 @@
                         <p id="queue-empty" class="hidden rounded-xl bg-white p-6 text-center text-[11px] font-medium text-slate-500 shadow-[0_2px_10px_rgba(15,69,39,0.06)]">Tidak ada antrean yang cocok.</p>
                     </aside>
                 </div>
-
-                {{-- Riwayat Transaksi --}}
-                <section class="{{ $card }} p-6">
-                    <div class="flex items-start justify-between gap-4">
-                        <div>
-                            <h2 class="text-[18px] font-bold text-[#0B3A22]">Riwayat Transaksi Sukses &amp; E-Ticket Terbit</h2>
-                            <p class="mt-1 text-[11px] leading-relaxed text-slate-600">5 aktivitas pemesanan terakhir yang telah lolos verifikasi dan dikirimkan ke gerbang otomatis.</p>
-                        </div>
-                        <div class="flex shrink-0 items-center gap-3">
-                            <button type="button" id="btn-export" class="flex items-center gap-2 rounded-lg {{ $lav }} px-4 py-2 text-[11px] font-semibold text-slate-800 transition hover:bg-[#cfd9f7] active:scale-95">
-                                {!! $ic($p['download'], 'h-4 w-4') !!} Unduh XLS
-                            </button>
-                            <a href="#" class="flex items-center gap-2 rounded-lg bg-[#0B3A22] px-4 py-2 text-[11px] font-bold text-white shadow-sm transition hover:bg-[#124c2f] active:scale-95">
-                                {!! $ic($p['history'], 'h-4 w-4') !!} Lihat Semua Arsip
-                            </a>
-                        </div>
-                    </div>
-
-                    <div class="mt-5 overflow-x-auto">
-                        <div class="min-w-[760px]">
-                            <div class="grid grid-cols-[100px_130px_minmax(0,1.5fr)_90px_120px_150px_130px] items-center gap-2 rounded-xl bg-[#E8ECFB] px-4 py-3 text-[9px] font-bold uppercase leading-snug tracking-wide text-slate-700">
-                                <span>Waktu<br>Transaksi</span><span>Kode Booking</span><span>Customer &amp; Unit</span><span>Metode<br>Bayar</span><span>Nominal</span><span>Status &amp; Dispatch</span><span class="text-right">Opsi</span>
-                            </div>
-                            <div id="history-list"></div>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 flex items-center justify-between gap-4">
-                        <p class="text-[10px] text-slate-600">Menampilkan <span data-shown>5</span> dari <span data-c="verified">86</span> transaksi berhasil hari ini</p>
-                        <div id="pager" class="flex items-center gap-2 text-[11px] font-semibold">
-                            <button type="button" data-pg="prev" aria-label="Sebelumnya" class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E8ECFB] text-slate-700 transition hover:bg-[#DDE3F8]">{!! $ic($p['chevl'], 'h-4 w-4', '2') !!}</button>
-                            @foreach (['1', '2', '3'] as $pg)
-                                <button type="button" data-pg="{{ $pg }}" class="flex h-8 w-8 items-center justify-center rounded-lg transition {{ $loop->first ? 'bg-[#0B3A22] text-white' : 'bg-[#E8ECFB] text-slate-700 hover:bg-[#DDE3F8]' }}">{{ $pg }}</button>
-                            @endforeach
-                            <span class="px-1 text-slate-500">...</span>
-                            <button type="button" data-pg="18" class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E8ECFB] text-slate-700 transition hover:bg-[#DDE3F8]">18</button>
-                            <button type="button" data-pg="next" aria-label="Berikutnya" class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#E8ECFB] text-slate-700 transition hover:bg-[#DDE3F8]">{!! $ic($p['chevr'], 'h-4 w-4', '2') !!}</button>
-                        </div>
-                    </div>
-                </section>
-            </div>
-        </main>
-    </div>
-
+@endsection
+@section('overlays')
     {{-- Toast --}}
     <div id="toast" role="status" class="pointer-events-none fixed right-6 top-20 z-50 max-w-sm translate-y-[-8px] rounded-xl bg-[#0B3A22] px-4 py-3 text-[12px] font-semibold text-white opacity-0 shadow-[0_10px_24px_-8px_rgba(11,46,34,0.55)] transition duration-300"></div>
-    </div>
-
 @endsection
 
 @push('scripts')
@@ -473,7 +334,6 @@
         // ---------- State ----------
         const state = {
             queue: @json($queue).map((i) => ({ ...i, at: Date.now() - i.mins * 60000 })),
-            history: @json($history),
             active: @json($first['id']),
             bank: 'all', status: 'waiting', q: '',
             c: { pending: 14, verified: 86, rejected: 2 },
@@ -627,22 +487,6 @@
 
         const setActive = (id) => { state.active = id; renderQueue(); showMain(); };
 
-        // ---------- Riwayat ----------
-        const histRow = (h) => `<div class="${h.fresh ? 'row-flash ' : ''}grid grid-cols-[100px_130px_minmax(0,1.5fr)_90px_120px_150px_130px] items-center gap-2 border-b border-slate-100 px-4 py-4 last:border-0">
-            <span class="font-mono text-[10px] text-slate-500">${h.t} WIB</span>
-            <span class="break-words text-[11px] font-semibold text-slate-900">${h.id}</span>
-            <span><b class="block text-[11px] text-slate-900">${esc(h.name)}</b><span class="block text-[10px] leading-snug text-slate-600">${esc(h.unit)}</span></span>
-            <span><span class="inline-block rounded-lg bg-[#DDE6FB] px-3 py-1.5 text-[10px] font-bold text-slate-800">${esc(h.method)}</span></span>
-            <b class="text-[12px] text-slate-900">${rp(h.amount)}</b>
-            <span><span class="inline-flex items-center gap-1.5 rounded-xl bg-[#CDEFD5] px-3 py-1.5 text-[9px] font-bold leading-tight text-[#0B3A22]">${ic('mail', 'h-3 w-3 shrink-0', '2')}<span>Lunas • QR<br>WA &amp; Email</span></span></span>
-            <span class="text-right"><button type="button" data-detail="${h.id}" class="rounded-lg bg-[#DDE6FB] px-3 py-2 text-center text-[9px] font-bold leading-tight text-slate-800 transition hover:bg-[#cfd9f7] active:scale-95">Lihat Detail &amp;<br>E-Ticket</button></span>
-        </div>`;
-        const renderHistory = () => {
-            $('#history-list').innerHTML = state.history.map(histRow).join('');
-            $('[data-shown]').textContent = state.history.length;
-            state.history.forEach((h) => (h.fresh = false));
-        };
-
         // ---------- Aksi: terima / tolak ----------
         const removeItem = (id) => {
             const idx = state.queue.findIndex((i) => i.id === id);
@@ -670,12 +514,9 @@
             if (id === state.active) setApproveBusy(true);
             await sleep(quick ? 700 : 1400);
 
-            state.history.unshift({ t: wib(Date.now()), id: it.id, name: it.name, unit: it.unit, method: it.method, amount: it.amount, fresh: true });
-            state.history = state.history.slice(0, 5);
             removeItem(id);
             setCount('pending', Math.max(0, state.c.pending - 1));
             setCount('verified', state.c.verified + 1);
-            renderHistory();
             setApproveBusy(false);
             if (current()) $('#btn-approve').disabled = current().problem;
             state.busy = false;
@@ -753,9 +594,7 @@
         ];
         const banks = [
             { m: 'BCA', channel: 'BCA Virtual Account / Manual', pay: 'BCA Transfer' },
-            { m: 'BNI', channel: 'BNI Virtual Account', pay: 'BNI Virtual Account' },
             { m: 'Mandiri', channel: 'Mandiri Transfer / Manual', pay: 'Mandiri Transfer' },
-            { m: 'QRIS', channel: 'QRIS Dinamis', pay: 'QRIS' },
         ];
 
         const incoming = () => {
@@ -813,40 +652,8 @@
             });
         }, 2500);
 
-        // ---------- Riwayat: ekspor & detail ----------
-        $('#btn-export').addEventListener('click', () => {
-            const rows = [['Waktu', 'Kode Booking', 'Customer', 'Unit', 'Metode', 'Nominal'], ...state.history.map((h) => [h.t + ' WIB', h.id, h.name, h.unit, h.method, h.amount])];
-            const csv = '\ufeff' + rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
-            const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })), download: 'riwayat-transaksi.csv' });
-            document.body.appendChild(a); a.click(); a.remove();
-            toast('Riwayat transaksi diunduh');
-        });
-        $('#history-list').addEventListener('click', (e) => {
-            const b = e.target.closest('[data-detail]');
-            if (b) toast('Membuka detail & E-Ticket ' + b.dataset.detail);
-        });
-
-        // Pagination (tampilan)
-        const pgOn = ['bg-[#0B3A22]', 'text-white'];
-        const pgOff = ['bg-[#E8ECFB]', 'text-slate-700', 'hover:bg-[#DDE3F8]'];
-        const setPage = (p) => {
-            state.page = p;
-            $$('#pager [data-pg]').forEach((b) => {
-                const act = b.dataset.pg === String(p);
-                if (isNaN(Number(b.dataset.pg))) return;
-                toggle(b, pgOn, act); toggle(b, pgOff, !act);
-            });
-        };
-        $$('#pager [data-pg]').forEach((b) => b.addEventListener('click', () => {
-            const v = b.dataset.pg;
-            const next = v === 'prev' ? Math.max(1, state.page - 1) : v === 'next' ? Math.min(18, state.page + 1) : Number(v);
-            if ([1, 2, 3, 18].includes(next)) setPage(next);
-            else toast('Halaman ' + next);
-        }));
-
         // ---------- Mulai ----------
         renderQueue();
-        renderHistory();
         showMain(false);
     });
 </script>

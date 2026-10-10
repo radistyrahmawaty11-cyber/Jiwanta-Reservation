@@ -1,8 +1,8 @@
-@extends('layouts.dashboard')
+@extends('layouts.admin')
 
 @section('title', 'Dashboard Operasional - Jiwanta')
 
-@section('content')
+@section('page-content')
 
 @php
     // ---------- Helper ----------
@@ -49,9 +49,9 @@
     $lav = 'bg-[#DDE6FB]';
 
     $queue = [
-        ['AM', $mint, 'Aris Munandar', 'JW-TKT-089', 'bg-[#DDE2F5]', ['BCA Transfer', 'Manual'], ['3 Tiket Kolam', 'Classic'], 170412, 3],
-        ['CK', $peach, 'Citra Kirana', 'JW-CAB-014', 'bg-[#F5C89A]', ['Mandiri', 'VA'], ['Pinus Suite Cabin (1', 'Malam)'], 2450000, 0],
-        ['DA', $mint, 'Dini Anggraini', 'JW-TKT-092', 'bg-[#DDE2F5]', ['BCA Transfer', 'Manual'], ['2 Tiket', 'Belerang', 'Premier'], 240000, 2],
+        ['AM', $mint, 'Aris Munandar', 'JW-TKT-089', 'bg-[#DDE2F5]', ['Bank BCA', 'Transfer'], ['Tiket Renang', 'Classic'], 170412, 3],
+        ['CK', $peach, 'Citra Kirana', 'JW-CAB-014', 'bg-[#F5C89A]', ['Mandiri', 'Transfer'], ['Cabin Suite', '(1 Malam)'], 2450000, 0],
+        ['DA', $mint, 'Dini Anggraini', 'JW-TKT-092', 'bg-[#DDE2F5]', ['Bank BCA', 'Transfer'], ['Tiket Renang', 'Premier'], 240000, 2],
     ];
 
     $status = [
@@ -61,14 +61,14 @@
     ];
 
     $reservations = [
-        ['tiket', ['#JW-', '8821'], ['Bambang', 'Wicaksono'], ['+62 812-', '4421-900'], ['Kolam Air', 'Panas', 'Classic'], ['20 Sep', '2026,', '09:00 WIB'], 'Check-in'],
-        ['cabin', ['#JW-', '8820'], ['Larasati', 'Dewi'], ['+62 857-', '1190-332'], ['Magnolia', 'Cabin', 'Suite'], ['20 - 21 Sep', '(1 Malam)'], 'Lunas'],
-        ['tiket', ['#JW-', '8819'], ['Reza', 'Pratama'], ['+62 821-', '9988-121'], ['Belerang', 'Premier', 'VIP'], ['20 Sep', '2026,', '14:00 WIB'], 'Menunggu'],
-        ['cabin', ['#JW-', '8818'], ['Nabila', 'Syakieb'], ['+62 813-', '7722-109'], ['Pinus', 'Cabin', 'Suite'], ['20 - 22', 'Sep (2', 'Malam)'], 'Check-in'],
-        ['tiket', ['#JW-', '8817'], ['Fajar', 'Nugraha'], ['+62 878-', '3341-002'], ['Kolam Air', 'Panas', 'Classic'], ['20 Sep', '2026,', '11:00 WIB'], 'Lunas'],
+        ['tiket', ['#JW-', '8821'], ['Bambang', 'Wicaksono'], ['+62 812-', '4421-900'], ['Tiket Renang', 'Classic'], ['20 Sep', '2026,', '09:00 WIB'], 'Check-in'],
+        ['cabin', ['#JW-', '8820'], ['Larasati', 'Dewi'], ['+62 857-', '1190-332'], ['Cabin', 'Suite'], ['20 - 21 Sep', '(1 Malam)'], 'Lunas'],
+        ['tiket', ['#JW-', '8819'], ['Reza', 'Pratama'], ['+62 821-', '9988-121'], ['Tiket Renang', 'Premier'], ['20 Sep', '2026,', '14:00 WIB'], 'Menunggu'],
+        ['cabin', ['#JW-', '8818'], ['Nabila', 'Syakieb'], ['+62 813-', '7722-109'], ['Cabin', 'Short'], ['20 - 22', 'Sep (2', 'Malam)'], 'Check-in'],
+        ['tiket', ['#JW-', '8817'], ['Fajar', 'Nugraha'], ['+62 878-', '3341-002'], ['Tiket Renang', 'Classic'], ['20 Sep', '2026,', '11:00 WIB'], 'Lunas'],
     ];
 
-    $tabs = [['all', 'Semua'], ['tiket', 'Kolam<br>Tiket'], ['cabin', 'Cabin<br>Suite']];
+    $tabs = [['all', 'Semua'], ['tiket', 'Tiket<br>Renang'], ['cabin', 'Cabin']];
 
     $card = 'rounded-2xl bg-white shadow-sm border border-slate-200';
     $cap = 'text-[9px] font-bold uppercase leading-snug tracking-wide text-slate-600';
@@ -81,89 +81,6 @@
     $btnG = 'inline-flex items-center justify-center gap-2 rounded-lg bg-slate-100 px-5 py-2.5 text-[12px] font-semibold text-slate-700 transition hover:bg-slate-200 active:scale-95';
 @endphp
 
-    {{-- ================= LAYOUT CONTAINER ================= --}}
-    <div class="min-w-full bg-slate-50 flex">
-
-    {{-- ================= SIDEBAR ================= --}}
-    <aside class="w-[240px] shrink-0 bg-white border-r border-slate-200 flex flex-col">
-        <div class="px-5 pt-6 pb-4">
-            <div class="flex items-center gap-3">
-                <span class="flex h-[26px] w-[26px] items-center justify-center rounded-lg bg-[#0B3A22] text-[#B5F0BE]">{!! $ic($p['tree'], 'h-4 w-4') !!}</span>
-                <div>
-                    <p class="text-[13px] font-bold leading-tight tracking-wide">JIWANTA</p>
-                    <p class="text-[8px] font-semibold uppercase leading-tight tracking-wider text-slate-600">Ciwidey Resort</p>
-                </div>
-            </div>
-            <span class="mt-4 inline-flex items-center gap-2 rounded-full {{ $mint }} px-3 py-1.5 text-[10px] font-bold">
-                <span class="h-2 w-2 rounded-full bg-[#0B3A22]"></span> Sistem Operasional Aktif
-            </span>
-        </div>
-
-        <nav class="flex-1 px-4 space-y-6 overflow-y-auto">
-            @foreach ($nav as $label => $items)
-                <div>
-                    <p class="mb-2 px-2 text-[9px] font-bold uppercase tracking-wider text-slate-500">{{ $label }}</p>
-                    <ul class="space-y-1">
-                        @foreach ($items as [$text, $icon, $active, $badge])
-                            <li>
-                                <a href="{{ route('verifikasi') }}" class="flex h-[36px] items-center gap-3 rounded-lg px-3 text-[13px] font-medium transition {{ $active ? 'bg-[#0B3A22] text-white' : 'text-slate-700 hover:bg-slate-50' }}">
-                                    {!! $ic($p[$icon], 'h-4 w-4 shrink-0') !!}
-                                    <span class="flex-1">{{ $text }}</span>
-                                    @if ($badge)
-                                        <span class="rounded-full {{ $peach }} px-2 py-0.5 text-[10px] font-bold text-[#6B4520]">{{ $badge }}</span>
-                                    @endif
-                                </a>
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endforeach
-        </nav>
-
-        <div class="border-t border-slate-200 p-4">
-            <div class="mb-3 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
-                <span class="flex items-center gap-2 text-[10px] font-semibold text-slate-700">{!! $ic($p['clock'], 'h-3.5 w-3.5') !!} Shift Pagi 07:00 - 15:00</span>
-                <span class="h-2 w-2 rounded-full bg-[#0B3A22]"></span>
-            </div>
-            <button type="button" class="flex w-full items-center justify-center gap-2 rounded-lg bg-red-50 py-2.5 text-[11px] font-bold text-red-700 transition hover:bg-red-100">
-                {!! $ic($p['logout'], 'h-4 w-4') !!} Keluar Sistem
-            </button>
-        </div>
-    </aside>
-
-    {{-- ================= MAIN CONTENT ================= --}}
-    <div class="flex-1 flex flex-col min-w-0">
-
-        {{-- Topbar --}}
-        <header class="h-[60px] bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0">
-            <div class="flex items-center gap-2">
-                <p class="text-[11px] text-slate-600">Sistem Jiwanta</p>
-                <span class="text-slate-400">/</span>
-                <b class="text-[11px] font-semibold text-[#0B3A22]">Panel Kendali Utama</b>
-            </div>
-            <div class="flex items-center gap-3">
-                <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-[10px] font-medium">{!! $ic($p['snow'], 'h-3.5 w-3.5') !!} Ciwidey 18°C Kabut Sejuk</span>
-                <span class="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-[10px] font-medium text-emerald-700">
-                    <span class="relative flex h-2 w-2"><span class="absolute h-full w-full animate-ping rounded-full bg-emerald-600 opacity-60"></span><span class="relative h-2 w-2 rounded-full bg-emerald-600"></span></span>
-                    Gate Turnstile Online
-                </span>
-                <button type="button" class="relative h-10 w-10 flex items-center justify-center rounded-full bg-slate-100 transition hover:bg-slate-200" aria-label="Notifikasi">
-                    {!! $ic($p['bell'], 'h-5 w-5') !!}
-                    <span class="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-600 border-2 border-white"></span>
-                </button>
-                <div class="flex items-center gap-3 pl-3 border-l border-slate-200">
-                    <img src="{{ asset('images/profil.jpg') }}" alt="Profil" class="h-10 w-10 rounded-full bg-[#C9B99A] object-cover border-2 border-white shadow-sm">
-                    <div>
-                        <p class="text-[11px] font-bold leading-tight">Bagas Dananjaya</p>
-                        <p class="text-[9px] font-medium uppercase leading-tight text-slate-600">Super Admin Resort</p>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        {{-- Content Area --}}
-        <main class="flex-1 p-6 overflow-y-auto">
-            <div class="max-w-7xl mx-auto space-y-6">
 
                 {{-- Header Section --}}
                 <div class="flex items-start justify-between">
@@ -216,7 +133,7 @@
                             <p class="{{ $cap }}">Okupansi Kabin</p>
                             <span class="flex h-10 w-10 items-center justify-center rounded-xl {{ $peach }} text-[#8B5E34]">{!! $ic($p['cabin'], 'h-5 w-5') !!}</span>
                         </div>
-                        <p class="text-[26px] font-bold leading-tight text-slate-900">3 / 3 <span class="text-[15px] font-normal text-slate-500">Terisi</span></p>
+                        <p class="text-[26px] font-bold leading-tight text-slate-900">2 / 2 <span class="text-[15px] font-normal text-slate-500">Terisi</span></p>
                         <p class="mt-3 inline-flex items-center gap-2 rounded-lg {{ $peach }} px-3 py-1.5 text-[10px] font-bold text-[#6B4520]">
                             <span class="h-1.5 w-1.5 rounded-full bg-[#6B4520]"></span>100% Penuh • High Demand
                         </p>
@@ -316,7 +233,7 @@
                                         <span class="text-[11px] leading-relaxed">{!! $br($service) !!}</span>
                                         <span class="text-[10px] leading-relaxed">{!! $br($date) !!}</span>
                                         <span><span class="inline-flex items-center gap-1.5 rounded-full {{ $status[$st][0] }} px-2.5 py-1 text-[9px] font-bold"><span class="h-1.5 w-1.5 rounded-full {{ $status[$st][1] }}"></span>{{ $st }}</span></span>
-                                        <button type="button" class="justify-self-center text-slate-400 hover:text-slate-600" aria-label="Aksi">
+                                        <button type="button" data-resv-action class="justify-self-center text-slate-400 hover:text-slate-600" aria-label="Aksi">
                                             <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
                                         </button>
                                     </div>
@@ -339,18 +256,18 @@
 
                             <div class="space-y-4">
                                 <div>
-                                    <div class="flex justify-between text-[11px] mb-1"><span class="font-semibold text-slate-700">Kolam Air Panas Classic</span><b class="text-[11px]"><span data-q1-used>120</span> / 200</b></div>
+                                    <div class="flex justify-between text-[11px] mb-1"><span class="font-semibold text-slate-700">Tiket Renang Classic</span><b class="text-[11px]"><span data-q1-used>120</span> / <span data-q1-cap>200</span></b></div>
                                     <div class="h-2 overflow-hidden rounded-full bg-slate-100"><div data-q1-bar style="width: 60%" class="h-full rounded-full bg-[#0B3A22] transition-all duration-1000"></div></div>
                                     <p data-q1-text class="mt-1.5 text-right text-[10px] text-slate-600">Sisa 80 tiket (60%)</p>
                                 </div>
 
                                 <div>
-                                    <div class="flex justify-between text-[11px] mb-1"><span class="font-semibold text-slate-700">Kolam Belerang Premier</span><b class="text-[11px] text-[#7A5230]"><span data-q2-used>65</span> / 100</b></div>
+                                    <div class="flex justify-between text-[11px] mb-1"><span class="font-semibold text-slate-700">Tiket Renang Premier</span><b class="text-[11px] text-[#7A5230]"><span data-q2-used>65</span> / <span data-q2-cap>100</span></b></div>
                                     <div class="h-2 overflow-hidden rounded-full bg-slate-100"><div data-q2-bar style="width: 65%" class="h-full rounded-full bg-[#7A5230] transition-all duration-1000"></div></div>
                                     <p data-q2-text class="mt-1.5 text-right text-[10px] text-slate-600">Sisa 35 tiket (65%)</p>
                                 </div>
 
-                                <button type="button" class="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-slate-100 py-2.5 text-[11px] font-bold transition hover:bg-slate-200">
+                                <button type="button" data-open="quota" class="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-slate-100 py-2.5 text-[11px] font-bold transition hover:bg-slate-200">
                                     {!! $ic($p['sliders'], 'h-4 w-4') !!} + Atur Kuota
                                 </button>
                             </div>
@@ -360,10 +277,10 @@
                         <section class="{{ $card }} p-5">
                             <div class="mb-4 flex items-start justify-between">
                                 <h2 class="flex items-start gap-2 text-[15px] font-bold text-slate-900"><span class="mt-0.5">{!! $ic($p['cabin'], 'h-5 w-5') !!}</span> <span>Ketersediaan Kabin</span></h2>
-                                <span class="rounded-lg {{ $mint }} px-3 py-1.5 text-center text-[10px] font-bold">3 Total Unit</span>
+                                <span class="rounded-lg {{ $mint }} px-3 py-1.5 text-center text-[10px] font-bold">2 Total Unit</span>
                             </div>
                             <div class="space-y-2">
-                                @foreach ([['Pinus Cabin A', 'Tamu: Hendra S.', 'Terisi', true, 'bed'], ['Magnolia Cabin B', 'Check-in 14:00 WIB', 'Terisi', true, 'bed'], ['Eukaliptus Cabin C', 'Siap Reservasi', 'Tersedia', false, 'door']] as [$n, $sub, $st, $busy, $icon])
+                                @foreach ([['Cabin Suite', 'Tamu: Hendra S.', 'Terisi', true, 'bed'], ['Cabin Short', 'Siap Reservasi', 'Tersedia', false, 'door']] as [$n, $sub, $st, $busy, $icon])
                                     <div class="flex items-center gap-3 rounded-lg bg-slate-50 p-3">
                                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg {{ $busy ? $lav : $mint }}">{!! $ic($p[$icon], 'h-4 w-4') !!}</span>
                                         <div class="min-w-0 flex-1">
@@ -399,139 +316,193 @@
                         </section>
                     </div>
                 </div>
-            </div>
-        </main>
-    </div>
-    </div>
+@endsection
 
-    {{-- ================= MODAL: RESERVASI WALK-IN ================= --}}
-    <div data-modal="walkin" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="wk-title">
-        <div data-close class="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"></div>
-        <form id="walkin-form" novalidate data-panel class="relative w-full max-w-lg scale-95 overflow-hidden rounded-2xl bg-white opacity-0 shadow-2xl transition duration-200">
-            <div class="flex items-start justify-between border-b border-slate-100 px-6 py-4">
-                <div>
-                    <h3 id="wk-title" class="text-[16px] font-bold text-slate-900">Reservasi Walk-in</h3>
-                    <p class="mt-0.5 text-[11px] text-slate-500">Catat tamu yang datang langsung ke loket.</p>
-                </div>
-                <button type="button" data-close class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Tutup">{!! $ic($p['x'], 'h-5 w-5') !!}</button>
+@section('overlays')
+{{-- Modal Reservasi Walk-in --}}
+<div data-modal="walkin" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="wk-title">
+    <div data-close class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+    <form id="walkin-form" novalidate data-panel class="relative w-full max-w-lg scale-95 overflow-hidden rounded-2xl bg-white opacity-0 shadow-xl transition duration-200">
+        <div class="flex items-start justify-between border-b border-slate-100 px-6 py-4">
+            <div>
+                <h3 id="wk-title" class="text-[16px] font-bold text-slate-900">Reservasi Walk-in</h3>
+                <p class="mt-0.5 text-[11px] text-slate-500">Catat tamu yang datang langsung ke loket.</p>
             </div>
+            <button type="button" data-close class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Tutup">{!! $ic($p['x'], 'h-5 w-5') !!}</button>
+        </div>
 
-            <div class="grid grid-cols-2 gap-4 px-6 py-5">
-                <div class="col-span-2">
-                    <label class="{{ $lbl }}" for="wk-guest">Nama Tamu</label>
-                    <input id="wk-guest" name="guest" type="text" maxlength="60" placeholder="Contoh: Budi Santoso" class="{{ $inp }}">
-                    <p data-err="guest" class="{{ $err }}"></p>
-                </div>
-                <div class="col-span-2">
-                    <label class="{{ $lbl }}" for="wk-phone">No. WhatsApp</label>
-                    <input id="wk-phone" name="phone" type="tel" inputmode="tel" placeholder="+62 812-0000-000" class="{{ $inp }}">
-                    <p data-err="phone" class="{{ $err }}"></p>
-                </div>
-                <div class="col-span-2">
-                    <label class="{{ $lbl }}" for="wk-service">Layanan</label>
-                    <select id="wk-service" name="service" class="{{ $inp }}">
-                        <optgroup label="Tiket Kolam">
-                            <option value="classic">Kolam Air Panas Classic — Rp 45.000/orang</option>
-                            <option value="premier">Belerang Premier VIP — Rp 85.000/orang</option>
-                        </optgroup>
-                        <optgroup label="Cabin Suite">
-                            <option value="pinus">Pinus Cabin Suite — Rp 1.040.000/malam</option>
-                            <option value="magnolia">Magnolia Cabin Suite — Rp 1.040.000/malam</option>
-                            <option value="eukaliptus">Eukaliptus Cabin Suite — Rp 1.040.000/malam</option>
-                        </optgroup>
-                    </select>
-                </div>
-                <div>
-                    <label class="{{ $lbl }}" for="wk-date">Tanggal</label>
-                    <input id="wk-date" name="date" type="date" class="{{ $inp }}">
-                    <p data-err="date" class="{{ $err }}"></p>
-                </div>
-                <div data-field="tiket">
-                    <label class="{{ $lbl }}" for="wk-time">Jam Kunjungan</label>
-                    <input id="wk-time" name="time" type="time" class="{{ $inp }}">
-                    <p data-err="time" class="{{ $err }}"></p>
-                </div>
-                <div data-field="cabin" class="hidden">
-                    <label class="{{ $lbl }}" for="wk-nights">Jumlah Malam</label>
-                    <input id="wk-nights" name="nights" type="number" min="1" max="14" value="1" class="{{ $inp }}">
-                    <p data-err="nights" class="{{ $err }}"></p>
-                </div>
-                <div data-field="tiket">
-                    <label class="{{ $lbl }}" for="wk-qty">Jumlah Pengunjung</label>
-                    <input id="wk-qty" name="qty" type="number" min="1" max="30" value="1" class="{{ $inp }}">
-                    <p data-err="qty" class="{{ $err }}"></p>
-                </div>
-                <div>
-                    <label class="{{ $lbl }}" for="wk-status">Status</label>
-                    <select id="wk-status" name="status" class="{{ $inp }}">
-                        @foreach (array_keys($status) as $st)
-                            <option value="{{ $st }}" {{ $st === 'Lunas' ? 'selected' : '' }}>{{ $st }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-span-2 flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
-                    <span class="text-[11px] font-medium text-slate-600">Total Tagihan</span>
-                    <b data-wk-total class="text-[18px] text-[#0B3A22]">Rp 0</b>
-                </div>
-                <p data-wk-error class="col-span-2 hidden rounded-lg bg-red-50 px-3 py-2 text-[11px] font-medium text-red-700"></p>
+        <div class="grid grid-cols-2 gap-4 px-6 py-5">
+            <div class="col-span-2">
+                <label class="{{ $lbl }}" for="wk-guest">Nama Tamu</label>
+                <input id="wk-guest" name="guest" type="text" maxlength="60" placeholder="Contoh: Budi Santoso" class="{{ $inp }}">
+                <p data-err="guest" class="{{ $err }}"></p>
             </div>
+            <div class="col-span-2">
+                <label class="{{ $lbl }}" for="wk-phone">No. WhatsApp</label>
+                <input id="wk-phone" name="phone" type="tel" inputmode="tel" placeholder="+62 812-0000-000" class="{{ $inp }}">
+                <p data-err="phone" class="{{ $err }}"></p>
+            </div>
+            <div class="col-span-2">
+                <label class="{{ $lbl }}" for="wk-service">Layanan</label>
+                <select id="wk-service" name="service" class="{{ $inp }}">
+                    <optgroup label="Tiket Kolam">
+                        <option value="classic">Kolam Air Panas Classic — Rp 45.000/orang</option>
+                        <option value="premier">Belerang Premier VIP — Rp 85.000/orang</option>
+                    </optgroup>
+                    <optgroup label="Cabin Suite">
+                        <option value="pinus">Pinus Cabin Suite — Rp 1.040.000/malam</option>
+                        <option value="magnolia">Magnolia Cabin Suite — Rp 1.040.000/malam</option>
+                        <option value="eukaliptus">Eukaliptus Cabin Suite — Rp 1.040.000/malam</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div>
+                <label class="{{ $lbl }}" for="wk-date">Tanggal</label>
+                <input id="wk-date" name="date" type="date" class="{{ $inp }}">
+                <p data-err="date" class="{{ $err }}"></p>
+            </div>
+            <div data-field="tiket">
+                <label class="{{ $lbl }}" for="wk-time">Jam Kunjungan</label>
+                <input id="wk-time" name="time" type="time" class="{{ $inp }}">
+                <p data-err="time" class="{{ $err }}"></p>
+            </div>
+            <div data-field="cabin" class="hidden">
+                <label class="{{ $lbl }}" for="wk-nights">Jumlah Malam</label>
+                <input id="wk-nights" name="nights" type="number" min="1" max="14" value="1" class="{{ $inp }}">
+                <p data-err="nights" class="{{ $err }}"></p>
+            </div>
+            <div data-field="tiket">
+                <label class="{{ $lbl }}" for="wk-qty">Jumlah Pengunjung</label>
+                <input id="wk-qty" name="qty" type="number" min="1" max="30" value="1" class="{{ $inp }}">
+                <p data-err="qty" class="{{ $err }}"></p>
+            </div>
+            <div>
+                <label class="{{ $lbl }}" for="wk-status">Status</label>
+                <select id="wk-status" name="status" class="{{ $inp }}">
+                    @foreach (array_keys($status) as $st)
+                        <option value="{{ $st }}" {{ $st === 'Lunas' ? 'selected' : '' }}>{{ $st }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-span-2 flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
+                <span class="text-[11px] font-medium text-slate-600">Total Tagihan</span>
+                <b data-wk-total class="text-[18px] text-[#0B3A22]">Rp 0</b>
+            </div>
+            <p data-wk-error class="col-span-2 hidden rounded-lg bg-red-50 px-3 py-2 text-[11px] font-medium text-red-700"></p>
+        </div>
 
-            <div class="flex justify-end gap-2 border-t border-slate-100 bg-slate-50 px-6 py-4">
+        <div class="flex justify-end gap-2 border-t border-slate-100 bg-slate-50 px-6 py-4">
+            <button type="button" data-close class="{{ $btnG }}">Batal</button>
+            <button type="submit" class="{{ $btnP }}">{!! $ic($p['check'], 'h-4 w-4') !!} Simpan Reservasi</button>
+        </div>
+    </form>
+</div>
+
+{{-- Modal Unduh Laporan --}}
+<div data-modal="report" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="rp-title">
+    <div data-close class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+    <form id="report-form" data-panel class="relative w-full max-w-md scale-95 overflow-hidden rounded-2xl bg-white opacity-0 shadow-xl transition duration-200">
+        <div class="flex items-start justify-between border-b border-slate-100 px-6 py-4">
+            <div>
+                <h3 id="rp-title" class="text-[16px] font-bold text-slate-900">Unduh Laporan Ringkas</h3>
+                <p class="mt-0.5 text-[11px] text-slate-500">Hari ini, 20 Sep 2026. Pilih format dan isi laporan.</p>
+            </div>
+            <button type="button" data-close class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Tutup">{!! $ic($p['x'], 'h-5 w-5') !!}</button>
+        </div>
+
+        <div class="space-y-4 px-6 py-5">
+            <div>
+                <p class="{{ $lbl }}">Format</p>
+                <div class="grid grid-cols-2 gap-2">
+                    @foreach ([['csv', 'CSV (Excel)', 'Data tabel, bisa dibuka di Excel'], ['pdf', 'PDF / Cetak', 'Tampilan siap cetak']] as [$v, $t, $d])
+                        <label class="cursor-pointer">
+                            <input type="radio" name="format" value="{{ $v }}" class="peer sr-only" {{ $loop->first ? 'checked' : '' }}>
+                            <span class="block rounded-xl border border-slate-200 p-3 transition peer-checked:border-[#0B3A22] peer-checked:bg-[#0B3A22]/5 peer-checked:ring-2 peer-checked:ring-[#0B3A22]/15">
+                                <b class="block text-[12px] text-slate-900">{{ $t }}</b><span class="text-[10px] text-slate-500">{{ $d }}</span>
+                            </span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+            <div>
+                <p class="{{ $lbl }}">Isi laporan</p>
+                <div class="space-y-2">
+                    @foreach ([['summary', 'Ringkasan pendapatan & tiket'], ['reservations', 'Daftar reservasi'], ['quota', 'Kuota tiket & okupansi kabin']] as [$v, $t])
+                        <label class="flex cursor-pointer items-center gap-2.5 text-[12px] text-slate-700">
+                            <input type="checkbox" name="sections" value="{{ $v }}" checked class="h-4 w-4 rounded border-slate-300 accent-[#0B3A22]"> {{ $t }}
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+            <p data-rp-error class="hidden rounded-lg bg-red-50 px-3 py-2 text-[11px] font-medium text-red-700"></p>
+        </div>
+
+        <div class="flex justify-end gap-2 border-t border-slate-100 bg-slate-50 px-6 py-4">
+            <button type="button" data-close class="{{ $btnG }}">Batal</button>
+            <button type="submit" class="{{ $btnP }}">{!! $ic($p['download'], 'h-4 w-4') !!} Unduh Laporan</button>
+        </div>
+    </form>
+</div>
+
+{{-- Modal Atur Kuota Tiket --}}
+<div data-modal="quota" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="quota-title">
+    <div data-close class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+    <div data-panel class="relative w-full max-w-md scale-95 rounded-2xl bg-white p-6 opacity-0 shadow-xl transition duration-200">
+        <div class="mb-4 flex items-start justify-between">
+            <div>
+                <h3 id="quota-title" class="text-[16px] font-bold text-slate-900">Atur Kuota Tiket</h3>
+                <p class="mt-1 text-[11px] leading-relaxed text-slate-600">Sesuaikan kapasitas harian tiket renang Classic dan Premier.</p>
+            </div>
+            <button type="button" data-close class="text-slate-400 transition hover:text-slate-600" aria-label="Tutup">
+                {!! $ic($p['x'], 'h-5 w-5') !!}
+            </button>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <label for="quota-classic" class="{{ $lbl }}">Tiket Renang Classic (kapasitas)</label>
+                <input id="quota-classic" type="number" min="0" max="100000" value="200" class="{{ $inp }}">
+            </div>
+            <div>
+                <label for="quota-premier" class="{{ $lbl }}">Tiket Renang Premier (kapasitas)</label>
+                <input id="quota-premier" type="number" min="0" max="100000" value="100" class="{{ $inp }}">
+            </div>
+            <p id="quota-error" class="{{ $err }}"></p>
+            <div class="flex justify-end gap-2 pt-1">
                 <button type="button" data-close class="{{ $btnG }}">Batal</button>
-                <button type="submit" class="{{ $btnP }}">{!! $ic($p['check'], 'h-4 w-4') !!} Simpan Reservasi</button>
+                <button type="button" id="quota-save" class="{{ $btnP }}">Simpan Kuota</button>
             </div>
-        </form>
+        </div>
     </div>
+</div>
 
-    {{-- ================= MODAL: UNDUH LAPORAN ================= --}}
-    <div data-modal="report" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="rp-title">
-        <div data-close class="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"></div>
-        <form id="report-form" data-panel class="relative w-full max-w-md scale-95 overflow-hidden rounded-2xl bg-white opacity-0 shadow-2xl transition duration-200">
-            <div class="flex items-start justify-between border-b border-slate-100 px-6 py-4">
-                <div>
-                    <h3 id="rp-title" class="text-[16px] font-bold text-slate-900">Unduh Laporan Ringkas</h3>
-                    <p class="mt-0.5 text-[11px] text-slate-500">Hari ini, 20 Sep 2026. Pilih format dan isi laporan.</p>
-                </div>
-                <button type="button" data-close class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Tutup">{!! $ic($p['x'], 'h-5 w-5') !!}</button>
+{{-- Modal Detail Reservasi --}}
+<div data-modal="resv" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="resv-title">
+    <div data-close class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+    <div data-panel class="relative w-full max-w-md scale-95 rounded-2xl bg-white p-6 opacity-0 shadow-xl transition duration-200">
+        <div class="mb-4 flex items-start justify-between">
+            <div>
+                <h3 id="resv-title" class="text-[16px] font-bold text-slate-900">Detail Reservasi</h3>
+                <p class="mt-1 text-[11px] leading-relaxed text-slate-600">Rincian booking pada tabel reservasi terbaru.</p>
             </div>
-
-            <div class="space-y-4 px-6 py-5">
-                <div>
-                    <p class="{{ $lbl }}">Format</p>
-                    <div class="grid grid-cols-2 gap-2">
-                        @foreach ([['csv', 'CSV (Excel)', 'Data tabel, bisa dibuka di Excel'], ['pdf', 'PDF / Cetak', 'Tampilan siap cetak']] as [$v, $t, $d])
-                            <label class="cursor-pointer">
-                                <input type="radio" name="format" value="{{ $v }}" class="peer sr-only" {{ $loop->first ? 'checked' : '' }}>
-                                <span class="block rounded-xl border border-slate-200 p-3 transition peer-checked:border-[#0B3A22] peer-checked:bg-[#0B3A22]/5 peer-checked:ring-2 peer-checked:ring-[#0B3A22]/15">
-                                    <b class="block text-[12px] text-slate-900">{{ $t }}</b><span class="text-[10px] text-slate-500">{{ $d }}</span>
-                                </span>
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-                <div>
-                    <p class="{{ $lbl }}">Isi laporan</p>
-                    <div class="space-y-2">
-                        @foreach ([['summary', 'Ringkasan pendapatan & tiket'], ['reservations', 'Daftar reservasi'], ['quota', 'Kuota tiket & okupansi kabin']] as [$v, $t])
-                            <label class="flex cursor-pointer items-center gap-2.5 text-[12px] text-slate-700">
-                                <input type="checkbox" name="sections" value="{{ $v }}" checked class="h-4 w-4 rounded border-slate-300 accent-[#0B3A22]"> {{ $t }}
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-                <p data-rp-error class="hidden rounded-lg bg-red-50 px-3 py-2 text-[11px] font-medium text-red-700"></p>
-            </div>
-
-            <div class="flex justify-end gap-2 border-t border-slate-100 bg-slate-50 px-6 py-4">
-                <button type="button" data-close class="{{ $btnG }}">Batal</button>
-                <button type="submit" class="{{ $btnP }}">{!! $ic($p['download'], 'h-4 w-4') !!} Unduh Laporan</button>
-            </div>
-        </form>
+            <button type="button" data-close class="text-slate-400 transition hover:text-slate-600" aria-label="Tutup">
+                {!! $ic($p['x'], 'h-5 w-5') !!}
+            </button>
+        </div>
+        <dl class="divide-y divide-slate-100 text-[12px]">
+            <div class="flex items-center justify-between gap-4 py-2.5"><dt class="text-slate-500">Kode</dt><dd data-resv="code" class="text-right font-semibold text-slate-900">-</dd></div>
+            <div class="flex items-center justify-between gap-4 py-2.5"><dt class="text-slate-500">Nama Tamu</dt><dd data-resv="guest" class="text-right font-semibold text-slate-900">-</dd></div>
+            <div class="flex items-center justify-between gap-4 py-2.5"><dt class="text-slate-500">No. WhatsApp</dt><dd data-resv="phone" class="text-right text-slate-900">-</dd></div>
+            <div class="flex items-center justify-between gap-4 py-2.5"><dt class="text-slate-500">Tipe Layanan</dt><dd data-resv="service" class="text-right text-slate-900">-</dd></div>
+            <div class="flex items-center justify-between gap-4 py-2.5"><dt class="text-slate-500">Jadwal</dt><dd data-resv="date" class="text-right text-slate-900">-</dd></div>
+            <div class="flex items-center justify-between gap-4 py-2.5"><dt class="text-slate-500">Status</dt><dd data-resv="status" class="text-right font-semibold text-slate-900">-</dd></div>
+        </dl>
+        <div class="mt-5 flex justify-end">
+            <button type="button" data-close class="{{ $btnP }}">Tutup</button>
+        </div>
     </div>
+</div>
 
-    {{-- Notifikasi singkat --}}
-    <div id="toast" class="pointer-events-none fixed bottom-6 right-6 z-[60] translate-y-4 rounded-xl bg-slate-900 px-4 py-3 text-[12px] font-medium text-white opacity-0 shadow-xl transition duration-300" role="status" aria-live="polite"></div>
-
+<div id="toast" class="pointer-events-none fixed bottom-6 right-6 z-[60] flex translate-y-4 items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-[12px] font-medium text-white opacity-0 shadow-xl transition duration-300" role="status" aria-live="polite"></div>
 @endsection
 
 @push('scripts')
@@ -558,7 +529,7 @@
         };
 
         const S = { revenue: 14850000, sold: 185, q1: 120, q2: 65 };
-        const CAP = 300, Q1_CAP = 200, Q2_CAP = 100;
+        let CAP = 300, Q1_CAP = 200, Q2_CAP = 100;
 
         const render = () => {
             animate($('[data-revenue]'), S.revenue, 1200);
@@ -569,10 +540,12 @@
             $('[data-sold-bar]').style.width = pct + '%';
             $('[data-sold-pct]').textContent = pct + '% Terisi';
             $('[data-sold-left]').textContent = 'Sisa ' + (CAP - S.sold) + ' Slot';
-            const q1pct = Math.round((S.q1 / Q1_CAP) * 100);
+            $('[data-q1-cap]').textContent = Q1_CAP;
+            $('[data-q2-cap]').textContent = Q2_CAP;
+            const q1pct = Q1_CAP ? Math.round((S.q1 / Q1_CAP) * 100) : 0;
             $('[data-q1-bar]').style.width = q1pct + '%';
             $('[data-q1-text]').textContent = 'Sisa ' + (Q1_CAP - S.q1) + ' tiket (' + q1pct + '%)';
-            const q2pct = Math.round((S.q2 / Q2_CAP) * 100);
+            const q2pct = Q2_CAP ? Math.round((S.q2 / Q2_CAP) * 100) : 0;
             $('[data-q2-bar]').style.width = q2pct + '%';
             $('[data-q2-text]').textContent = 'Sisa ' + (Q2_CAP - S.q2) + ' tiket (' + q2pct + '%)';
         };
@@ -686,14 +659,71 @@
             if (!opener) return;
             if (opener.dataset.open === 'walkin') openWalkin();
             if (opener.dataset.open === 'report') openModal('report');
+            if (opener.dataset.open === 'quota') { syncQuotaInputs(); openModal('quota'); }
+        });
+
+        // =====================================================================
+        //  ATUR KUOTA TIKET (Classic & Premier)
+        // =====================================================================
+        const qClassic = $('#quota-classic');
+        const qPremier = $('#quota-premier');
+        const qError = $('#quota-error');
+
+        const syncQuotaInputs = () => {
+            qClassic.value = Q1_CAP;
+            qPremier.value = Q2_CAP;
+            qError.classList.add('hidden');
+        };
+
+        $('#quota-save').addEventListener('click', () => {
+            const c = Number(qClassic.value);
+            const p = Number(qPremier.value);
+            if (!Number.isInteger(c) || !Number.isInteger(p) || c < 0 || p < 0 || c > 100000 || p > 100000) {
+                qError.textContent = 'Masukkan angka kuota yang valid (0 - 100000).';
+                qError.classList.remove('hidden');
+                return;
+            }
+            if (c < S.q1 || p < S.q2) {
+                qError.textContent = 'Kuota tidak boleh lebih kecil dari yang sudah terjual (Classic ' + S.q1 + ', Premier ' + S.q2 + ').';
+                qError.classList.remove('hidden');
+                return;
+            }
+            Q1_CAP = c;
+            Q2_CAP = p;
+            render();
+            closeModal();
+            toast('Kuota tiket diperbarui');
+        });
+
+        // =====================================================================
+        //  AKSI TABEL RESERVASI (buka detail, tanpa database)
+        // =====================================================================
+        const resvCellText = (el) => el
+            ? el.innerHTML.split(/<br\s*\/?>/i).map((s) => s.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').trim()).filter(Boolean).join(' ')
+            : '-';
+
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-resv-action]');
+            if (!btn) return;
+            const row = btn.closest('[data-type]');
+            if (!row) return;
+            const c = row.children;
+            const fill = (key, value) => { const el = $(`[data-resv="${key}"]`); if (el) el.textContent = value; };
+            fill('code', resvCellText(c[0]));
+            fill('guest', resvCellText(c[1] && c[1].children[0]));
+            fill('phone', resvCellText(c[1] && c[1].children[1]));
+            fill('service', resvCellText(c[2]));
+            fill('date', resvCellText(c[3]));
+            fill('status', resvCellText(c[4]));
+            openModal('resv');
         });
 
         // =====================================================================
         //  RESERVASI WALK-IN
         // =====================================================================
         const SERVICES = {
-            classic:    { lines: ['Kolam Air', 'Panas', 'Classic'], type: 'tiket', price: 45000 },
-            premier:    { lines: ['Belerang', 'Premier', 'VIP'],    type: 'tiket', price: 85000 },
+            classic:    { lines: ['Tiket Renang', 'Classic'], type: 'tiket', price: 45000 },
+            premier:    { lines: ['Tiket Renang', 'Premier'], type: 'tiket', price: 85000 },
             pinus:      { lines: ['Pinus', 'Cabin', 'Suite'],       type: 'cabin', price: 1040000 },
             magnolia:   { lines: ['Magnolia', 'Cabin', 'Suite'],    type: 'cabin', price: 1040000 },
             eukaliptus: { lines: ['Eukaliptus', 'Cabin', 'Suite'],  type: 'cabin', price: 1040000 },
@@ -837,11 +867,11 @@
         const buildReport = (sections) => {
             const out = { title: 'Laporan Ringkas Operasional - Jiwanta Ciwidey', period: 'Hari ini, 20 Sep 2026', blocks: [] };
             if (sections.includes('summary')) out.blocks.push({ name: 'Ringkasan', head: ['Indikator', 'Nilai'], rows: [
-                ['Pendapatan hari ini', rp(S.revenue)], ['Tiket terjual', `${S.sold} / ${CAP}`], ['Okupansi kabin', '3 / 3 (100%)'], ['Struk perlu verifikasi', $('[data-batch]').textContent],
+                ['Pendapatan hari ini', rp(S.revenue)], ['Tiket terjual', `${S.sold} / ${CAP}`], ['Okupansi cabin', '2 / 2 (100%)'], ['Struk perlu verifikasi', $('[data-batch]').textContent],
             ] });
             if (sections.includes('reservations')) out.blocks.push({ name: 'Daftar Reservasi', head: ['Kode', 'Nama Tamu', 'No. WhatsApp', 'Layanan', 'Jadwal', 'Status'], rows: readReservations() });
             if (sections.includes('quota')) out.blocks.push({ name: 'Kuota & Okupansi', head: ['Kolam / Unit', 'Terjual', 'Kapasitas', 'Sisa'], rows: [
-                ['Kolam Air Panas Classic', S.q1, Q1_CAP, Q1_CAP - S.q1], ['Kolam Belerang Premier', S.q2, Q2_CAP, Q2_CAP - S.q2], ['Cabin Suite (3 unit)', 3, 3, 0],
+                ['Tiket Renang Classic', S.q1, Q1_CAP, Q1_CAP - S.q1], ['Tiket Renang Premier', S.q2, Q2_CAP, Q2_CAP - S.q2], ['Cabin Suite & Cabin Short (2 unit)', 2, 2, 0],
             ] });
             return out;
         };

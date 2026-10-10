@@ -1,8 +1,9 @@
-@extends('layouts.dashboard')
+@extends('layouts.pengunjung')
 
 @section('title', 'Beranda - Jiwanta')
+@section('page-label', 'Beranda')
 
-@section('content')
+@section('page-content')
 
 @php
     // ---------- Helper ----------
@@ -57,18 +58,6 @@
 
     $shadow = 'shadow-[0_4px_18px_rgba(15,69,39,0.08)]';
 @endphp
-
-<div class="min-h-screen w-full bg-slate-200">
-    <div class="relative mx-auto min-h-screen w-full max-w-[390px] overflow-x-clip bg-[#F9F8FF] pb-28 shadow-2xl">
-
-        {{-- ========== HEADER (menempel saat scroll) ========== --}}
-        <header id="top-header" class="sticky top-0 z-40 flex items-center justify-between bg-[#F9F8FF]/85 px-5 py-3 backdrop-blur transition-shadow duration-300">
-            <span class="text-[19px] font-bold tracking-tight text-[#0B3A22]">Jiwanta</span>
-            <div class="flex items-center gap-3">
-                <span class="text-[13px] font-medium text-slate-600">Beranda</span>
-                <img src="{{ asset('images/profil.jpg') }}" alt="Profil" class="h-9 w-9 rounded-full bg-[#C9B99A] object-cover">
-            </div>
-        </header>
 
         {{-- ========== HERO ========== --}}
         <section id="hero" class="relative overflow-hidden rounded-b-[40px] bg-gradient-to-b from-[#0B3A22] via-[#0F4527] to-[#0B3A22] px-5 pb-16 pt-5 text-white">
@@ -241,40 +230,6 @@
                 </a>
             </section>
         </main>
-
-        {{-- ========== BOTTOM NAV ========== --}}
-        <nav class="fixed bottom-0 left-1/2 z-30 w-full max-w-[390px] -translate-x-1/2 bg-white pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-4px_16px_rgba(11,46,34,0.06)]" aria-label="Navigasi utama">
-            <div class="flex items-center justify-around px-2 pt-3 pb-3.5">
-                <a href="{{ route('dashboard') }}" class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
-                    <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 3l4.2 6.2h-2l3.3 4.6h-2.3L15 18.5H1l3.8-4.7H2.6L6 9.2H4z"/>
-                        <path d="M17 8l3.6 5.2h-1.8L22 17.5h-4.5v3H16v-3h-1.4z" opacity=".85"/>
-                        <path d="M7 18.5h2V21H7z"/>
-                    </svg>
-                    <span class="text-[10.5px] font-bold">Beranda</span>
-                </a>
-                <a href="{{ route('reservasi') }}" class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1v-9z"/>
-                    </svg>
-                    <span class="text-[10.5px] font-bold">Reservasi</span>
-                </a>
-                <a href="{{ route('transaksi') }}" aria-current="page" class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
-                    <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                        <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v17l2-1.2 2 1.2 2-1.2 2 1.2 2-1.2 2 1.2 2-1.2V4a2 2 0 00-2-2H6zm2 5h8v2H8V7zm0 4h8v2H8v-2zm0 4h5v2H8v-2z" clip-rule="evenodd"/>
-                    </svg>
-                    <span class="text-[10.5px] font-extrabold">Transaksi</span>
-                </a>
-                <a href="{{ route('tiket') }}" class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
-                    </svg>
-                    <span class="text-[10.5px] font-bold">Tiket Saya</span>
-                </a>
-            </div>
-        </nav>
-    </div>
-</div>
 
 @endsection
 

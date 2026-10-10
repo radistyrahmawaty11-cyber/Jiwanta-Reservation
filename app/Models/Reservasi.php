@@ -13,11 +13,15 @@ class Reservasi extends Model
         'nama_reservasi',
         'tgl_reservasi',
         'jenis_reservasi',
-        'pengguna_id',
+        'id_pengguna',
+        'jumlah_orang',
+        'status',
+        'keterangan',
+        'total_harga',
     ];
 
     public function pengguna()
     {
-        return $this->belongsTo(Pengguna::class);
+        return $this->belongsTo(Pengguna::class, 'id_pengguna');
     }
 }

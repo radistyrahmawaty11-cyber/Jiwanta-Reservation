@@ -12,7 +12,7 @@
     <div class="flex justify-between items-center mb-1.5">
         <label for="{{ $name }}" class="text-sm font-medium text-gray-700">{{ $label }}</label>
         @if($showToggle)
-            <a href="#" class="text-sm text-gray-500 hover:text-jiwanta transition">Lupa Sandi?</a>
+            <a href="{{ route('password.request') }}" class="text-sm text-gray-500 hover:text-jiwanta transition">Lupa Sandi?</a>
         @endif
     </div>
     <div class="relative">

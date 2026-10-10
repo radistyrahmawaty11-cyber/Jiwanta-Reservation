@@ -11,13 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('penggunas', function (Blueprint $table) {
+        Schema::create('banks', function (Blueprint $table) {
             $table->id();
-            $table->string('nama_pengguna', 100);
-            $table->string('email', 50)->unique();
-            $table->string('password');
-            $table->string('nohp', 15);
-            $table->enum('role', ['admin', 'pengunjung', 'petugas']);
+            $table->enum('kode', ['bca', 'mandiri']);
+            $table->string('nama', 100);
+            $table->string('nomor_rekening', 50);
+            $table->string('atas_nama', 100);
+            $table->string('cabang', 100)->nullable();
+            $table->boolean('is_utama')->default(false);
             $table->timestamps();
         });
     }
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('penggunas');
+        Schema::dropIfExists('banks');
     }
 };
