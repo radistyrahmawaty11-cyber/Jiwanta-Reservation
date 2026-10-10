@@ -316,6 +316,7 @@
                         </section>
                     </div>
                 </div>
+<<<<<<< HEAD
 @endsection
 
 @section('overlays')
@@ -378,6 +379,8 @@
 </div>
 
 <div id="toast" class="pointer-events-none fixed bottom-6 right-6 z-[60] flex translate-y-4 items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-[12px] font-medium text-white opacity-0 shadow-xl transition duration-300" role="status" aria-live="polite"></div>
+=======
+>>>>>>> d0c70c8d31d52cecb4d10594c5c6910a3c2cf03b
 @endsection
 
 @push('scripts')

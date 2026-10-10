@@ -60,11 +60,17 @@
             <span class="flex items-center gap-2 text-[10px] font-semibold text-slate-700">{!! $ic($p['clock'], 'h-3.5 w-3.5') !!} Shift Pagi 07:00 - 15:00</span>
             <span class="h-2 w-2 rounded-full bg-[#0B3A22]"></span>
         </div>
+<<<<<<< HEAD
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-lg bg-red-50 py-2.5 text-[11px] font-bold text-red-700 transition hover:bg-red-100">
                 {!! $ic($p['logout'], 'h-4 w-4') !!} Keluar Sistem
             </button>
         </form>
+=======
+        <button type="button" class="flex w-full items-center justify-center gap-2 rounded-lg bg-red-50 py-2.5 text-[11px] font-bold text-red-700 transition hover:bg-red-100">
+            {!! $ic($p['logout'], 'h-4 w-4') !!} Keluar Sistem
+        </button>
+>>>>>>> d0c70c8d31d52cecb4d10594c5c6910a3c2cf03b
     </div>
 </aside>

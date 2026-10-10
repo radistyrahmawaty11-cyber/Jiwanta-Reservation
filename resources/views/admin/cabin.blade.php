@@ -63,6 +63,7 @@
         'spark'     => 'M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z',
         'x'         => 'M6 6l12 12M18 6L6 18',
         'copy'      => 'M9 9h10v11H9zM5 15V4h10',
+        'trash'     => 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16',
     ];
 
     $nav = [
@@ -77,26 +78,101 @@
 
     $card = 'rounded-2xl bg-white shadow-sm border border-slate-200';
     $cap = 'text-[9px] font-bold uppercase leading-snug tracking-wide text-slate-600';
-
-    // Master data unit
-    $units = [
-        [
-            'key' => 'suite', 'no' => 'Unit 01', 'img' => 'images/cabin-suite.jpg', 'title' => 'Cabin Suite',
-            'badge' => ['Tamu Check-in Hari ini', 'bg-[#FBD9B0] text-[#6B4520]', 'bg-[#7A5230]'],
-            'capIcon' => 'users', 'cap' => 'Kapasitas: 4-5 orang',
-            'amen' => [['bed', 'King Bed'], ['tv', 'Smart TV'], ['fire', 'Private Hot Spring'], ['food', 'Sarapan 2 Pax'], ['wifi', 'High-Speed WiFi']],
-            'normal' => 1250000, 'weekend' => 1500000, 'guest' => null, 'primary' => 'booking',
-        ],
-        [
-            'key' => 'shorts', 'no' => 'Unit 02', 'img' => 'images/cabin-shorts.jpg', 'title' => 'Cabin Shorts',
-            'badge' => ['Tamu Check-in Hari ini', 'bg-[#FBD9B0] text-[#6B4520]', 'bg-[#7A5230]'],
-            'capIcon' => 'users', 'cap' => 'Kapasitas: 4 orang',
-            'amen' => [['bed', '2 Queen Bed'], ['sofa', 'Living Room'], ['kitchen', 'Dapur Kecil'], ['deck', 'Private Forest Deck'], ['wifi', 'High-Speed WiFi']],
-            'normal' => 2100000, 'weekend' => 2450000, 'guest' => ['Tamu: Mariana S. (4 Dewasa)', 'Tiba Estimasi', '14:00 WIB'], 'primary' => 'tarif',
-        ],
-    ];
 @endphp
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+    {{-- ================= LAYOUT CONTAINER ================= --}}
+    <div class="min-w-full bg-slate-50 flex">
+
+    {{-- ================= SIDEBAR ================= --}}
+    <aside class="w-[240px] shrink-0 bg-white border-r border-slate-200 flex flex-col">
+        <div class="px-5 pt-6 pb-4">
+            <div class="flex items-center gap-3">
+                <span class="flex h-[26px] w-[26px] items-center justify-center rounded-lg bg-[#0B3A22] text-[#B5F0BE]">{!! $ic($p['tree'], 'h-4 w-4') !!}</span>
+                <div>
+                    <p class="text-[13px] font-bold leading-tight tracking-wide">JIWANTA</p>
+                    <p class="text-[8px] font-semibold uppercase leading-tight tracking-wider text-slate-600">Ciwidey Resort</p>
+                </div>
+            </div>
+            <span class="mt-4 inline-flex items-center gap-2 rounded-full {{ $mint }} px-3 py-1.5 text-[10px] font-bold">
+                <span class="h-2 w-2 rounded-full bg-[#0B3A22]"></span> Sistem Operasional Aktif
+            </span>
+        </div>
+
+        <nav class="flex-1 px-4 space-y-6 overflow-y-auto">
+            @foreach ($nav as $label => $items)
+                <div>
+                    <p class="mb-2 px-2 text-[9px] font-bold uppercase tracking-wider text-slate-500">{{ $label }}</p>
+                    <ul class="space-y-1">
+                        @foreach ($items as [$text, $icon, $active, $badge])
+                            <li>
+                                <a href="{{ route($active ? 'cabin' : 'manajemen-pengguna') }}" class="flex h-[36px] items-center gap-3 rounded-lg px-3 text-[13px] font-medium transition {{ $active ? 'bg-[#0B3A22] text-white' : 'text-slate-700 hover:bg-slate-50' }}">
+                                    {!! $ic($p[$icon], 'h-4 w-4 shrink-0') !!}
+                                    <span class="flex-1">{{ $text }}</span>
+                                    @if ($badge)
+                                        <span class="rounded-full {{ $peach }} px-2 py-0.5 text-[10px] font-bold text-[#6B4520]">{{ $badge }}</span>
+                                    @endif
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endforeach
+        </nav>
+
+        <div class="border-t border-slate-200 p-4">
+            <div class="mb-3 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+                <span class="flex items-center gap-2 text-[10px] font-semibold text-slate-700">{!! $ic($p['clock'], 'h-3.5 w-3.5') !!} Shift Pagi 07:00 - 15:00</span>
+                <span class="h-2 w-2 rounded-full bg-[#0B3A22]"></span>
+            </div>
+
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-lg {{ $lav }} py-2.5 text-[11px] font-bold text-red-700 transition hover:brightness-95">
+                    {!! $ic($p['logout'], 'h-4 w-4') !!} Keluar Sistem
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    {{-- ================= MAIN CONTENT ================= --}}
+    <div class="flex-1 flex flex-col min-w-0">
+
+        {{-- Topbar --}}
+        <header class="h-[60px] bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-2">
+                <p class="text-[11px] text-slate-600">Sistem Jiwanta</p>
+                <span class="text-slate-400">/</span>
+                <b class="text-[11px] font-semibold text-[#0B3A22]">Panel Kendali Utama</b>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-[10px] font-medium">{!! $ic($p['snow'], 'h-3.5 w-3.5') !!} Ciwidey 18°C Kabut Sejuk</span>
+                <span class="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-[10px] font-medium text-emerald-700">
+                    <span class="relative flex h-2 w-2"><span class="absolute h-full w-full animate-ping rounded-full bg-emerald-600 opacity-60"></span><span class="relative h-2 w-2 rounded-full bg-emerald-600"></span></span>
+                    Gate Turnstile Online
+                </span>
+                <button type="button" class="relative h-10 w-10 flex items-center justify-center rounded-full bg-slate-100 transition hover:bg-slate-200" aria-label="Notifikasi">
+                    {!! $ic($p['bell'], 'h-5 w-5') !!}
+                    <span data-notif class="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-600 border-2 border-white"></span>
+                </button>
+                <div class="flex items-center gap-3 pl-3 border-l border-slate-200">
+                    <img src="{{ asset('images/profil.jpg') }}" alt="Profil" class="h-10 w-10 rounded-full bg-[#C9B99A] object-cover border-2 border-white shadow-sm">
+                    <div>
+                        <p class="text-[11px] font-bold leading-tight">Bagas Dananjaya</p>
+                        <p class="text-[9px] font-medium uppercase leading-tight text-slate-600">Super Admin Resort</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        {{-- Content Area --}}
+        <main class="flex-1 p-6 overflow-y-auto">
+            <div class="max-w-7xl mx-auto space-y-6">
+=======
+>>>>>>> 593d6fbd28a469abbe6a7d9a1a3b10fd1a150a7a
+>>>>>>> d0c70c8d31d52cecb4d10594c5c6910a3c2cf03b
 
                 {{-- Header Section --}}
                 <div class="flex items-start justify-between">
@@ -129,7 +205,7 @@
                             <p class="{{ $cap }}">Inventaris Unit</p>
                             <span class="flex h-10 w-10 items-center justify-center rounded-xl {{ $mint }}">{!! $ic($p['cabin'], 'h-5 w-5') !!}</span>
                         </div>
-                        <p class="text-[34px] font-bold leading-tight text-[#0B3A22]"><span data-inv>2</span> <span class="text-[18px] font-medium text-slate-600">Kabin</span></p>
+                        <p class="text-[34px] font-bold leading-tight text-[#0B3A22]"><span data-inv>{{ $cabins->count() }}</span> <span class="text-[18px] font-medium text-slate-600">Kabin</span></p>
                         <div class="mt-3 flex items-end justify-between text-[10px] text-slate-600">
                             <span class="max-w-[110px] leading-snug">Tipe Suite Eksklusif Ciwidey</span>
                             <b class="max-w-[100px] text-right text-[10px] leading-snug text-slate-900">100% Terdaftar PMS</b>
@@ -142,10 +218,10 @@
                             <span class="flex h-10 w-10 items-center justify-center rounded-xl {{ $peach }} text-[#8B5E34]">{!! $ic($p['bed'], 'h-5 w-5') !!}</span>
                         </div>
                         <div class="flex items-start gap-2">
-                            <p class="text-[34px] font-bold leading-[1.1] text-[#0B3A22]"><span data-occ>2</span><br>Unit</p>
-                            <span data-occ-pct class="mt-4 rounded-full {{ $mint }} px-3 py-1 text-[9px] font-bold leading-tight text-[#0B3A22]">100%<br>Okupansi</span>
+                            <p class="text-[34px] font-bold leading-[1.1] text-[#0B3A22]"><span data-occ>0</span><br>Unit</p>
+                            <span data-occ-pct class="mt-4 rounded-full {{ $mint }} px-3 py-1 text-[9px] font-bold leading-tight text-[#0B3A22]">0%<br>Okupansi</span>
                         </div>
-                        <p class="mt-3 flex items-start gap-2 text-[10px] leading-snug text-slate-600"><span class="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[#0B3A22]"></span><span>2 Tamu Menginap, 1 Tamu Segera Check-in</span></p>
+                        <p class="mt-3 flex items-start gap-2 text-[10px] leading-snug text-slate-600"><span class="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[#0B3A22]"></span><span>Data real-time dari sistem</span></p>
                     </div>
 
                     <div data-reveal class="{{ $card }} p-5 hover:shadow-md">
@@ -153,8 +229,8 @@
                             <p class="{{ $cap }}">Status Housekeeping</p>
                             <span class="flex h-10 w-10 items-center justify-center rounded-xl {{ $mint }}">{!! $ic($p['spark'], 'h-5 w-5') !!}</span>
                         </div>
-                        <p class="text-[34px] font-bold leading-tight text-[#0B3A22]"><span data-hk-ready>2</span> Siap <span class="text-[18px] font-medium text-slate-600">/ <span data-hk-service>1</span> Servis</span></p>
-                        <p class="mt-3 flex items-center gap-2 text-[10px] text-slate-600"><span class="text-[#C2762B]">{!! $ic($p['fire'], 'h-3.5 w-3.5') !!}</span> 1 Unit Pembersihan Rutin &amp; Filter Kolam</p>
+                        <p class="text-[34px] font-bold leading-tight text-[#0B3A22]"><span data-hk-ready>{{ $cabins->count() }}</span> Siap</p>
+                        <p class="mt-3 flex items-center gap-2 text-[10px] text-slate-600"><span class="text-[#C2762B]">{!! $ic($p['fire'], 'h-3.5 w-3.5') !!}</span> Semua unit dalam kondisi baik</p>
                     </div>
                 </div>
 
@@ -198,13 +274,40 @@
                         </div>
                         <div id="filters" class="flex flex-wrap items-center justify-end gap-2 text-[10px] font-medium text-slate-600">
                             Filter Tipe:
-                            @foreach ([['all', 'Semua (2)'], ['suite', 'Suite'], ['shorts', 'Shorts']] as [$k, $l])
-                                <button type="button" data-filter="{{ $k }}" class="rounded-full px-3 py-1 text-[10px] font-bold transition {{ $loop->first ? 'bg-[#0B3A22] text-white' : $lav.' text-slate-800 hover:brightness-95' }}">{{ $l }}</button>
-                            @endforeach
+                            @php
+                                $totalCabin = $cabins->count();
+                                $suiteCount = $cabins->where('jenis_cabin', 'suite')->count();
+                                $shortsCount = $cabins->where('jenis_cabin', 'shorts')->count();
+                            @endphp
+                            <button type="button" data-filter="all" class="rounded-full px-3 py-1 text-[10px] font-bold transition bg-[#0B3A22] text-white">Semua ({{ $totalCabin }})</button>
+                            <button type="button" data-filter="suite" class="rounded-full px-3 py-1 text-[10px] font-bold transition bg-[#DDE6FB] text-slate-800 hover:brightness-95">Suite ({{ $suiteCount }})</button>
+                            <button type="button" data-filter="shorts" class="rounded-full px-3 py-1 text-[10px] font-bold transition bg-[#DDE6FB] text-slate-800 hover:brightness-95">Shorts ({{ $shortsCount }})</button>
                         </div>
                     </div>
 
                     <div id="units" class="mt-5 flex flex-wrap justify-center gap-4">
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+                        @foreach ($cabins as $cabin)
+                            <article data-unit="{{ $cabin->jenis_cabin }}" data-reveal class="group relative w-[260px] overflow-hidden rounded-2xl bg-white shadow-md border border-slate-100 hover:shadow-xl">
+                                <span data-shine class="pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-300 bg-[radial-gradient(220px_circle_at_var(--mx,50%)_var(--my,50%),rgba(255,255,255,0.28),transparent_65%)]"></span>
+
+                                <div class="relative h-[158px] overflow-hidden bg-[#1d3b2a]">
+                                    @php
+                                        $imgPath = $cabin->jenis_cabin === 'suite' ? 'images/cabin-suite.jpg' : 'images/cabin-shorts.jpg';
+                                    @endphp
+                                    <img src="{{ asset($imgPath) }}" alt="{{ $cabin->nama_cabin }}" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-[#0B3A22]/80 via-transparent to-black/10"></div>
+
+                                    <span data-badge class="absolute left-3 top-3 z-10 inline-flex cursor-pointer select-none items-center gap-1.5 rounded-full bg-[#FBD9B0] text-[#6B4520] px-2.5 py-1 text-[9px] font-bold transition hover:brightness-95">
+                                        <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-[#7A5230]"></span>
+                                        <span data-badge-text>{{ ucfirst($cabin->status) }}</span>
+                                    </span>
+                                    <span class="absolute right-3 top-3 rounded-md bg-[#0B3A22] px-2 py-1 text-[9px] font-bold text-white">Unit {{ $cabin->id }}</span>
+                                    <h3 class="absolute bottom-3 left-3 text-[16px] font-bold text-white">{{ $cabin->nama_cabin }}</h3>
+=======
+>>>>>>> d0c70c8d31d52cecb4d10594c5c6910a3c2cf03b
                         @foreach ($units as $u)
                             <article data-unit="{{ $u['key'] }}" data-reveal class="group relative w-[260px] overflow-hidden rounded-2xl bg-white shadow-md border border-slate-100 hover:shadow-xl">
                                 <span data-shine class="pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-300 bg-[radial-gradient(220px_circle_at_var(--mx,50%)_var(--my,50%),rgba(255,255,255,0.28),transparent_65%)]"></span>
@@ -216,41 +319,65 @@
                                     </span>
                                     <span class="absolute right-3 top-3 rounded-md bg-[#0B3A22] px-2 py-1 text-[9px] font-bold text-white">{{ $u['no'] }}</span>
                                     <h3 data-title class="absolute bottom-3 left-3 text-[16px] font-bold text-white">{{ $u['title'] }}</h3>
+<<<<<<< HEAD
+=======
+>>>>>>> 593d6fbd28a469abbe6a7d9a1a3b10fd1a150a7a
+>>>>>>> d0c70c8d31d52cecb4d10594c5c6910a3c2cf03b
                                 </div>
 
                                 <div class="p-4">
-                                    <p class="flex items-center gap-2 text-[10px] font-bold text-slate-800"><span class="text-[#0B3A22]">{!! $ic($p[$u['capIcon']], 'h-3.5 w-3.5') !!}</span><span data-cap>{{ $u['cap'] }}</span></p>
-                                    <div data-amen class="mt-3 flex flex-wrap gap-1.5">
-                                        @foreach ($u['amen'] as [$ai, $al])
-                                            <span class="inline-flex items-center gap-1.5 rounded-lg {{ $lav }} px-2 py-1 text-[9px] font-medium text-slate-800 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-sm">{!! $ic($p[$ai], 'h-3 w-3') !!}{{ $al }}</span>
-                                        @endforeach
+                                    <p class="flex items-center gap-2 text-[10px] font-bold text-slate-800">
+                                        <span class="text-[#0B3A22]">{!! $ic('users', 'h-3.5 w-3.5') !!}</span>
+                                        Kapasitas: {{ $cabin->kapasitas }} orang
+                                    </p>
+
+                                    <div class="mt-3 flex flex-wrap gap-1.5">
+                                        <span class="inline-flex items-center gap-1.5 rounded-lg bg-[#DDE6FB] px-2 py-1 text-[9px] font-medium text-slate-800 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-sm">
+                                            {!! $ic('wifi', 'h-3 w-3') !!} High-Speed WiFi
+                                        </span>
                                     </div>
 
                                     <div class="mt-4 space-y-1.5 rounded-xl bg-slate-100 p-3 text-[10px] text-slate-600">
-                                        <div class="flex items-start justify-between gap-2"><span class="leading-snug">Tarif Normal<br>(Weekday)</span><b data-rate-normal class="text-right text-[11px] leading-snug text-slate-900">{{ $rp($u['normal']) }} /<br>malam</b></div>
-                                        <div class="flex items-start justify-between gap-2"><span class="leading-snug">Tarif Weekend<br>(Jum-Sab)</span><b data-rate-weekend class="text-right text-[11px] leading-snug text-[#7A5230]">{{ $rp($u['weekend']) }} /<br>malam</b></div>
+                                        <div class="flex items-start justify-between gap-2">
+                                            <span class="leading-snug">Tarif per Malam</span>
+                                            <b data-rate-normal class="text-right text-[11px] leading-snug text-slate-900">
+                                                Rp {{ number_format($cabin->harga_per_malam, 0, ',', '.') }}
+                                            </b>
+                                        </div>
                                     </div>
 
-                                    @if ($u['guest'])
-                                        <div class="mt-3 flex items-start justify-between gap-2 text-[10px]">
-                                            <span class="leading-snug text-slate-600">{{ $u['guest'][0] }}</span>
-                                            <span class="text-right font-bold leading-snug text-[#7A5230]">{{ $u['guest'][1] }}<br>{{ $u['guest'][2] }}<br><span data-cd class="font-semibold text-[#C2762B]"></span></span>
-                                        </div>
-                                    @endif
+                                    {{-- TOMBOL AKSI (EDIT & HAPUS) --}}
+                                    <div class="mt-4 flex items-center gap-2">
+                                        <button type="button" class="flex-1 rounded-lg bg-[#DDE6FB] px-3 py-2 text-[10px] font-bold text-slate-800 transition hover:brightness-95">Edit</button>
 
-                                    <div class="mt-4 flex items-center gap-1.5">
-                                        <button type="button" data-edit class="rounded-lg {{ $lav }} px-3 py-2 text-[10px] font-bold text-slate-800 transition hover:brightness-95">Edit Unit</button>
-                                        <button type="button" data-tarif class="rounded-lg px-3 py-2 text-[10px] font-bold transition hover:brightness-95 {{ $u['primary'] === 'tarif' ? 'bg-[#7A5230] text-white' : $lav.' text-slate-800' }}">Atur Tarif</button>
-                                        <button type="button" data-booking class="rounded-lg px-3 py-2 text-[10px] font-bold transition hover:brightness-95 {{ $u['primary'] === 'booking' ? 'bg-[#0B3A22] text-white' : $lav.' text-slate-800' }}">Detail Booking</button>
+                                        <form method="POST" action="{{ route('cabin.destroy', $cabin->id) }}" onsubmit="return confirm('Yakin ingin menghapus cabin {{ $cabin->nama_cabin }}?')" class="flex-1">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="w-full rounded-lg bg-red-50 px-3 py-2 text-[10px] font-bold text-red-600 transition hover:bg-red-100 flex items-center justify-center gap-1">
+                                                {!! $ic('trash', 'h-3.5 w-3.5') !!} Hapus
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
                             </article>
                         @endforeach
                     </div>
                 </section>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+            </div>
+        </main>
+    </div>
+    </div>
+
+    {{-- Modal --}}
+=======
+>>>>>>> d0c70c8d31d52cecb4d10594c5c6910a3c2cf03b
 @endsection
 @section('overlays')
     {{-- Modal (Atur Tarif / Detail Booking / Walk-in / Edit Unit / Tambah Unit) --}}
+>>>>>>> 593d6fbd28a469abbe6a7d9a1a3b10fd1a150a7a
     <div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4">
         <div data-m-box class="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
             <div class="flex items-start justify-between">
@@ -275,6 +402,10 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // Variabel dari Laravel untuk menembak Database
+        const STORE_URL = "{{ route('cabin.store') }}";
+        const CSRF_TOKEN = "{{ csrf_token() }}";
+
         const LIVE_DEMO = true;
         const $ = (s, r = document) => r.querySelector(s);
         const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -286,7 +417,6 @@
         const LOCK = 'M6 11h12v9H6zM8 11V8a4 4 0 018 0v3';
         const CLOCK = 'M12 8v4l2 2M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
 
-        // Ikon fasilitas (dipakai saat Edit Unit / Tambah Unit)
         const IC = {
             bed: 'M3 18V7M3 14h18v4M21 14v-2a3 3 0 00-3-3h-7v5',
             tv: 'M4 5h16v11H4zM9 20h6M12 16v4',
@@ -307,7 +437,6 @@
         };
         const chip = (l) => `<span class="inline-flex items-center gap-1.5 rounded-lg bg-[#DDE6FB] px-2 py-1 text-[9px] font-medium text-slate-800 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-sm">${ICON(amenIcon(l), 'h-3 w-3')}${esc(l)}</span>`;
 
-        // ---------- Toast ----------
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const toast = (msg) => {
             const t = document.createElement('div');
@@ -334,7 +463,6 @@
         };
         $$('[data-toast]').forEach((b) => b.addEventListener('click', () => toast(b.dataset.toast)));
 
-        // ---------- State ----------
         const DAYS = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
         const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
         const utc = (y, m, d) => new Date(Date.UTC(y, m, d));
@@ -425,7 +553,6 @@
 
         let filter = 'all';
 
-        // ---------- Stats ----------
         const HK = { ready: 2, service: 1, total: 3 };
         const updateStats = () => {
             const tk = iso(TODAY);
@@ -437,14 +564,12 @@
             tween($('[data-hk-service]'), HK.service);
         };
 
-        // ---------- Week navigation ----------
         $$('[data-week]').forEach((b) => b.addEventListener('click', () => {
             const v = Number(b.dataset.week);
             WS = v === 0 ? TODAY : addDays(WS, v * 7);
             renderTimeline();
         }));
 
-        // ---------- Pilih tanggal bebas ----------
         const picker = $('[data-date-pick]');
         const openPicker = () => {
             picker.value = iso(WS);
@@ -458,7 +583,6 @@
             toast('Timeline dimulai ' + fmtD(picker.value));
         });
 
-        // ---------- Timeline actions (delegation) ----------
         $('#tl-rows').addEventListener('click', (e) => {
             const slotBtn = e.target.closest('[data-slot]');
             if (slotBtn) return openModal(slotBtn.dataset.ukey, 'book', { from: slotBtn.dataset.slot, end: slotBtn.dataset.end });
@@ -476,10 +600,9 @@
                 a.disabled = true;
                 a.textContent = 'Mengirim...';
                 setTimeout(() => { a.disabled = false; a.textContent = 'Kirim Smart PIN'; toast('Smart PIN ' + pin + ' terkirim ke Ibu Mariana'); }, 900);
-            } else toast('Detail slot ' + NAMES[a.dataset.unitId] + ' dibuka.');
+            } else toast('Detail slot ' + (a.dataset.unitId === 'suite' ? 'Cabin Suite' : 'Cabin Shorts') + ' dibuka.');
         });
 
-        // ---------- Filter tipe ----------
         const onC = ['bg-[#0B3A22]', 'text-white'];
         const offC = ['bg-[#DDE6FB]', 'text-slate-800', 'hover:brightness-95'];
         const bindFilter = (tab) => tab.addEventListener('click', () => {
@@ -492,7 +615,6 @@
         });
         $$('[data-filter]').forEach(bindFilter);
 
-        // ---------- Tarif data & modal ----------
         const RATES = { suite: { normal: 1250000, weekend: 1500000 }, shorts: { normal: 2100000, weekend: 2450000 } };
         const NAMES = { suite: 'Cabin Suite', shorts: 'Cabin Shorts' };
         const modal = $('#modal');
@@ -505,7 +627,6 @@
         const clash = (u, x, y, skip) => u.segs.find((sg) => sg !== skip && x <= sg.to && y >= sg.from);
         const unitCard = (key) => $(`[data-unit="${key}"]`);
 
-        // Form Edit Unit / Tambah Unit
         const unitForm = (v, withRates) => `
             <label class="${lbl}">Nama Unit<input data-in="name" type="text" value="${esc(v.name)}" placeholder="mis. Cabin Pinus" class="${dInp} mt-1"></label>
             <div>
@@ -531,7 +652,7 @@
             const wide = mode === 'add' || mode === 'edit';
             $('[data-m-box]').className = 'max-h-[90vh] w-full overflow-y-auto rounded-2xl bg-white p-6 shadow-xl ' + (wide ? 'max-w-md' : 'max-w-sm');
             $('[data-m-title]').textContent = { tarif: 'Atur Tarif', booking: 'Detail Booking', book: 'Booking Walk-in', edit: 'Edit Unit', add: 'Tambah Unit Kabin' }[mode];
-            $('[data-m-sub]').textContent = mode === 'add' ? 'Unit baru langsung muncul di timeline & master data' : NAMES[key];
+            $('[data-m-sub]').textContent = mode === 'add' ? 'Unit baru langsung muncul di timeline & master data' : (key ? NAMES[key] : '');
             $('[data-m-save]').textContent = mode === 'add' ? 'Tambah Unit' : 'Simpan';
             let html = '';
             if (mode === 'tarif') {
@@ -543,11 +664,11 @@
                 const card = unitCard(key);
                 const im = $('[data-img]', card);
                 html = unitForm({
-                    name: u.name,
+                    name: u ? u.name : '',
                     img: im && !im.classList.contains('hidden') ? (im.getAttribute('src') || '') : '',
-                    cap: $('[data-cap]', card).textContent.replace(/^Kapasitas:\s*/, ''),
-                    sub: u.sub,
-                    amen: $$('[data-amen] > span', card).map((s) => s.textContent.trim()).join(', '),
+                    cap: $('[data-cap]', card) ? $('[data-cap]', card).textContent.replace(/^Kapasitas:\s*/, '') : '',
+                    sub: u ? u.sub : '',
+                    amen: card ? $$('[data-amen] > span', card).map((s) => s.textContent.trim()).join(', ') : '',
                 }, false);
             } else if (mode === 'book') {
                 const to = dayDiff(ex.from, ex.end) >= 1 ? iso(addDays(new Date(ex.from + 'T00:00:00Z'), 1)) : ex.from;
@@ -602,9 +723,6 @@
         modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
-        // Ambil nilai foto dari form (upload > URL > foto lama)
-        // CATATAN: foto upload hanya tampil di browser (blob). Untuk disimpan permanen,
-        // kirim file ini ke controller, mis. fetch('/admin/cabin/foto', { method:'POST', body: formData }).
         const pickImage = (old = '') => {
             const f = $('[data-in="file"]').files[0];
             const url = $('[data-in="imgurl"]').value.trim();
@@ -612,7 +730,6 @@
         };
         const readList = () => $('[data-in="amen"]').value.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 12);
 
-        // ---------- Kartu unit baru ----------
         const cardHTML = (u) => `
             <span data-shine class="pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-300 bg-[radial-gradient(220px_circle_at_var(--mx,50%)_var(--my,50%),rgba(255,255,255,0.28),transparent_65%)]"></span>
             <div class="relative h-[158px] overflow-hidden bg-[#1d3b2a]">
@@ -640,47 +757,46 @@
 
         const syncFilterCount = () => { $('[data-filter="all"]').textContent = 'Semua (' + UNITS.length + ')'; };
 
+        // ==========================================
+        // FUNGSI TAMBAH UNIT (LANGSUNG KE DATABASE)
+        // ==========================================
         const addUnit = () => {
             const name = $('[data-in="name"]').value.trim();
-            const cap = $('[data-in="cap"]').value.trim() || '2 orang';
-            const normal = Number($('[data-in="normal"]').value), weekend = Number($('[data-in="weekend"]').value);
+            const cap = $('[data-in="cap"]').value.trim();
+            const normal = $('[data-in="normal"]').value;
+
             if (!name) return toast('Nama unit wajib diisi.');
-            if (!(normal > 0) || !(weekend > 0)) return toast('Tarif normal & weekend harus lebih dari 0.');
-            let key = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'unit', base = key, n = 2;
-            while (UNITS.some((x) => x.key === key)) key = base + '-' + n++;
-            const amen = readList();
-            const sub = $('[data-in="sub"]').value.trim() || 'Kapasitas ' + cap;
-            const img = pickImage('');
-            const no = 'Unit ' + String(UNITS.length + 1).padStart(2, '0');
+            if (!normal) return toast('Tarif wajib diisi.');
 
-            UNITS.push({ id: String.fromCharCode(65 + (UNITS.length % 26)), key, name, sub, action: { label: 'Detail Slot', cls: 'bg-[#DDE6FB] text-slate-800', type: 'slot' }, segs: [] });
-            RATES[key] = { normal, weekend };
-            NAMES[key] = name;
-            HK.total++; HK.ready++;
+            toast('Menyimpan ke database...');
 
-            const card = document.createElement('article');
-            card.dataset.unit = key;
-            card.setAttribute('data-reveal', '');
-            card.className = 'group relative w-[260px] overflow-hidden rounded-2xl bg-white shadow-md border border-slate-100 hover:shadow-xl';
-            card.innerHTML = cardHTML({ key, no, name, img, cap, amen, normal, weekend });
-            $('#units').appendChild(card);
-            bindCard(card);
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = STORE_URL;
 
-            const tab = document.createElement('button');
-            tab.type = 'button';
-            tab.dataset.filter = key;
-            tab.className = 'rounded-full px-3 py-1 text-[10px] font-bold transition bg-[#DDE6FB] text-slate-800 hover:brightness-95';
-            tab.textContent = name;
-            $('#filters').appendChild(tab);
-            bindFilter(tab);
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = CSRF_TOKEN;
+            form.appendChild(csrfInput);
 
-            closeModal();
-            syncFilterCount();
-            $('[data-filter="all"]').click();
-            updateStats();
-            requestAnimationFrame(() => { card.classList.add('in'); card.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }); flash(card); });
-            $$('[data-inv]').forEach((el) => flash(el.closest('[data-reveal]')));
-            toast('Unit ' + name + ' berhasil ditambahkan.');
+            const addField = (name, value) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = name;
+                input.value = value;
+                form.appendChild(input);
+            };
+
+            addField('nama_cabin', name);
+            addField('jenis_cabin', 'suite');
+            addField('kapasitas', parseInt(cap) || 2);
+            addField('harga_per_malam', normal);
+            addField('status', 'tersedia');
+            addField('deskripsi', 'Ditambahkan via sistem');
+
+            document.body.appendChild(form);
+            form.submit();
         };
 
         const saveEdit = () => {
@@ -736,7 +852,6 @@
                 $$('[data-occ]').forEach((el) => flash(el.closest('[data-reveal]')));
                 return toast('Booking ' + g + ' • ' + rangeTxt(x, y) + ' tersimpan');
             }
-            // edit tanggal booking yang ada
             const backup = u.segs.map((sg) => ({ ...sg }));
             for (let i = 0; i < current.list.length; i++) {
                 const sg = current.list[i];
@@ -755,10 +870,8 @@
             toast('Tanggal booking diperbarui.');
         });
 
-        // Tombol Tambah Unit Kabin
         $('[data-add-unit]').addEventListener('click', () => openModal(null, 'add'));
 
-        // ---------- Sinkronisasi PMS / Smart Lock ----------
         let syncing = false;
         $('[data-sync]').addEventListener('click', () => {
             if (syncing) return;
@@ -777,7 +890,6 @@
             }, steps.length * 700);
         });
 
-        // ---------- Live demo (event simulasi) ----------
         if (LIVE_DEMO) {
             const events = [
                 'Smart Lock Unit 01: pintu terkunci',
@@ -792,8 +904,6 @@
             }, 12000);
         }
 
-        // ---------- Animasi & interaksi ----------
-        // 1) Scroll reveal bertahap
         const io = new IntersectionObserver((es) => es.forEach((en) => {
             if (!en.isIntersecting) return;
             en.target.classList.add('in');
@@ -802,7 +912,6 @@
         }), { threshold: 0.08 });
         $$('[data-reveal]').forEach((el, i) => { el.style.transitionDelay = (i % 4) * 90 + 'ms'; io.observe(el); });
 
-        // 2) Kartu unit: tombol, 3D tilt + kilau mengikuti kursor, badge Smart Lock
         const bindCard = (card) => {
             const k = card.dataset.unit;
             $('[data-tarif]', card).addEventListener('click', () => openModal(k, 'tarif'));
@@ -825,7 +934,6 @@
                 shine.style.opacity = 0;
             });
 
-            // 3) Badge Smart Lock interaktif (klik = buka kunci, auto-kunci 5 detik)
             const b = $('[data-badge]', card);
             const txt = $('[data-badge-text]', b), orig = txt.textContent, cls = b.className;
             let busy = false;
@@ -844,7 +952,6 @@
         };
         $$('[data-unit]').forEach(bindCard);
 
-        // 4) Kartu housekeeping bisa diklik untuk ganti status
         const hkCard = $('[data-hk-ready]').closest('[data-reveal]');
         hkCard.classList.add('cursor-pointer', 'select-none');
         hkCard.title = 'Klik untuk ubah status housekeeping';
@@ -856,7 +963,6 @@
             toast(HK.service ? 'Unit dijadwalkan servis' : 'Semua unit siap');
         });
 
-        // 5) Hitung mundur check-in (real-time, zona WIB)
         const fmtWib = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Jakarta', hourCycle: 'h23', hour: '2-digit', minute: '2-digit', second: '2-digit' });
         const tickCd = () => {
             const g = (t) => Number(fmtWib.formatToParts(new Date()).find((p) => p.type === t).value);
@@ -868,7 +974,6 @@
         tickCd();
         setInterval(tickCd, 1000);
 
-        // 6) Efek ripple pada semua tombol
         document.addEventListener('pointerdown', (e) => {
             const b = e.target.closest('main button, aside button, #modal button');
             if (!b || b.disabled || reduce) return;
