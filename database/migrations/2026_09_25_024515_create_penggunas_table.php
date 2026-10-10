@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+<<<<<<< HEAD
         Schema::create('penggunas', function (Blueprint $table) {
             $table->id();
             $table->string('nama_pengguna', 100);
@@ -20,6 +21,17 @@ return new class extends Migration
             $table->enum('role', ['admin', 'pengunjung', 'petugas']);
             $table->timestamps();
         });
+=======
+    Schema::create('penggunas', function (Blueprint $table) {
+        $table->id();
+        $table->string('nama', 100);       // <-- Pastikan ini 'nama', bukan 'name'
+        $table->string('email', 50)->unique();
+        $table->string('password');
+        $table->string('nohp', 15);
+        $table->enum('role', ['admin', 'pengunjung', 'petugas']);
+        $table->timestamps();
+    });
+>>>>>>> d0c70c8d31d52cecb4d10594c5c6910a3c2cf03b
     }
 
     /**

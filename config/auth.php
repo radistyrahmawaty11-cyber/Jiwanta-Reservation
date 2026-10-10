@@ -62,7 +62,15 @@ return [
     'providers' => [
         'penggunas' => [
             'driver' => 'eloquent',
+<<<<<<< HEAD
             'model' => App\Models\Pengguna::class,
+=======
+<<<<<<< HEAD
+            'model' => App\Models\Pengguna::class,
+=======
+            'model' => env('AUTH_MODEL', App\Models\Pengguna::class),
+>>>>>>> d0c70c8d31d52cecb4d10594c5c6910a3c2cf03b
+>>>>>>> cda8ee55bbea2f98005fe193b9416e649bb5bb95
         ],
     ],
 

@@ -316,6 +316,7 @@
                         </section>
                     </div>
                 </div>
+<<<<<<< HEAD
 @endsection
 
 @section('overlays')
@@ -462,6 +463,30 @@
                 <label for="quota-classic" class="{{ $lbl }}">Tiket Renang Classic (kapasitas)</label>
                 <input id="quota-classic" type="number" min="0" max="100000" value="200" class="{{ $inp }}">
             </div>
+=======
+<<<<<<< HEAD
+@endsection
+
+@section('overlays')
+{{-- Modal Atur Kuota Tiket --}}
+<div data-modal="quota" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="quota-title">
+    <div data-close class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+    <div data-panel class="relative w-full max-w-md scale-95 rounded-2xl bg-white p-6 opacity-0 shadow-xl transition duration-200">
+        <div class="mb-4 flex items-start justify-between">
+            <div>
+                <h3 id="quota-title" class="text-[16px] font-bold text-slate-900">Atur Kuota Tiket</h3>
+                <p class="mt-1 text-[11px] leading-relaxed text-slate-600">Sesuaikan kapasitas harian tiket renang Classic dan Premier.</p>
+            </div>
+            <button type="button" data-close class="text-slate-400 transition hover:text-slate-600" aria-label="Tutup">
+                {!! $ic($p['x'], 'h-5 w-5') !!}
+            </button>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <label for="quota-classic" class="{{ $lbl }}">Tiket Renang Classic (kapasitas)</label>
+                <input id="quota-classic" type="number" min="0" max="100000" value="200" class="{{ $inp }}">
+            </div>
+>>>>>>> cda8ee55bbea2f98005fe193b9416e649bb5bb95
             <div>
                 <label for="quota-premier" class="{{ $lbl }}">Tiket Renang Premier (kapasitas)</label>
                 <input id="quota-premier" type="number" min="0" max="100000" value="100" class="{{ $inp }}">
@@ -503,6 +528,11 @@
 </div>
 
 <div id="toast" class="pointer-events-none fixed bottom-6 right-6 z-[60] flex translate-y-4 items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-[12px] font-medium text-white opacity-0 shadow-xl transition duration-300" role="status" aria-live="polite"></div>
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> d0c70c8d31d52cecb4d10594c5c6910a3c2cf03b
+>>>>>>> cda8ee55bbea2f98005fe193b9416e649bb5bb95
 @endsection
 
 @push('scripts')

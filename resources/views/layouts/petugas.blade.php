@@ -1,6 +1,14 @@
 @extends('layouts.master')
 
+<<<<<<< HEAD
 @section('body-class', 'bg-gray-100 overflow-hidden')
+=======
+<<<<<<< HEAD
+@section('body-class', 'bg-gray-100 overflow-hidden')
+=======
+@section('body-class', 'min-h-screen flex items-center justify-center p-4')
+>>>>>>> d0c70c8d31d52cecb4d10594c5c6910a3c2cf03b
+>>>>>>> cda8ee55bbea2f98005fe193b9416e649bb5bb95
 
 @php
     $ic = fn (string $d, string $c = 'h-4 w-4') =>
@@ -23,6 +31,10 @@
     ];
 @endphp
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> cda8ee55bbea2f98005fe193b9416e649bb5bb95
 @push('styles')
 <style>
     #page-anim {
@@ -78,6 +90,16 @@
 
     {{-- ================= SIDEBAR (full desktop, selalu tampil) ================= --}}
     <aside class="flex w-[250px] shrink-0 flex-col border-r border-slate-100 bg-white">
+<<<<<<< HEAD
+=======
+=======
+@section('content')
+<div class="flex min-h-screen w-full bg-[#F8F7FF] text-[#0B3A22]">
+
+    {{-- ================= SIDEBAR (hanya Dashboard) ================= --}}
+    <aside class="sticky top-0 hidden h-screen w-[250px] shrink-0 flex-col border-r border-slate-100 bg-white lg:flex">
+>>>>>>> d0c70c8d31d52cecb4d10594c5c6910a3c2cf03b
+>>>>>>> cda8ee55bbea2f98005fe193b9416e649bb5bb95
         <div class="px-6 pt-7">
             <div class="flex items-center gap-3">
                 <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#0B3A22] text-[#B5F0BE]">{!! $ic($p['tree'], 'h-5 w-5') !!}</span>
@@ -100,6 +122,10 @@
                 <p class="text-[12px] font-bold leading-tight">Shift Pagi Gate</p>
                 <p class="mt-0.5 text-[11px] leading-tight text-slate-700">07:00 - 15:00 WIB</p>
             </div>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> cda8ee55bbea2f98005fe193b9416e649bb5bb95
             <button type="submit" form="logout-form" class="transition hover:text-red-600" aria-label="Keluar">{!! $ic($p['logout'], 'h-5 w-5') !!}</button>
         </div>
     </aside>
@@ -111,6 +137,22 @@
         <header class="z-20 flex h-16 shrink-0 items-center justify-between border-b border-slate-100 bg-white/90 px-6 backdrop-blur">
             <div class="flex items-center gap-3">
                 <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0B3A22] text-[#B5F0BE]">{!! $ic($p['tree'], 'h-4 w-4') !!}</span>
+<<<<<<< HEAD
+=======
+=======
+            <button type="button" class="transition hover:text-red-600" aria-label="Keluar">{!! $ic($p['logout'], 'h-5 w-5') !!}</button>
+        </div>
+    </aside>
+
+    {{-- ================= MAIN ================= --}}
+    <div class="min-w-0 flex-1">
+
+        {{-- Topbar --}}
+        <header class="sticky top-0 z-20 flex h-16 items-center justify-between bg-[#F8F7FF]/90 px-5 backdrop-blur lg:px-8">
+            <div class="flex items-center gap-3">
+                <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0B3A22] text-[#B5F0BE] lg:hidden">{!! $ic($p['tree'], 'h-4 w-4') !!}</span>
+>>>>>>> d0c70c8d31d52cecb4d10594c5c6910a3c2cf03b
+>>>>>>> cda8ee55bbea2f98005fe193b9416e649bb5bb95
                 <span class="flex items-center gap-2 rounded-full bg-[#E4E8FB] px-4 py-2 text-[12px]">
                     <span class="relative flex h-2 w-2"><span class="absolute h-full w-full animate-ping rounded-full bg-[#0B3A22] opacity-60"></span><span class="relative h-2 w-2 rounded-full bg-[#0B3A22]"></span></span>
                     <b class="font-semibold">Gate Online</b>
@@ -131,10 +173,21 @@
             </div>
         </header>
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> cda8ee55bbea2f98005fe193b9416e649bb5bb95
         <main class="flex-1 overflow-y-auto px-6 py-5">
             <div id="page-anim" class="mx-auto max-w-7xl space-y-5">
                 @yield('page-content')
             </div>
+<<<<<<< HEAD
+=======
+=======
+        <main class="space-y-5 px-5 pb-10 pt-2 lg:px-8">
+            @yield('page-content')
+>>>>>>> d0c70c8d31d52cecb4d10594c5c6910a3c2cf03b
+>>>>>>> cda8ee55bbea2f98005fe193b9416e649bb5bb95
         </main>
     </div>
 </div>
