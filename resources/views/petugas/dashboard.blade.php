@@ -1,8 +1,8 @@
-@extends('layouts.dashboard')
+@extends('layouts.petugas')
 
 @section('title', 'Gate Portal - Jiwanta')
 
-@section('content')
+@section('page-content')
 
 <style>
     @keyframes jw-rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -44,64 +44,6 @@
     $cap  = 'text-[10px] font-bold uppercase leading-snug tracking-wide text-slate-600';
 @endphp
 
-<div class="flex min-h-screen w-full bg-[#F8F7FF] text-[#0B3A22]">
-
-    {{-- ================= SIDEBAR (hanya Dashboard) ================= --}}
-    <aside class="sticky top-0 hidden h-screen w-[250px] shrink-0 flex-col border-r border-slate-100 bg-white lg:flex">
-        <div class="px-6 pt-7">
-            <div class="flex items-center gap-3">
-                <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#0B3A22] text-[#B5F0BE]">{!! $ic($p['tree'], 'h-5 w-5') !!}</span>
-                <div>
-                    <p class="text-[17px] font-bold leading-tight">Jiwanta Gate<br>Portal</p>
-                </div>
-            </div>
-            <p class="mt-3 text-[10px] font-bold uppercase tracking-wide text-slate-600">Petugas &amp; Akses Masuk</p>
-        </div>
-
-        <nav class="mt-8 flex-1 px-5">
-            <p class="mb-2 px-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Menu</p>
-            <a href="#" aria-current="page" class="flex items-center gap-3 rounded-xl bg-[#0B3A22] px-3.5 py-3 text-[13px] font-semibold text-white shadow-sm">
-                {!! $ic($p['grid'], 'h-4 w-4 shrink-0') !!} Dashboard
-            </a>
-        </nav>
-
-        <div class="m-5 flex items-center justify-between rounded-2xl bg-[#E8ECFB] px-4 py-4">
-            <div>
-                <p class="text-[12px] font-bold leading-tight">Shift Pagi Gate</p>
-                <p class="mt-0.5 text-[11px] leading-tight text-slate-700">07:00 - 15:00 WIB</p>
-            </div>
-            <button type="button" class="transition hover:text-red-600" aria-label="Keluar">{!! $ic($p['logout'], 'h-5 w-5') !!}</button>
-        </div>
-    </aside>
-
-    {{-- ================= MAIN ================= --}}
-    <div class="min-w-0 flex-1">
-
-        {{-- Topbar --}}
-        <header class="sticky top-0 z-20 flex h-16 items-center justify-between bg-[#F8F7FF]/90 px-5 backdrop-blur lg:px-8">
-            <div class="flex items-center gap-3">
-                <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0B3A22] text-[#B5F0BE] lg:hidden">{!! $ic($p['tree'], 'h-4 w-4') !!}</span>
-                <span class="flex items-center gap-2 rounded-full bg-[#E4E8FB] px-4 py-2 text-[12px]">
-                    <span class="relative flex h-2 w-2"><span class="absolute h-full w-full animate-ping rounded-full bg-[#0B3A22] opacity-60"></span><span class="relative h-2 w-2 rounded-full bg-[#0B3A22]"></span></span>
-                    <b class="font-semibold">Gate Online</b>
-                    <span class="hidden font-mono text-[12px] font-bold sm:inline" data-clock>--:--:--</span>
-                    <span class="hidden text-[10px] text-slate-600 sm:inline">WIB</span>
-                </span>
-            </div>
-            <div class="flex items-center gap-4">
-                <button type="button" id="bell" class="relative flex h-10 w-10 items-center justify-center rounded-full bg-[#E4E8FB] transition hover:bg-[#d6dcf7]" aria-label="Pembayaran menunggu verifikasi">
-                    {!! $ic($p['bell'], 'h-5 w-5') !!}
-                    <span data-bell-count class="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">0</span>
-                </button>
-                <span class="hidden h-8 w-px bg-slate-200 sm:block"></span>
-                <div class="hidden text-right sm:block">
-                    <p class="text-[13px] font-bold leading-tight">Rian Hidayat</p>
-                    <p class="text-[10px] font-semibold uppercase leading-tight tracking-wide text-[#8B5E34]">Petugas Gate STF-042</p>
-                </div>
-            </div>
-        </header>
-
-        <main class="space-y-5 px-5 pb-10 pt-2 lg:px-8">
 
             {{-- Judul --}}
             <section class="jw-rise flex flex-wrap items-end justify-between gap-4">
@@ -221,10 +163,8 @@
                     <p id="pay-empty" class="mt-5 hidden rounded-2xl {{ $soft }} px-4 py-10 text-center text-[12px] font-medium text-slate-600">Tidak ada pembayaran yang menunggu verifikasi.</p>
                 </section>
             </div>
-        </main>
-    </div>
-</div>
-
+@endsection
+@section('overlays')
 {{-- Modal verifikasi --}}
 <div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4">
     <div class="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
@@ -240,7 +180,6 @@
 </div>
 
 <div id="toasts" class="fixed bottom-6 right-6 z-[60] space-y-2"></div>
-
 @endsection
 
 @push('scripts')

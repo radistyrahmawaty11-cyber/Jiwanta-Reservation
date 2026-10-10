@@ -1,8 +1,8 @@
-@extends('layouts.dashboard')
+@extends('layouts.admin')
 
 @section('title', 'Kelola Cabin Suite & Shorts - Jiwanta')
 
-@section('content')
+@section('page-content')
 
 <style>
     @keyframes jw-grow{from{opacity:0;transform:scaleX(.2)}to{opacity:1;transform:scaleX(1)}}
@@ -97,89 +97,6 @@
     ];
 @endphp
 
-    {{-- ================= LAYOUT CONTAINER ================= --}}
-    <div class="min-w-full bg-slate-50 flex">
-
-    {{-- ================= SIDEBAR ================= --}}
-    <aside class="w-[240px] shrink-0 bg-white border-r border-slate-200 flex flex-col">
-        <div class="px-5 pt-6 pb-4">
-            <div class="flex items-center gap-3">
-                <span class="flex h-[26px] w-[26px] items-center justify-center rounded-lg bg-[#0B3A22] text-[#B5F0BE]">{!! $ic($p['tree'], 'h-4 w-4') !!}</span>
-                <div>
-                    <p class="text-[13px] font-bold leading-tight tracking-wide">JIWANTA</p>
-                    <p class="text-[8px] font-semibold uppercase leading-tight tracking-wider text-slate-600">Ciwidey Resort</p>
-                </div>
-            </div>
-            <span class="mt-4 inline-flex items-center gap-2 rounded-full {{ $mint }} px-3 py-1.5 text-[10px] font-bold">
-                <span class="h-2 w-2 rounded-full bg-[#0B3A22]"></span> Sistem Operasional Aktif
-            </span>
-        </div>
-
-        <nav class="flex-1 px-4 space-y-6 overflow-y-auto">
-            @foreach ($nav as $label => $items)
-                <div>
-                    <p class="mb-2 px-2 text-[9px] font-bold uppercase tracking-wider text-slate-500">{{ $label }}</p>
-                    <ul class="space-y-1">
-                        @foreach ($items as [$text, $icon, $active, $badge])
-                            <li>
-                                <a href="{{ route('manajemen-pengguna') }}" class="flex h-[36px] items-center gap-3 rounded-lg px-3 text-[13px] font-medium transition {{ $active ? 'bg-[#0B3A22] text-white' : 'text-slate-700 hover:bg-slate-50' }}">
-                                    {!! $ic($p[$icon], 'h-4 w-4 shrink-0') !!}
-                                    <span class="flex-1">{{ $text }}</span>
-                                    @if ($badge)
-                                        <span class="rounded-full {{ $peach }} px-2 py-0.5 text-[10px] font-bold text-[#6B4520]">{{ $badge }}</span>
-                                    @endif
-                                </a>
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endforeach
-        </nav>
-
-        <div class="border-t border-slate-200 p-4">
-            <div class="mb-3 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
-                <span class="flex items-center gap-2 text-[10px] font-semibold text-slate-700">{!! $ic($p['clock'], 'h-3.5 w-3.5') !!} Shift Pagi 07:00 - 15:00</span>
-                <span class="h-2 w-2 rounded-full bg-[#0B3A22]"></span>
-            </div>
-            <button type="button" class="flex w-full items-center justify-center gap-2 rounded-lg {{ $lav }} py-2.5 text-[11px] font-bold text-red-700 transition hover:brightness-95">
-                {!! $ic($p['logout'], 'h-4 w-4') !!} Keluar Sistem
-            </button>
-        </div>
-    </aside>
-
-    {{-- ================= MAIN CONTENT ================= --}}
-    <div class="flex-1 flex flex-col min-w-0">
-
-        {{-- Topbar --}}
-        <header class="h-[60px] bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0">
-            <div class="flex items-center gap-2">
-                <p class="text-[11px] text-slate-600">Sistem Jiwanta</p>
-                <span class="text-slate-400">/</span>
-                <b class="text-[11px] font-semibold text-[#0B3A22]">Panel Kendali Utama</b>
-            </div>
-            <div class="flex items-center gap-3">
-                <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-[10px] font-medium">{!! $ic($p['snow'], 'h-3.5 w-3.5') !!} Ciwidey 18°C Kabut Sejuk</span>
-                <span class="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-[10px] font-medium text-emerald-700">
-                    <span class="relative flex h-2 w-2"><span class="absolute h-full w-full animate-ping rounded-full bg-emerald-600 opacity-60"></span><span class="relative h-2 w-2 rounded-full bg-emerald-600"></span></span>
-                    Gate Turnstile Online
-                </span>
-                <button type="button" class="relative h-10 w-10 flex items-center justify-center rounded-full bg-slate-100 transition hover:bg-slate-200" aria-label="Notifikasi">
-                    {!! $ic($p['bell'], 'h-5 w-5') !!}
-                    <span data-notif class="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-600 border-2 border-white"></span>
-                </button>
-                <div class="flex items-center gap-3 pl-3 border-l border-slate-200">
-                    <img src="{{ asset('images/profil.jpg') }}" alt="Profil" class="h-10 w-10 rounded-full bg-[#C9B99A] object-cover border-2 border-white shadow-sm">
-                    <div>
-                        <p class="text-[11px] font-bold leading-tight">Bagas Dananjaya</p>
-                        <p class="text-[9px] font-medium uppercase leading-tight text-slate-600">Super Admin Resort</p>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        {{-- Content Area --}}
-        <main class="flex-1 p-6 overflow-y-auto">
-            <div class="max-w-7xl mx-auto space-y-6">
 
                 {{-- Header Section --}}
                 <div class="flex items-start justify-between">
@@ -287,55 +204,19 @@
                         </div>
                     </div>
 
-     @foreach ($cabins as $cabin)
-        <article data-unit="{{ $cabin->jenis_cabin }}" data-reveal class="group relative w-[260px] overflow-hidden rounded-2xl bg-white shadow-md border border-slate-100 hover:shadow-xl">
-            <span data-shine class="pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-300 bg-[radial-gradient(220px_circle_at_var(--mx,50%)_var(--my,50%),rgba(255,255,255,0.28),transparent_65%)]"></span>
-            
-            <div class="relative h-[158px] overflow-hidden bg-[#1d3b2a]">
-                {{-- Gambar dinamis berdasarkan jenis cabin --}}
-                @php
-                    $imgPath = $cabin->jenis_cabin === 'suite' ? 'images/cabin-suite.jpg' : 'images/cabin-shorts.jpg';
-                @endphp
-                <img src="{{ asset($imgPath) }}" alt="{{ $cabin->nama_cabin }}" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110">
-                <div class="absolute inset-0 bg-gradient-to-t from-[#0B3A22]/80 via-transparent to-black/10"></div>
-                
-                <span data-badge class="absolute left-3 top-3 z-10 inline-flex cursor-pointer select-none items-center gap-1.5 rounded-full bg-[#FBD9B0] text-[#6B4520] px-2.5 py-1 text-[9px] font-bold transition hover:brightness-95">
-                    <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-[#7A5230]"></span>
-                    <span data-badge-text>{{ ucfirst($cabin->status) }}</span>
-                </span>
-                <span class="absolute right-3 top-3 rounded-md bg-[#0B3A22] px-2 py-1 text-[9px] font-bold text-white">Unit {{ $cabin->id }}</span>
-                <h3 class="absolute bottom-3 left-3 text-[16px] font-bold text-white">{{ $cabin->nama_cabin }}</h3>
-            </div>
-
-            <div class="p-4">
-                <p class="flex items-center gap-2 text-[10px] font-bold text-slate-800">
-                    <span class="text-[#0B3A22]">{!! $ic('users', 'h-3.5 w-3.5') !!}</span>
-                    Kapasitas: {{ $cabin->kapasitas }} orang
-                </p>
-                
-                <div class="mt-3 flex flex-wrap gap-1.5">
-                    {{-- Contoh amenitas statis, nanti bisa dikembangkan --}}
-                    <span class="inline-flex items-center gap-1.5 rounded-lg bg-[#DDE6FB] px-2 py-1 text-[9px] font-medium text-slate-800 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-sm">
-                        {!! $ic('wifi', 'h-3 w-3') !!} High-Speed WiFi
-                    </span>
-                </div>
-
-                <div class="mt-4 space-y-1.5 rounded-xl bg-slate-100 p-3 text-[10px] text-slate-600">
-                    <div class="flex items-start justify-between gap-2">
-                        <span class="leading-snug">Tarif per Malam</span>
-                        <b data-rate-normal class="text-right text-[11px] leading-snug text-slate-900">
-                            Rp {{ number_format($cabin->harga_per_malam, 0, ',', '.') }}
-                        </b>
-                    </div>
-                </div>
-
-                <div class="mt-4 flex items-center gap-1.5">
-                    <button type="button" class="rounded-lg bg-[#DDE6FB] px-3 py-2 text-[10px] font-bold text-slate-800 transition hover:brightness-95">Edit Unit</button>
-                    <button type="button" class="rounded-lg bg-[#0B3A22] px-3 py-2 text-[10px] font-bold text-white transition hover:bg-[#124c2f]">Detail Booking</button>
-                </div>
-            </div>
-        </article>
-    @endforeach
+                    <div id="units" class="mt-5 flex flex-wrap justify-center gap-4">
+                        @foreach ($units as $u)
+                            <article data-unit="{{ $u['key'] }}" data-reveal class="group relative w-[260px] overflow-hidden rounded-2xl bg-white shadow-md border border-slate-100 hover:shadow-xl">
+                                <span data-shine class="pointer-events-none absolute inset-0 z-20 opacity-0 transition-opacity duration-300 bg-[radial-gradient(220px_circle_at_var(--mx,50%)_var(--my,50%),rgba(255,255,255,0.28),transparent_65%)]"></span>
+                                <div class="relative h-[158px] overflow-hidden bg-[#1d3b2a]">
+                                    <img data-img src="{{ asset($u['img']) }}" alt="{{ $u['title'] }}" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-[#0B3A22]/80 via-transparent to-black/10"></div>
+                                    <span data-badge class="absolute left-3 top-3 z-10 inline-flex cursor-pointer select-none items-center gap-1.5 rounded-full {{ $u['badge'][1] }} px-2.5 py-1 text-[9px] font-bold transition hover:brightness-95">
+                                        <span class="h-1.5 w-1.5 animate-pulse rounded-full {{ $u['badge'][2] }}"></span><span data-badge-text>{{ $u['badge'][0] }}</span>
+                                    </span>
+                                    <span class="absolute right-3 top-3 rounded-md bg-[#0B3A22] px-2 py-1 text-[9px] font-bold text-white">{{ $u['no'] }}</span>
+                                    <h3 data-title class="absolute bottom-3 left-3 text-[16px] font-bold text-white">{{ $u['title'] }}</h3>
+                                </div>
 
                                 <div class="p-4">
                                     <p class="flex items-center gap-2 text-[10px] font-bold text-slate-800"><span class="text-[#0B3A22]">{!! $ic($p[$u['capIcon']], 'h-3.5 w-3.5') !!}</span><span data-cap>{{ $u['cap'] }}</span></p>
@@ -364,14 +245,11 @@
                                     </div>
                                 </div>
                             </article>
-                            @endforeach
+                        @endforeach
                     </div>
                 </section>
-            </div>
-        </main>
-    </div>
-    </div>
-
+@endsection
+@section('overlays')
     {{-- Modal (Atur Tarif / Detail Booking / Walk-in / Edit Unit / Tambah Unit) --}}
     <div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4">
         <div data-m-box class="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
@@ -392,7 +270,6 @@
 
     {{-- Toast --}}
     <div id="toasts" class="fixed bottom-6 right-6 z-[60] space-y-2"></div>
-
 @endsection
 
 @push('scripts')
@@ -441,7 +318,7 @@
             setTimeout(() => { t.classList.add('opacity-0', 'translate-x-6'); setTimeout(() => t.remove(), 300); }, 3200);
         };
         const flash = (el) => { if (!el) return; el.classList.remove('jw-flash'); void el.offsetWidth; el.classList.add('jw-flash'); };
-        const bell = () => { const b = $('[data-notif]').parentElement; b.classList.remove('jw-wiggle'); void b.offsetWidth; b.classList.add('jw-wiggle'); };
+        const bell = () => { const b = $('[data-bell]'); b.classList.remove('jw-wiggle'); void b.offsetWidth; b.classList.add('jw-wiggle'); };
         const tween = (el, to, dur = 800) => {
             if (!el) return;
             const from = Number(el.dataset.v ?? 0);

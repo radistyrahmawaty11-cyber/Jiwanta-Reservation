@@ -18,6 +18,7 @@ return new class extends Migration
             $table->integer('kapasitas')->default(10);
             $table->decimal('harga_per_jam', 10, 2);
             $table->enum('status', ['tersedia', 'dipesan'])->default('tersedia');
+            $table->text('deskripsi')->nullable();
             $table->timestamps();
         });
     }

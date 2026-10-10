@@ -1,8 +1,8 @@
-@extends('layouts.dashboard')
+@extends('layouts.admin')
 
 @section('title', 'Kelola Tiket - Jiwanta')
 
-@section('content')
+@section('page-content')
 
 @php
     // ---------- Helper ----------
@@ -40,6 +40,7 @@
         'cloudup'   => 'M7 18a4 4 0 010-8 5 5 0 019.6-1A4.5 4.5 0 0117 18M12 12v6M9 15l3-3 3 3',
         'thermo'    => 'M14 14V5a2 2 0 00-4 0v9a4 4 0 104 0z',
         'star'      => 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9L12 3z',
+        'edit'      => 'M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z',
         'trash'     => 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
         'chevron'   => 'M6 9l6 6 6-6',
         'bolt'      => 'M13 3L5 14h6l-1 7 8-11h-6l1-7z',
@@ -55,23 +56,8 @@
     $peach = 'bg-[#FBD9B0]';
     $lav = 'bg-[#DDE6FB]';
 
-    // Data awal katalog (nanti diganti hasil query database / tabel tickets)
-    $tickets = [
-        [
-            'id' => 'classic', 'sku' => 'JWN-TKT-CLS-01', 'short' => 'Classic', 'portfolio' => 'Classic Thermal Springs',
-            'name' => 'Tiket Kolam Air Hangat Classic', 'accent' => 'public', 'temp' => '39° - 41°C',
-            'image' => asset('images/tiket-classic.jpg'), 'price' => 45000, 'unit' => 'orang', 'cap' => 200, 'sold' => 140, 'safeMax' => 250,
-            'hours' => '07:00 - 18:00 WIB (Fleksibel Tanpa Sesi Kaku)', 'sessions' => [],
-            'facilities' => ['Akses Kolam Alami Belerang', 'Gazebo Publik', 'Kamar Bilas Standar'], 'desc' => '', 'status' => 'active', 'updatedMin' => 12,
-        ],
-        [
-            'id' => 'premier', 'sku' => 'JWN-TKT-VIP-02', 'short' => 'Premier Onsen', 'portfolio' => 'Premier Onsen Private',
-            'name' => 'Tiket Kolam Belerang Premier & Onsen Private', 'accent' => 'vip', 'temp' => '',
-            'image' => asset('images/tiket-premier.jpg'), 'price' => 85000, 'unit' => 'orang', 'cap' => 100, 'sold' => 85, 'safeMax' => 150,
-            'hours' => '', 'sessions' => ['Pagi 08-12', 'Sore 13-17', 'Malam 18-21'],
-            'facilities' => ['Onsen Belerang Hangat', 'Welcome Herbal Tea', 'Handuk & Private Locker', 'Sabun Alami'], 'desc' => '', 'status' => 'active', 'updatedMin' => 45,
-        ],
-    ];
+    // Data katalog tiket (diisi dari database via TiketController)
+    $tickets = $tickets ?? [];
 
     // Distribusi sesi kedatangan hari ini
     $sessions = [
@@ -99,89 +85,6 @@
     $btnG = 'inline-flex items-center justify-center gap-2 rounded-lg bg-slate-100 px-5 py-2.5 text-[12px] font-semibold text-slate-700 transition hover:bg-slate-200 active:scale-95';
 @endphp
 
-    {{-- ================= LAYOUT CONTAINER ================= --}}
-    <div class="min-w-full bg-slate-50 flex">
-
-    {{-- ================= SIDEBAR ================= --}}
-    <aside class="sticky top-0 h-screen w-[240px] shrink-0 bg-white border-r border-slate-200 flex flex-col">
-        <div class="px-5 pt-6 pb-4">
-            <div class="flex items-center gap-3">
-                <span class="flex h-[26px] w-[26px] items-center justify-center rounded-lg bg-[#0B3A22] text-[#B5F0BE]">{!! $ic($p['tree'], 'h-4 w-4') !!}</span>
-                <div>
-                    <p class="text-[13px] font-bold leading-tight tracking-wide">JIWANTA</p>
-                    <p class="text-[8px] font-semibold uppercase leading-tight tracking-wider text-slate-600">Ciwidey Resort</p>
-                </div>
-            </div>
-            <span class="mt-4 inline-flex items-center gap-2 rounded-full {{ $mint }} px-3 py-1.5 text-[10px] font-bold">
-                <span class="h-2 w-2 rounded-full bg-[#0B3A22]"></span> Sistem Operasional Aktif
-            </span>
-        </div>
-
-        <nav class="flex-1 px-4 space-y-6 overflow-y-auto">
-            @foreach ($nav as $label => $items)
-                <div>
-                    <p class="mb-2 px-2 text-[9px] font-bold uppercase tracking-wider text-slate-500">{{ $label }}</p>
-                    <ul class="space-y-1">
-                        @foreach ($items as [$text, $icon, $active, $badge])
-                            <li>
-                                <a href="{{ route('cabin') }}" class="flex h-[36px] items-center gap-3 rounded-lg px-3 text-[13px] font-medium transition {{ $active ? 'bg-[#0B3A22] text-white shadow-md' : 'text-slate-700 hover:bg-slate-50' }}">
-                                    {!! $ic($p[$icon], 'h-4 w-4 shrink-0') !!}
-                                    <span class="flex-1">{{ $text }}</span>
-                                    @if ($badge)
-                                        <span class="rounded-full {{ $peach }} px-2 py-0.5 text-[10px] font-bold text-[#6B4520]">{{ $badge }}</span>
-                                    @endif
-                                </a>
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endforeach
-        </nav>
-
-        <div class="border-t border-slate-200 p-4">
-            <div class="mb-3 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
-                <span class="flex items-center gap-2 text-[10px] font-semibold text-slate-700">{!! $ic($p['clock'], 'h-3.5 w-3.5') !!} Shift Pagi 07:00 - 15:00</span>
-                <span class="h-2 w-2 rounded-full bg-[#0B3A22]"></span>
-            </div>
-            <button type="button" class="flex w-full items-center justify-center gap-2 rounded-lg bg-red-50 py-2.5 text-[11px] font-bold text-red-700 transition hover:bg-red-100">
-                {!! $ic($p['logout'], 'h-4 w-4') !!} Keluar Sistem
-            </button>
-        </div>
-    </aside>
-
-    {{-- ================= MAIN CONTENT ================= --}}
-    <div class="flex-1 flex flex-col min-w-0">
-
-        {{-- Topbar --}}
-        <header class="sticky top-0 z-30 h-[60px] bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0">
-            <div class="flex items-center gap-2">
-                <p class="text-[11px] text-slate-600">Sistem Jiwanta</p>
-                <span class="text-slate-400">/</span>
-                <b class="text-[11px] font-semibold text-[#0B3A22]">Panel Kendali Utama</b>
-            </div>
-            <div class="flex items-center gap-3">
-                <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-[10px] font-medium">{!! $ic($p['snow'], 'h-3.5 w-3.5') !!} Ciwidey 18°C Kabut Sejuk</span>
-                <span class="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-[10px] font-medium text-emerald-700">
-                    <span class="relative flex h-2 w-2"><span class="absolute h-full w-full animate-ping rounded-full bg-emerald-600 opacity-60"></span><span class="relative h-2 w-2 rounded-full bg-emerald-600"></span></span>
-                    Gate Turnstile Online
-                </span>
-                <button type="button" class="relative h-10 w-10 flex items-center justify-center rounded-full bg-slate-100 transition hover:bg-slate-200" aria-label="Notifikasi">
-                    {!! $ic($p['bell'], 'h-5 w-5') !!}
-                    <span class="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-600 border-2 border-white"></span>
-                </button>
-                <div class="flex items-center gap-3 pl-3 border-l border-slate-200">
-                    <img src="{{ asset('images/profil.jpg') }}" alt="Profil" class="h-10 w-10 rounded-full bg-[#C9B99A] object-cover border-2 border-white shadow-sm">
-                    <div>
-                        <p class="text-[11px] font-bold leading-tight">Bagas Dananjaya</p>
-                        <p class="text-[9px] font-medium uppercase leading-tight text-slate-600">Super Admin Resort</p>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        {{-- Content Area --}}
-        <main class="flex-1 p-6">
-            <div class="max-w-7xl mx-auto space-y-6">
 
                 {{-- Header Section --}}
                 <div class="flex items-start justify-between gap-6">
@@ -286,8 +189,15 @@
                                 <span class="flex items-center gap-1.5 rounded-md {{ $peach }} px-2 py-1 text-[8px] font-bold uppercase tracking-wide text-[#8B5E34]"><span class="h-1.5 w-1.5 animate-pulse rounded-full bg-[#C2762B]"></span>Live Sync</span>
                             </div>
 
-                            <p class="mt-5 text-[9px] font-bold uppercase tracking-wide text-slate-600">Pilih Varian Tiket</p>
-                            <div id="variant-tabs" class="mt-2 grid grid-cols-2 gap-2"></div>
+                            <div class="mt-5 flex items-center justify-between gap-2">
+                                <p class="text-[9px] font-bold uppercase tracking-wide text-slate-600">Pilih Varian Tiket</p>
+                                <button type="button" id="qm-add" class="inline-flex items-center gap-1.5 rounded-lg bg-[#0B3A22] px-2.5 py-1.5 text-[10px] font-bold text-white transition hover:bg-[#124c2f] active:scale-95">{!! $ic($p['plus'], 'h-3.5 w-3.5') !!} Tambah Tipe</button>
+                            </div>
+                            <div id="variant-tabs" class="mt-2 grid grid-cols-1 gap-2"></div>
+                            <div id="variant-actions" class="mt-2 hidden items-center gap-2">
+                                <button type="button" id="qm-edit" class="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#DDE6FB] py-2 text-[10px] font-bold text-slate-700 transition hover:bg-[#cfd9f7] active:scale-95">{!! $ic($p['edit'], 'h-3.5 w-3.5') !!} Edit Tipe</button>
+                                <button type="button" id="qm-del" class="flex items-center justify-center gap-1.5 rounded-lg bg-red-50 px-3 py-2 text-[10px] font-bold text-red-600 transition hover:bg-red-100 active:scale-95">{!! $ic($p['trash'], 'h-3.5 w-3.5') !!} Hapus</button>
+                            </div>
 
                             <div class="mt-4 rounded-2xl bg-[#EEF1FD] p-4">
                                 <div class="flex items-center justify-between">
@@ -332,11 +242,8 @@
                         </section>
                     </div>
                 </div>
-            </div>
-        </main>
-    </div>
-    </div>
-
+@endsection
+@section('overlays')
     {{-- ================= MODAL ================= --}}
     <div id="modal-root">
 
@@ -462,7 +369,6 @@
 
     {{-- Notifikasi singkat --}}
     <div id="toast" class="pointer-events-none fixed bottom-6 right-6 z-[60] flex translate-y-4 items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-[12px] font-medium text-white opacity-0 shadow-xl transition duration-300" role="status" aria-live="polite"></div>
-
 @endsection
 
 @push('scripts')
@@ -480,7 +386,7 @@
         // =====================================================================
         const CONFIG = {
             // false = data hanya di browser (tampilan saja). true = memanggil endpoint di bawah.
-            USE_API: false,
+            USE_API: true,
             csrf: @json(csrf_token()),
             urls: {
                 tickets:  @json(url('/admin/tiket')),            // POST / PUT {id} / DELETE {id}
@@ -488,7 +394,7 @@
                 openAll:  @json(url('/admin/tiket/buka-semua')), // POST
             },
         };
-        const LIVE_DEMO = true; // simulasi tiket terjual & sinkronisasi; matikan saat memakai data asli
+        const LIVE_DEMO = false; // simulasi tiket terjual & sinkronisasi; matikan saat memakai data asli
         const USER = 'Bagas Dananjaya (Super Admin)';
         const STEP = 25;
 
@@ -503,7 +409,10 @@
                 const err = await res.json().catch(() => ({}));
                 throw new Error(err.message || 'Terjadi kesalahan pada server.');
             }
-            return res.status === 204 ? true : res.json();
+            if (res.status === 204) return true;
+            const json = await res.json();
+            // Endpoint tiket membalas { ok, data: {...} }; kembalikan record-nya langsung.
+            return json && typeof json === 'object' && json.data && typeof json.data === 'object' ? json.data : json;
         };
 
         // =====================================================================
@@ -734,7 +643,9 @@
             if (!actives.find((t) => t.id === state.variant)) { state.variant = actives[0]?.id; state.draftCap = null; }
             const t = byId(state.variant);
             $('#variant-tabs').innerHTML = actives.map((a) =>
-                `<button type="button" data-variant="${esc(a.id)}" class="rounded-xl px-3 py-2.5 text-[11px] font-semibold transition active:scale-95 ${a.id === state.variant ? ON.join(' ') : OFF.join(' ')}">${esc(a.short)} (${a.cap})</button>`).join('');
+                `<button type="button" data-variant="${esc(a.id)}" class="flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-left text-[11px] font-semibold transition active:scale-95 ${a.id === state.variant ? ON.join(' ') : OFF.join(' ')}"><span class="truncate">${esc(a.name)}</span><span class="shrink-0 rounded-md ${a.id === state.variant ? 'bg-white/20 text-white' : 'bg-white text-slate-700'} px-1.5 py-0.5 text-[10px] font-bold">${a.cap}</span></button>`).join('');
+            $('#variant-actions').classList.toggle('hidden', !t);
+            $('#variant-actions').classList.toggle('flex', !!t);
 
             const minus = $('#qm-minus'), plus = $('#qm-plus'), apply = $('#qm-apply');
             if (!t) {
@@ -761,6 +672,11 @@
         });
         $('#qm-minus').addEventListener('click', () => { state.draftCap -= STEP; renderQuota(); });
         $('#qm-plus').addEventListener('click', () => { state.draftCap += STEP; renderQuota(); });
+
+        // CRUD tipe tiket langsung dari panel Manajer Kuota Gerbang
+        $('#qm-add').addEventListener('click', () => openForm('create'));
+        $('#qm-edit').addEventListener('click', () => { const t = byId(state.variant); if (t) openForm('edit', t, 'name'); });
+        $('#qm-del').addEventListener('click', () => removeTicket(byId(state.variant)));
 
         $('#qm-apply').addEventListener('click', async () => {
             const t = byId(state.variant), diff = state.draftCap - t.cap;
@@ -861,6 +777,7 @@
                 name: f('name').value.trim(), price: Number(f('price').value), unit: f('unit').value, cap: Number(f('cap').value),
                 accent: f('accent').value, temp: f('temp').value.trim(), status: f('status').value, hours: f('hours').value.trim(),
                 sessions: list(f('sessions').value), facilities: list(f('facilities').value), desc: f('desc').value.trim(),
+                kategori: (old && old.kategori) || 'renang',
             };
             const errs = {};
             if (d.name.length < 3) errs.name = 'Nama tiket minimal 3 karakter.';
@@ -908,25 +825,37 @@
         });
 
         // DELETE — DELETE /admin/tiket/{id}
-        $('#tf-delete').addEventListener('click', async () => {
-            const t = byId(f('id').value);
+        const removeTicket = async (t) => {
+            if (!t) return;
             if (t.sold > 0) {
-                const box = $('[data-form-error]');
-                box.textContent = `Tiket tidak bisa dihapus karena sudah terjual ${t.sold} hari ini. Ubah status menjadi Nonaktif saja.`;
-                box.classList.remove('hidden');
+                if (openName === 'ticket') {
+                    const box = $('[data-form-error]');
+                    box.textContent = `Tiket tidak bisa dihapus karena sudah terjual ${t.sold} hari ini. Ubah status menjadi Nonaktif saja.`;
+                    box.classList.remove('hidden');
+                } else {
+                    toast(`Tidak bisa dihapus: ${t.name} sudah terjual ${t.sold} hari ini.`, 'err');
+                }
                 return;
             }
-            closeModal(true);
             const ok = await askConfirm({ title: 'Hapus Kategori Tiket?', text: `<b>${esc(t.name)}</b> akan dihapus dari katalog dan tidak dapat dikembalikan.`, label: 'Ya, Hapus' });
             if (!ok) return;
             try {
                 if (CONFIG.USE_API) await http('DELETE', `${CONFIG.urls.tickets}/${t.id}`);
                 state.tickets = state.tickets.filter((x) => x.id !== t.id);
+                if (state.variant === t.id) state.variant = null;
                 addLog(`Menghapus kategori tiket "${t.name}" dari katalog.`, '', 'gray');
                 state.draftCap = null;
                 renderAll();
                 toast(`Tiket "${t.name}" dihapus`);
             } catch (err) { toast(err.message, 'err'); }
+        };
+
+        $('#tf-delete').addEventListener('click', () => {
+            const t = byId(f('id').value);
+            if (!t) return;
+            if (t.sold > 0) { removeTicket(t); return; }
+            closeModal(true);
+            removeTicket(t);
         });
 
         // =====================================================================

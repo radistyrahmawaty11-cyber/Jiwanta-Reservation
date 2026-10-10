@@ -11,7 +11,7 @@ class Pengguna extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'nama',
+        'nama_pengguna',
         'email',
         'password',
         'nohp',
@@ -22,9 +22,16 @@ class Pengguna extends Authenticatable
         'password',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'password' => 'hashed',
+        ];
+    }
+
     public function reservasis()
     {
-        return $this->hasMany(Reservasi::class);
+        return $this->hasMany(Reservasi::class, 'id_pengguna');
     }
 
     public function transaksis()

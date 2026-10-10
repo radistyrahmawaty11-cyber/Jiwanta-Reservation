@@ -2,25 +2,52 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Cabin;
+use Illuminate\Http\Request;
 
 class CabinController extends Controller
 {
     public function index()
-{
-    // 1. Ambil semua data dari database
-    $cabins = Cabin::all();
+    {
+        $cabins = Cabin::orderBy('jenis_cabin')->orderBy('id')->get();
 
-    // 2. Kirim ke view 'cabin' (file cabin.blade.php)
-    return view('admin.cabin', compact('cabins'));
-}
+        return view('admin.cabin', compact('cabins'));
+    }
 
+    public function store(Request $request)
+    {
+        $d = $this->validated($request);
 
-    public function create() { }
-    public function store(Request $request) { }
-    public function show($id) { }
-    public function edit($id) { }
-    public function update(Request $request, $id) { }
-    public function destroy($id) { }
+        $cabin = Cabin::create($d + ['status' => $d['status'] ?? 'tersedia']);
+
+        return response()->json(['ok' => true, 'data' => $cabin]);
+    }
+
+    public function update(Request $request, Cabin $cabin)
+    {
+        $d = $this->validated($request);
+
+        $cabin->update($d);
+
+        return response()->json(['ok' => true, 'data' => $cabin]);
+    }
+
+    public function destroy(Cabin $cabin)
+    {
+        $cabin->delete();
+
+        return response()->json(['ok' => true]);
+    }
+
+    private function validated(Request $request): array
+    {
+        return $request->validate([
+            'nama_cabin' => ['required', 'string', 'max:100'],
+            'jenis_cabin' => ['required', 'in:suite,shorts'],
+            'kapasitas' => ['required', 'integer', 'min:1', 'max:50'],
+            'harga_per_malam' => ['required', 'numeric', 'min:0'],
+            'status' => ['nullable', 'in:tersedia,dipesan'],
+            'deskripsi' => ['nullable', 'string', 'max:1000'],
+        ]);
+    }
 }

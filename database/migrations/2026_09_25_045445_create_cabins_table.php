@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('cabins', function (Blueprint $table) {
             $table->id();
             $table->string('nama_cabin', 100);
-            $table->enum('jenis_cabin', ['sweet', 'short']);
+            $table->enum('jenis_cabin', ['suite', 'shorts']);
             $table->integer('kapasitas')->default(2);
             $table->decimal('harga_per_malam', 10, 2);
             $table->enum('status', ['tersedia', 'dipesan'])->default('tersedia');

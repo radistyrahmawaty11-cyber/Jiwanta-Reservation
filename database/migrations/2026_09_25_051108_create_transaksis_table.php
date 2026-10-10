@@ -18,8 +18,9 @@ return new class extends Migration
             $table->datetime('tgl_transaksi');
             $table->decimal('total_bayar', 12, 2);
             $table->decimal('jumlah_bayar', 12, 2);
-            $table->decimal('kembalian', 12, 2);
-            $table->enum('metode', ['cash', 'qr', 'tf']);
+            $table->decimal('kembalian', 12, 2)->default(0);
+            $table->enum('metode', ['bca', 'mandiri']);
+            $table->string('bukti', 255)->nullable();
             $table->enum('jenis_transaksi', ['pembayaran_renang', 'pembayaran_cabin']);
             $table->enum('status', ['pending', 'lunas', 'gagal'])->default('pending');
             $table->timestamps();
