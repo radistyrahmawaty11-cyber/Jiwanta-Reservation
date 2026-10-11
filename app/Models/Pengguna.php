@@ -9,14 +9,14 @@ class Pengguna extends Authenticatable
 {
     use Notifiable;
 
-    protected $table = 'penggunas';
+    protected $table = 'penggunas'; // Pastikan ini sesuai nama tabel
 
     protected $fillable = [
         'nama_pengguna',
         'email',
-        'password',
         'nohp',
         'role',
+        'password',
     ];
 
     protected $hidden = [
@@ -26,22 +26,4 @@ class Pengguna extends Authenticatable
     protected $casts = [
         'password' => 'hashed',
     ];
-
-    // Override karena kolom username bukan 'name'
-    public function getAuthIdentifierName()
-    {
-        return 'id';
-    }
-
-    // Relasi ke transaksi
-    public function transaksis()
-    {
-        return $this->hasMany(Transaksi::class, 'pengguna_id');
-    }
-
-    // Relasi ke reservasi
-    public function reservasis()
-    {
-        return $this->hasMany(Reservasi::class, 'pengguna_id');
-    }
 }
