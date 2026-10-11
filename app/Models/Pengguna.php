@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class Pengguna extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use Notifiable;
+
+    protected $table = 'penggunas';
 
     protected $fillable = [
         'nama_pengguna',
@@ -22,20 +23,25 @@ class Pengguna extends Authenticatable
         'password',
     ];
 
-    protected function casts(): array
+    protected $casts = [
+        'password' => 'hashed',
+    ];
+
+    // Override karena kolom username bukan 'name'
+    public function getAuthIdentifierName()
     {
-        return [
-            'password' => 'hashed',
-        ];
+        return 'id';
     }
 
-    public function reservasis()
-    {
-        return $this->hasMany(Reservasi::class, 'id_pengguna');
-    }
-
+    // Relasi ke transaksi
     public function transaksis()
     {
-        return $this->hasMany(Transaksi::class);
+        return $this->hasMany(Transaksi::class, 'pengguna_id');
+    }
+
+    // Relasi ke reservasi
+    public function reservasis()
+    {
+        return $this->hasMany(Reservasi::class, 'pengguna_id');
     }
 }

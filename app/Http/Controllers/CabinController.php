@@ -2,120 +2,95 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Cabin;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class CabinController extends Controller
 {
-    /**
-     * 1. Menampilkan semua data cabin (Read)
-     */
+    // Tampilkan daftar semua cabin
     public function index()
-{
-    $cabins = Cabin::all();
-    return view('admin.cabin', compact('cabins'));
-}
+    {
+        $cabins = Cabin::orderBy('created_at', 'desc')->get();
+        return view('admin.cabin', compact('cabins'));
+    }
 
-    /**
-     * 2. Menampilkan form tambah cabin (Create)
-     *
-     * CATATAN: Karena kita menggunakan Modal JavaScript di halaman index,
-     * method ini tidak benar-benar dipanggil saat klik tombol "Tambah".
-     * Kita buat redirect ke index agar aman, atau bisa return view('admin.cabin.create')
-     * jika nanti ingin membuat halaman khusus untuk menambah data.
-     */
+    // Tampilkan form tambah cabin
     public function create()
     {
-        // Redirect ke halaman index (karena form tambah sudah ada di modal)
-        return redirect()->route('cabin');
-
-        // Jika nanti ingin pakai halaman terpisah, hapus baris di atas dan gunakan:
-        // return view('admin.cabin.create');
+        return view('admin.cabin-form', ['cabin' => null]);
     }
 
-    /**
-     * 3. Menyimpan data cabin baru ke database (Store)
-     */
+    // Simpan cabin baru ke database
     public function store(Request $request)
     {
-        $request->validate([
-
-            'nama_cabin'      => 'required|string|max:100',
-            'jenis_cabin'     => 'required|in:suite,shorts',
-            'kapasitas'       => 'required
-            |integer|min:1',
+        $validated = $request->validate([
+            'nama_cabin' => 'required|string|max:100',
+            'deskripsi' => 'nullable|string',
             'harga_per_malam' => 'required|numeric|min:0',
-            'status'          => 'required|in:tersedia,penuh,maintenance',
-            'deskripsi'       => 'nullable|string',
-        ], [
-            'nama_cabin.required'      => 'Nama cabin wajib diisi.',
-            'jenis_cabin.required'     => 'Jenis cabin wajib dipilih.',
-            'kapasitas.required'       => 'Kapasitas wajib diisi.',
-            'kapasitas.integer'        => 'Kapasitas harus berupa angka.',
-            'harga_per_malam.required' => 'Harga per malam wajib diisi.',
-            'harga_per_malam.numeric'  => 'Harga harus berupa angka.',
-            'status.required'          => 'Status wajib dipilih.',
+            'kapasitas' => 'required|integer|min:1',
+            'fasilitas' => 'nullable|string',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'status' => 'required|in:tersedia,terisi',
         ]);
 
-        Cabin::create($request->all());
+        // Handle upload gambar
+        if ($request->hasFile('gambar')) {
+            $validated['gambar'] = $request->file('gambar')->store('cabins', 'public');
+        }
 
-        return redirect()->route('cabin')->with('success', 'Cabin berhasil ditambahkan!');
+        Cabin::create($validated);
+
+        return redirect()->route('admin.cabin.index')->with('success', 'Cabin berhasil ditambahkan!');
     }
 
-    /**
-     * 4. Menampilkan detail 1 cabin (Show) - Biasanya untuk API
-     */
-    public function show($id)
-    {
-        $cabin = Cabin::findOrFail($id);
-        return response()->json($cabin);
-    }
-
-    /**
-     * 5. Menampilkan data cabin untuk diedit (Edit) - Biasanya untuk API/JS
-     */
+    // Tampilkan form edit cabin
     public function edit($id)
     {
         $cabin = Cabin::findOrFail($id);
-        return response()->json($cabin);
+        return view('admin.cabin-form', compact('cabin'));
     }
 
-    /**
-     * 6. Memperbarui data cabin (Update)
-     */
+    // Update cabin
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'nama_cabin'      => 'required|string|max:100',
-            'jenis_cabin'     => 'required|in:suite,shorts',
-            'kapasitas'       => 'required|integer|min:1',
+        $cabin = Cabin::findOrFail($id);
+
+        $validated = $request->validate([
+            'nama_cabin' => 'required|string|max:100',
+            'deskripsi' => 'nullable|string',
             'harga_per_malam' => 'required|numeric|min:0',
-            'status'          => 'required|in:tersedia,penuh,maintenance',
-            'deskripsi'       => 'nullable|string',
-        ], [
-            'nama_cabin.required'      => 'Nama cabin wajib diisi.',
-            'jenis_cabin.required'     => 'Jenis cabin wajib dipilih.',
-            'kapasitas.required'       => 'Kapasitas wajib diisi.',
-            'kapasitas.integer'        => 'Kapasitas harus berupa angka.',
-            'harga_per_malam.required' => 'Harga per malam wajib diisi.',
-            'harga_per_malam.numeric'  => 'Harga harus berupa angka.',
-            'status.required'          => 'Status wajib dipilih.',
+            'kapasitas' => 'required|integer|min:1',
+            'fasilitas' => 'nullable|string',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'status' => 'required|in:tersedia,terisi',
         ]);
 
-        $cabin = Cabin::findOrFail($id);
-        $cabin->update($request->all());
+        // Handle upload gambar baru (hapus yang lama)
+        if ($request->hasFile('gambar')) {
+            if ($cabin->gambar) {
+                Storage::disk('public')->delete($cabin->gambar);
+            }
+            $validated['gambar'] = $request->file('gambar')->store('cabins', 'public');
+        }
 
-        return redirect()->route('cabin')->with('success', 'Data cabin berhasil diperbarui!');
+        $cabin->update($validated);
+
+        return redirect()->route('admin.cabin.index')->with('success', 'Cabin berhasil diperbarui!');
     }
 
-    /**
-     * 7. Menghapus data cabin (Destroy)
-     */
+    // Hapus cabin
     public function destroy($id)
     {
         $cabin = Cabin::findOrFail($id);
+
+        // Hapus gambar jika ada
+        if ($cabin->gambar) {
+            Storage::disk('public')->delete($cabin->gambar);
+        }
+
         $cabin->delete();
 
-        return redirect()->route('cabin')->with('success', 'Cabin berhasil dihapus!');
+        return redirect()->route('admin.cabin.index')->with('success', 'Cabin berhasil dihapus!');
     }
 }

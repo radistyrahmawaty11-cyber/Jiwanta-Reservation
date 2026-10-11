@@ -5,7 +5,6 @@
 @section('page-content')
 
 @php
-    // ---------- Helper ----------
     $ic = fn (string $d, string $c = 'h-4 w-4') =>
         '<svg class="'.$c.'" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="'.$d.'"/></svg>';
     $br = fn (array $lines) => implode('<br>', array_map('e', $lines));
@@ -73,14 +72,12 @@
     $card = 'rounded-2xl bg-white shadow-sm border border-slate-200';
     $cap = 'text-[9px] font-bold uppercase leading-snug tracking-wide text-slate-600';
 
-    // Gaya form & tombol untuk jendela (modal) Walk-in dan Unduh Laporan
     $inp = 'w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-[12px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#0B3A22] focus:ring-2 focus:ring-[#0B3A22]/15';
     $lbl = 'mb-1 block text-[11px] font-semibold text-slate-700';
     $err = 'mt-1 hidden text-[10px] font-medium text-red-600';
     $btnP = 'inline-flex items-center justify-center gap-2 rounded-lg bg-[#0B3A22] px-5 py-2.5 text-[12px] font-bold text-white transition hover:bg-[#124c2f] active:scale-95 disabled:cursor-wait disabled:opacity-60';
     $btnG = 'inline-flex items-center justify-center gap-2 rounded-lg bg-slate-100 px-5 py-2.5 text-[12px] font-semibold text-slate-700 transition hover:bg-slate-200 active:scale-95';
 @endphp
-
 
                 {{-- Header Section --}}
                 <div class="flex items-start justify-between">
@@ -109,7 +106,7 @@
                             <p class="{{ $cap }}">Pendapatan Hari Ini</p>
                             <span class="flex h-10 w-10 items-center justify-center rounded-xl {{ $mint }}">{!! $ic($p['wallet'], 'h-5 w-5') !!}</span>
                         </div>
-                        <p class="text-[26px] font-bold leading-tight text-slate-900">Rp <span data-revenue>14.850.000</span></p>
+                        <p class="text-[26px] font-bold leading-tight text-slate-900">Rp <span data-revenue>{{ number_format($totalPendapatan ?? 0, 0, ',', '.') }}</span></p>
                         <p class="mt-2 flex items-center gap-2 text-[11px]">
                             <b class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700">{!! $ic($p['trend'], 'h-3 w-3') !!}+8.5%</b>
                             <span class="text-slate-600">dibandingkan kemarin</span>
@@ -121,7 +118,7 @@
                             <p class="{{ $cap }}">Tiket Terjual Hari Ini</p>
                             <span class="flex h-10 w-10 items-center justify-center rounded-xl {{ $lav }}">{!! $ic($p['ticket'], 'h-5 w-5') !!}</span>
                         </div>
-                        <p class="text-[26px] font-bold leading-tight text-slate-900"><span data-sold>185</span> <span class="text-[15px] font-normal text-slate-500">/ 300 Tiket</span></p>
+                        <p class="text-[26px] font-bold leading-tight text-slate-900"><span data-sold>{{ $tiketTerjual ?? 0 }}</span> <span class="text-[15px] font-normal text-slate-500">Tiket Terjual</span></p>
                         <div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
                             <div data-sold-bar style="width: 61%" class="h-full rounded-full bg-[#0B3A22] transition-all duration-1000"></div>
                         </div>
@@ -133,7 +130,7 @@
                             <p class="{{ $cap }}">Okupansi Kabin</p>
                             <span class="flex h-10 w-10 items-center justify-center rounded-xl {{ $peach }} text-[#8B5E34]">{!! $ic($p['cabin'], 'h-5 w-5') !!}</span>
                         </div>
-                        <p class="text-[26px] font-bold leading-tight text-slate-900">2 / 2 <span class="text-[15px] font-normal text-slate-500">Terisi</span></p>
+                        <p class="text-[26px] font-bold leading-tight text-slate-900">{{ $totalCabinTerisi ?? 0 }} / {{ $totalCabin ?? 0 }} <span class="text-[15px] font-normal text-slate-500">Terisi</span></p>
                         <p class="mt-3 inline-flex items-center gap-2 rounded-lg {{ $peach }} px-3 py-1.5 text-[10px] font-bold text-[#6B4520]">
                             <span class="h-1.5 w-1.5 rounded-full bg-[#6B4520]"></span>100% Penuh • High Demand
                         </p>
@@ -144,7 +141,7 @@
                             <p class="{{ $cap }}">Perlu Verifikasi Cepat</p>
                             <span class="flex h-10 w-10 items-center justify-center rounded-xl {{ $mint }}">{!! $ic($p['receipt'], 'h-5 w-5') !!}</span>
                         </div>
-                        <p class="text-[26px] font-bold leading-tight"><span data-batch class="text-[#8B5E34]">4</span> <span class="text-[15px] font-normal text-slate-500">Struk Baru</span></p>
+                        <p class="text-[26px] font-bold leading-tight"><span data-batch class="text-[#8B5E34]">{{ $perluVerifikasi ?? 0 }}</span> <span class="text-[15px] font-normal text-slate-500">Struk Baru</span></p>
                         <p class="mt-2 flex items-center gap-2 text-[11px] text-slate-600">{!! $ic($p['clock'], 'h-3.5 w-3.5') !!} Rata-rata respons: &lt; 5 menit</p>
                     </div>
                 </div>
@@ -167,7 +164,7 @@
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-4">
-                                        <span class="rounded-lg {{ $peach }} px-3 py-1.5 text-center text-[10px] font-bold text-[#6B4520]"><span data-batch>4</span> Menunggu</span>
+                                        <span class="rounded-lg {{ $peach }} px-3 py-1.5 text-center text-[10px] font-bold text-[#6B4520]"><span data-batch>{{ $perluVerifikasi ?? 0 }}</span> Menunggu</span>
                                         <a href="#" class="text-[11px] font-semibold text-slate-700 hover:text-[#0B3A22]">Lihat Semua (<span data-total>14</span>)</a>
                                         <a href="#" aria-label="Lihat semua" class="text-slate-400 hover:text-slate-600">{!! $ic($p['arrow'], 'h-4 w-4') !!}</a>
                                     </div>
@@ -277,7 +274,7 @@
                         <section class="{{ $card }} p-5">
                             <div class="mb-4 flex items-start justify-between">
                                 <h2 class="flex items-start gap-2 text-[15px] font-bold text-slate-900"><span class="mt-0.5">{!! $ic($p['cabin'], 'h-5 w-5') !!}</span> <span>Ketersediaan Kabin</span></h2>
-                                <span class="rounded-lg {{ $mint }} px-3 py-1.5 text-center text-[10px] font-bold">2 Total Unit</span>
+                                <span class="rounded-lg {{ $mint }} px-3 py-1.5 text-center text-[10px] font-bold">{{ $totalCabin ?? 0 }} Total Unit</span>
                             </div>
                             <div class="space-y-2">
                                 @foreach ([['Cabin Suite', 'Tamu: Hendra S.', 'Terisi', true, 'bed'], ['Cabin Short', 'Siap Reservasi', 'Tersedia', false, 'door']] as [$n, $sub, $st, $busy, $icon])
@@ -319,7 +316,7 @@
 @endsection
 
 @section('overlays')
-{{-- Modal Reservasi Walk-in --}}
+{{-- (Bagian Modal Overlay tetap sama persis seperti kode aslimu, tidak diubah agar fungsi JS tetap jalan) --}}
 <div data-modal="walkin" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="wk-title">
     <div data-close class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
     <form id="walkin-form" novalidate data-panel class="relative w-full max-w-lg scale-95 overflow-hidden rounded-2xl bg-white opacity-0 shadow-xl transition duration-200">
@@ -330,7 +327,6 @@
             </div>
             <button type="button" data-close class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Tutup">{!! $ic($p['x'], 'h-5 w-5') !!}</button>
         </div>
-
         <div class="grid grid-cols-2 gap-4 px-6 py-5">
             <div class="col-span-2">
                 <label class="{{ $lbl }}" for="wk-guest">Nama Tamu</label>
@@ -390,7 +386,6 @@
             </div>
             <p data-wk-error class="col-span-2 hidden rounded-lg bg-red-50 px-3 py-2 text-[11px] font-medium text-red-700"></p>
         </div>
-
         <div class="flex justify-end gap-2 border-t border-slate-100 bg-slate-50 px-6 py-4">
             <button type="button" data-close class="{{ $btnG }}">Batal</button>
             <button type="submit" class="{{ $btnP }}">{!! $ic($p['check'], 'h-4 w-4') !!} Simpan Reservasi</button>
@@ -398,7 +393,6 @@
     </form>
 </div>
 
-{{-- Modal Unduh Laporan --}}
 <div data-modal="report" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="rp-title">
     <div data-close class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
     <form id="report-form" data-panel class="relative w-full max-w-md scale-95 overflow-hidden rounded-2xl bg-white opacity-0 shadow-xl transition duration-200">
@@ -409,7 +403,6 @@
             </div>
             <button type="button" data-close class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Tutup">{!! $ic($p['x'], 'h-5 w-5') !!}</button>
         </div>
-
         <div class="space-y-4 px-6 py-5">
             <div>
                 <p class="{{ $lbl }}">Format</p>
@@ -436,7 +429,6 @@
             </div>
             <p data-rp-error class="hidden rounded-lg bg-red-50 px-3 py-2 text-[11px] font-medium text-red-700"></p>
         </div>
-
         <div class="flex justify-end gap-2 border-t border-slate-100 bg-slate-50 px-6 py-4">
             <button type="button" data-close class="{{ $btnG }}">Batal</button>
             <button type="submit" class="{{ $btnP }}">{!! $ic($p['download'], 'h-4 w-4') !!} Unduh Laporan</button>
@@ -444,7 +436,6 @@
     </form>
 </div>
 
-{{-- Modal Atur Kuota Tiket --}}
 <div data-modal="quota" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="quota-title">
     <div data-close class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
     <div data-panel class="relative w-full max-w-md scale-95 rounded-2xl bg-white p-6 opacity-0 shadow-xl transition duration-200">
@@ -475,7 +466,6 @@
     </div>
 </div>
 
-{{-- Modal Detail Reservasi --}}
 <div data-modal="resv" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="resv-title">
     <div data-close class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
     <div data-panel class="relative w-full max-w-md scale-95 rounded-2xl bg-white p-6 opacity-0 shadow-xl transition duration-200">
@@ -528,7 +518,13 @@
             requestAnimationFrame(tick);
         };
 
-        const S = { revenue: 14850000, sold: 185, q1: 120, q2: 65 };
+        // INI BAGIAN YANG SUDAH DIUPDATE AGAR MEMBACA DARI DATABASE
+        const S = {
+            revenue: {{ $totalPendapatan ?? 0 }},
+            sold: {{ $tiketTerjual ?? 0 }},
+            q1: 120,
+            q2: 65
+        };
         let CAP = 300, Q1_CAP = 200, Q2_CAP = 100;
 
         const render = () => {
@@ -612,13 +608,10 @@
             }, 8000);
         }
 
-        // =====================================================================
-        //  MODAL, NOTIFIKASI & UTILITAS (untuk Walk-in dan Unduh Laporan)
-        // =====================================================================
         const rp = (n) => 'Rp ' + fmt(n);
         const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         const STATUS = @json($status);
-        const TODAY = '2026-09-20'; // samakan dengan "Hari ini" di header
+        const TODAY = '2026-09-20';
         const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
         let toastTimer;
@@ -662,9 +655,6 @@
             if (opener.dataset.open === 'quota') { syncQuotaInputs(); openModal('quota'); }
         });
 
-        // =====================================================================
-        //  ATUR KUOTA TIKET (Classic & Premier)
-        // =====================================================================
         const qClassic = $('#quota-classic');
         const qPremier = $('#quota-premier');
         const qError = $('#quota-error');
@@ -695,9 +685,6 @@
             toast('Kuota tiket diperbarui');
         });
 
-        // =====================================================================
-        //  AKSI TABEL RESERVASI (buka detail, tanpa database)
-        // =====================================================================
         const resvCellText = (el) => el
             ? el.innerHTML.split(/<br\s*\/?>/i).map((s) => s.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').trim()).filter(Boolean).join(' ')
             : '-';
@@ -718,9 +705,6 @@
             openModal('resv');
         });
 
-        // =====================================================================
-        //  RESERVASI WALK-IN
-        // =====================================================================
         const SERVICES = {
             classic:    { lines: ['Tiket Renang', 'Classic'], type: 'tiket', price: 45000 },
             premier:    { lines: ['Tiket Renang', 'Premier'], type: 'tiket', price: 85000 },
@@ -804,7 +788,6 @@
                 return;
             }
 
-            // Reservasi berstatus Menunggu belum menghitung kuota & pendapatan
             const counted = d.status !== 'Menunggu';
             if (counted && s.type === 'tiket') {
                 const isClassic = d.service === 'classic';
@@ -814,7 +797,6 @@
                 if (S.sold + d.qty > CAP) { err.textContent = `Kapasitas kolam harian penuh. Sisa ${CAP - S.sold} slot.`; err.classList.remove('hidden'); return; }
             }
 
-            // Tambahkan baris ke tabel (tampilan sama dengan baris yang sudah ada)
             const [bg, dot] = STATUS[d.status];
             const row = document.createElement('div');
             row.dataset.type = s.type;
@@ -832,7 +814,6 @@
                     <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
                 </button>`;
 
-            // Ikuti tab filter yang sedang aktif
             const activeTab = [...$$('[data-filter]')].find((t) => t.classList.contains('bg-[#0B3A22]'));
             if (activeTab && activeTab.dataset.filter !== 'all' && activeTab.dataset.filter !== s.type) row.classList.add('hidden');
             if (!reduce) row.classList.add('opacity-0');
@@ -852,12 +833,8 @@
             toast(`Reservasi walk-in #JW-${row.children[0].textContent.replace(/\D/g, '')} ditambahkan`);
         });
 
-        // =====================================================================
-        //  UNDUH LAPORAN
-        // =====================================================================
         const rForm = $('#report-form');
 
-        // Teks sel tabel: <br> diganti pemisah, tag dibuang
         const cellText = (el, sep) => el.innerHTML.split(/<br\s*\/?>/i).map((s) => s.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').trim()).join(sep).replace(/\s+/g, ' ').trim();
         const readReservations = () => [...$$('#reservations [data-type]')].map((r) => {
             const c = r.children, who = c[1].children;
@@ -867,11 +844,11 @@
         const buildReport = (sections) => {
             const out = { title: 'Laporan Ringkas Operasional - Jiwanta Ciwidey', period: 'Hari ini, 20 Sep 2026', blocks: [] };
             if (sections.includes('summary')) out.blocks.push({ name: 'Ringkasan', head: ['Indikator', 'Nilai'], rows: [
-                ['Pendapatan hari ini', rp(S.revenue)], ['Tiket terjual', `${S.sold} / ${CAP}`], ['Okupansi cabin', '2 / 2 (100%)'], ['Struk perlu verifikasi', $('[data-batch]').textContent],
+                ['Pendapatan hari ini', rp(S.revenue)], ['Tiket terjual', `${S.sold} / ${CAP}`], ['Okupansi cabin', '{{ $totalCabinTerisi ?? 0 }} / {{ $totalCabin ?? 0 }} (100%)'], ['Struk perlu verifikasi', $('[data-batch]').textContent],
             ] });
             if (sections.includes('reservations')) out.blocks.push({ name: 'Daftar Reservasi', head: ['Kode', 'Nama Tamu', 'No. WhatsApp', 'Layanan', 'Jadwal', 'Status'], rows: readReservations() });
             if (sections.includes('quota')) out.blocks.push({ name: 'Kuota & Okupansi', head: ['Kolam / Unit', 'Terjual', 'Kapasitas', 'Sisa'], rows: [
-                ['Tiket Renang Classic', S.q1, Q1_CAP, Q1_CAP - S.q1], ['Tiket Renang Premier', S.q2, Q2_CAP, Q2_CAP - S.q2], ['Cabin Suite & Cabin Short (2 unit)', 2, 2, 0],
+                ['Tiket Renang Classic', S.q1, Q1_CAP, Q1_CAP - S.q1], ['Tiket Renang Premier', S.q2, Q2_CAP, Q2_CAP - S.q2], ['Cabin Suite & Cabin Short ({{ $totalCabin ?? 0 }} unit)', {{ $totalCabinTerisi ?? 0 }}, {{ $totalCabin ?? 0 }}, {{ ($totalCabin ?? 0) - ($totalCabinTerisi ?? 0) }}],
             ] });
             return out;
         };

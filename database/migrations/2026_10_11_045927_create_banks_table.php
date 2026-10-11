@@ -6,26 +6,18 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('banks', function (Blueprint $table) {
             $table->id();
-            $table->enum('kode', ['bca', 'mandiri']);
-            $table->string('nama', 100);
+            $table->string('nama_bank', 100);
             $table->string('nomor_rekening', 50);
             $table->string('atas_nama', 100);
-            $table->string('cabang', 100)->nullable();
-            $table->boolean('is_utama')->default(false);
+            $table->boolean('status')->default(true);
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('banks');

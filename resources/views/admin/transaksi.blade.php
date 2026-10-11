@@ -3,7 +3,6 @@
 @section('title', 'Transaksi - Jiwanta')
 @section('page-class') bg-[#F9F8FF] font-['Plus_Jakarta_Sans',ui-sans-serif,system-ui,sans-serif] text-slate-900 antialiased @endsection
 
-{{-- Font desain: Plus Jakarta Sans (aman jika layout belum punya @stack('styles'), hanya tidak terpakai) --}}
 @push('styles')
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +17,6 @@
 @section('page-content')
 
 @php
-    // ---------- Helper ----------
     $ic = fn (string $d, string $c = 'h-4 w-4', string $sw = '1.8') =>
         '<svg class="'.$c.'" fill="none" stroke="currentColor" stroke-width="'.$sw.'" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="'.$d.'"/></svg>';
 
@@ -27,7 +25,7 @@
         'receipt'   => 'M6 3h12v18l-3-2-3 2-3-2-3 2V3zM9 8h6M9 12h6',
         'ticket'    => 'M4 7h16v3a2 2 0 000 4v3H4v-3a2 2 0 000-4V7zM14 7v10',
         'cabin'     => 'M3 11l9-8 9 8M5 10v10h14V10M10 20v-5h4v5',
-        'pool'      => 'M3 19c1.5 0 1.5-1 3-1s1.5 1 3-1 1.5 1 3-1 1.5 1 3-1 1.5 1 3-1 1.5 1 3 1M8 15V6M14 15V6M8 8h6M8 12h6',
+        'pool'      => 'M3 19c1.5 0 1.5-1 3-1s1.5 1 3 1 1.5-1 3-1 1.5 1 3 1 1.5-1 3-1 1.5 1 3 1M8 15V6M14 15V6M8 8h6M8 12h6',
         'users'     => 'M17 20v-1a4 4 0 00-4-4H7a4 4 0 00-4 4v1M10 11a4 4 0 100-8 4 4 0 000 8zM21 20v-1a4 4 0 00-3-3.9M16 3.1a4 4 0 010 7.8',
         'chart'     => 'M5 20V10M12 20V4M19 20v-7',
         'gear'      => 'M12 15a3 3 0 100-6 3 3 0 000 6zM2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2',
@@ -65,102 +63,100 @@
     $statuses = [['all', 'Semua Status'], ['lunas', 'Lunas'], ['pending', 'Menunggu Verifikasi'], ['gagal', 'Gagal']];
 @endphp
 
-                <div class="flex items-start justify-between gap-6">
-                    <div class="max-w-xl">
-                        <p class="mb-2 flex items-center gap-2">
-                            <span class="rounded-md {{ $mint }} px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-[#0B3A22]">Finance Ledger</span>
-                            <span class="text-[10px] text-slate-600">Rekonsiliasi Otomatis Aktif</span>
-                        </p>
-                        <h1 class="text-[32px] font-bold leading-tight text-[#0B3A22]">Riwayat Transaksi</h1>
-                        <p class="mt-2 text-[13px] leading-relaxed text-slate-600">Seluruh pemesanan yang tercatat beserta metode pembayaran, nominal, dan status penyelesaiannya dalam satu daftar.</p>
-                    </div>
+<div class="flex items-start justify-between gap-6">
+    <div class="max-w-xl">
+        <p class="mb-2 flex items-center gap-2">
+            <span class="rounded-md {{ $mint }} px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-[#0B3A22]">Finance Ledger</span>
+            <span class="text-[10px] text-slate-600">Rekonsiliasi Otomatis Aktif</span>
+        </p>
+        <h1 class="text-[32px] font-bold leading-tight text-[#0B3A22]">Riwayat Transaksi</h1>
+        <p class="mt-2 text-[13px] leading-relaxed text-slate-600">Seluruh pemesanan yang tercatat beserta metode pembayaran, nominal, dan status penyelesaiannya dalam satu daftar.</p>
+    </div>
 
-                    <div class="grid w-[540px] shrink-0 grid-cols-3 gap-3">
-                        <div class="{{ $card }} flex items-center gap-3 px-4 py-3.5">
-                            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $mint }} text-[#0B3A22]">{!! $ic($p['receipt'], 'h-5 w-5') !!}</span>
-                            <div>
-                                <p class="text-[22px] font-bold leading-tight text-slate-900" data-stat-today>{{ $stats['today'] }}</p>
-                                <p class="text-[10px] leading-tight text-slate-600">Transaksi Hari Ini</p>
-                            </div>
-                        </div>
-                        <div class="{{ $card }} flex items-center gap-3 px-4 py-3.5">
-                            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $lav }} text-[#2F3F86]">{!! $ic($p['chart'], 'h-5 w-5') !!}</span>
-                            <div>
-                                <p class="text-[18px] font-bold leading-tight text-slate-900" data-stat-omzet>Rp {{ number_format($stats['omzet'], 0, ',', '.') }}</p>
-                                <p class="text-[10px] leading-tight text-slate-600">Omzet Hari Ini</p>
-                            </div>
-                        </div>
-                        <div class="{{ $card }} flex items-center gap-3 px-4 py-3.5">
-                            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $peach }} text-[#0B3A22]">{!! $ic($p['clock'], 'h-5 w-5') !!}</span>
-                            <div>
-                                <p class="text-[22px] font-bold leading-tight text-slate-900" data-stat-pending>{{ $stats['pending'] }}</p>
-                                <p class="text-[10px] leading-tight text-slate-600">Menunggu Verifikasi</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <div class="grid w-[540px] shrink-0 grid-cols-3 gap-3">
+        <div class="{{ $card }} flex items-center gap-3 px-4 py-3.5">
+            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $mint }} text-[#0B3A22]">{!! $ic($p['receipt'], 'h-5 w-5') !!}</span>
+            <div>
+                <p class="text-[22px] font-bold leading-tight text-slate-900" data-stat-today>{{ $stats['today'] }}</p>
+                <p class="text-[10px] leading-tight text-slate-600">Transaksi Hari Ini</p>
+            </div>
+        </div>
+        <div class="{{ $card }} flex items-center gap-3 px-4 py-3.5">
+            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $lav }} text-[#2F3F86]">{!! $ic($p['chart'], 'h-5 w-5') !!}</span>
+            <div>
+                <p class="text-[18px] font-bold leading-tight text-slate-900" data-stat-omzet>Rp {{ number_format($stats['omzet'], 0, ',', '.') }}</p>
+                <p class="text-[10px] leading-tight text-slate-600">Omzet Hari Ini</p>
+            </div>
+        </div>
+        <div class="{{ $card }} flex items-center gap-3 px-4 py-3.5">
+            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $peach }} text-[#0B3A22]">{!! $ic($p['clock'], 'h-5 w-5') !!}</span>
+            <div>
+                <p class="text-[22px] font-bold leading-tight text-slate-900" data-stat-pending>{{ $stats['pending'] }}</p>
+                <p class="text-[10px] leading-tight text-slate-600">Menunggu Verifikasi</p>
+            </div>
+        </div>
+    </div>
+</div>
 
-                <div class="{{ $card }} mt-6 p-5">
-                    <div class="flex flex-wrap items-center gap-3">
-                        <div class="relative min-w-[220px] flex-1">
-                            <span class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">{!! $ic($p['search'], 'h-4 w-4') !!}</span>
-                            <input id="search" type="text" placeholder="Cari kode transaksi, pengguna, atau unit..." class="w-full rounded-xl border border-slate-200 bg-[#F7F8FC] py-2.5 pl-10 pr-4 text-[12px] text-slate-800 outline-none transition focus:border-[#0B3A22] focus:bg-white">
-                        </div>
+<div class="{{ $card }} mt-6 p-5">
+    <div class="flex flex-wrap items-center gap-3">
+        <div class="relative min-w-[220px] flex-1">
+            <span class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">{!! $ic($p['search'], 'h-4 w-4') !!}</span>
+            <input id="search" type="text" placeholder="Cari kode transaksi, pengguna, atau unit..." class="w-full rounded-xl border border-slate-200 bg-[#F7F8FC] py-2.5 pl-10 pr-4 text-[12px] text-slate-800 outline-none transition focus:border-[#0B3A22] focus:bg-white">
+        </div>
 
-                        <div class="flex items-center gap-1 rounded-xl {{ $soft }} p-1">
-                            @foreach ($banks as [$val, $label])
-                                <button type="button" data-bank="{{ $val }}" class="rounded-lg px-3.5 py-2 text-[11px] font-semibold text-slate-600 transition {{ $val === 'all' ? 'bg-white text-[#0B3A22] shadow-sm' : 'hover:text-[#0B3A22]' }}">{{ $label }}</button>
-                            @endforeach
-                        </div>
+        <div class="flex items-center gap-1 rounded-xl {{ $soft }} p-1">
+            @foreach ($banks as [$val, $label])
+                <button type="button" data-bank="{{ $val }}" class="rounded-lg px-3.5 py-2 text-[11px] font-semibold text-slate-600 transition {{ $val === 'all' ? 'bg-white text-[#0B3A22] shadow-sm' : 'hover:text-[#0B3A22]' }}">{{ $label }}</button>
+            @endforeach
+        </div>
 
-                        <div class="relative">
-                            <button type="button" id="status-btn" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-[11px] font-semibold text-slate-700 transition hover:border-[#0B3A22]">
-                                {!! $ic($p['sliders'], 'h-3.5 w-3.5') !!}<span id="status-label">Semua Status</span>{!! $ic($p['chevron'], 'h-3.5 w-3.5') !!}
-                            </button>
-                            <div id="status-menu" class="hidden absolute right-0 top-full z-40 mt-2 w-44 overflow-hidden rounded-xl border border-slate-100 bg-white py-1 shadow-lg">
-                                @foreach ($statuses as [$val, $label])
-                                    <button type="button" data-status="{{ $val }}" class="block w-full px-4 py-2.5 text-left text-[11px] font-semibold text-slate-600 transition hover:bg-[#F3F5FC] hover:text-[#0B3A22]">{{ $label }}</button>
-                                @endforeach
-                            </div>
-                        </div>
+        <div class="relative">
+            <button type="button" id="status-btn" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-[11px] font-semibold text-slate-700 transition hover:border-[#0B3A22]">
+                {!! $ic($p['sliders'], 'h-3.5 w-3.5') !!}<span id="status-label">Semua Status</span>{!! $ic($p['chevron'], 'h-3.5 w-3.5') !!}
+            </button>
+            <div id="status-menu" class="hidden absolute right-0 top-full z-40 mt-2 w-44 overflow-hidden rounded-xl border border-slate-100 bg-white py-1 shadow-lg">
+                @foreach ($statuses as [$val, $label])
+                    <button type="button" data-status="{{ $val }}" class="block w-full px-4 py-2.5 text-left text-[11px] font-semibold text-slate-600 transition hover:bg-[#F3F5FC] hover:text-[#0B3A22]">{{ $label }}</button>
+                @endforeach
+            </div>
+        </div>
 
-                        <button type="button" id="trx-add" class="flex items-center gap-2 rounded-xl bg-[#0B3A22] px-4 py-2.5 text-[11px] font-bold text-white transition hover:bg-[#0e4a2c] active:scale-95">
-                            {!! $ic($p['plus'], 'h-4 w-4', '2.2') !!} Tambah Transaksi
-                        </button>
+        <button type="button" id="trx-add" class="flex items-center gap-2 rounded-xl bg-[#0B3A22] px-4 py-2.5 text-[11px] font-bold text-white transition hover:bg-[#0e4a2c] active:scale-95">
+            {!! $ic($p['plus'], 'h-4 w-4', '2.2') !!} Tambah Transaksi
+        </button>
 
-                        <a href="{{ route('admin.transaksi.export') }}" class="flex items-center gap-2 rounded-xl {{ $lav }} px-4 py-2.5 text-[11px] font-bold text-slate-800 transition hover:bg-[#cfd9f7] active:scale-95">
-                            {!! $ic($p['download'], 'h-4 w-4', '2.2') !!} Unduh XLS
-                        </a>
-                    </div>
-                </div>
+        <a href="{{ route('admin.transaksi.export') }}" class="flex items-center gap-2 rounded-xl {{ $lav }} px-4 py-2.5 text-[11px] font-bold text-slate-800 transition hover:bg-[#cfd9f7] active:scale-95">
+            {!! $ic($p['download'], 'h-4 w-4', '2.2') !!} Unduh XLS
+        </a>
+    </div>
+</div>
 
-                <div class="{{ $card }} mt-6 overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <div class="min-w-[900px]">
-                            <div class="grid grid-cols-[90px_140px_minmax(0,1.4fr)_100px_130px_150px_160px] items-center gap-3 border-b border-slate-100 bg-[#F3F5FC] px-5 py-3 text-[9px] font-bold uppercase tracking-wide text-slate-500">
-                                <span>Waktu</span>
-                                <span>Kode Booking</span>
-                                <span>Customer &amp; Unit</span>
-                                <span>Metode</span>
-                                <span>Nominal</span>
-                                <span>Status</span>
-                                <span class="text-right">Opsi</span>
-                            </div>
-                            <div id="trx-list"></div>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between gap-4 border-t border-slate-100 px-5 py-4">
-                        <p class="text-[10px] text-slate-600">Menampilkan <span data-shown class="font-bold text-slate-800">0</span> dari <span data-total class="font-bold text-slate-800">0</span> transaksi</p>
-                        <div id="pager" class="flex items-center gap-1.5 text-[11px] font-semibold"></div>
-                    </div>
-                </div>
+<div class="{{ $card }} mt-6 overflow-hidden">
+    <div class="overflow-x-auto">
+        <div class="min-w-[900px]">
+            <div class="grid grid-cols-[90px_140px_minmax(0,1.4fr)_100px_130px_150px_160px] items-center gap-3 border-b border-slate-100 bg-[#F3F5FC] px-5 py-3 text-[9px] font-bold uppercase tracking-wide text-slate-500">
+                <span>Waktu</span>
+                <span>Kode Booking</span>
+                <span>Customer &amp; Unit</span>
+                <span>Metode</span>
+                <span>Nominal</span>
+                <span>Status</span>
+                <span class="text-right">Opsi</span>
+            </div>
+            <div id="trx-list"></div>
+        </div>
+    </div>
+    <div class="flex items-center justify-between gap-4 border-t border-slate-100 px-5 py-4">
+        <p class="text-[10px] text-slate-600">Menampilkan <span data-shown class="font-bold text-slate-800">0</span> dari <span data-total class="font-bold text-slate-800">0</span> transaksi</p>
+        <div id="pager" class="flex items-center gap-1.5 text-[11px] font-semibold"></div>
+    </div>
+</div>
 @endsection
 
 @section('overlays')
-    {{-- Toast --}}
     <div id="toast" role="status" class="pointer-events-none fixed right-6 top-20 z-[60] max-w-sm translate-y-[-8px] rounded-xl bg-[#0B3A22] px-4 py-3 text-[12px] font-semibold text-white opacity-0 shadow-[0_10px_24px_-8px_rgba(11,46,34,0.55)] transition duration-300"></div>
 
-    {{-- Modal form (tambah/edit) --}}
     <div id="trx-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
         <div class="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
             <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
@@ -234,7 +230,6 @@
         </div>
     </div>
 
-    {{-- Modal detail --}}
     <div id="trx-detail" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
         <div class="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
             <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
@@ -249,7 +244,6 @@
         </div>
     </div>
 
-    {{-- Modal konfirmasi hapus --}}
     <div id="del-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
         <div class="w-full max-w-sm overflow-hidden rounded-2xl bg-white p-6 text-center shadow-2xl">
             <span class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#FBD5D5] text-[#B42318]">{!! $ic($p['alert'], 'h-6 w-6') !!}</span>
@@ -276,7 +270,6 @@
         const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         const CSRF = $('meta[name="csrf-token"]').content;
 
-        // ---------- HTTP (unwrap { ok, data }) ----------
         const http = async (method, url, body) => {
             const res = await fetch(url, {
                 method,
@@ -292,10 +285,8 @@
             return json && Object.prototype.hasOwnProperty.call(json, 'data') ? json.data : json;
         };
 
-        // ---------- State ----------
         const state = { rows: @json($transaksis), q: '', bank: 'all', status: 'all', page: 1, per: 8, editing: null, deleting: null, viewing: null };
 
-        // ---------- Toast ----------
         let toastTimer;
         const toast = (msg, bad = false) => {
             const el = $('#toast');
@@ -311,7 +302,6 @@
             }, 2800);
         };
 
-        // ---------- Modal helper ----------
         const openModal = (id) => { const m = $('#' + id); m.classList.remove('hidden'); m.classList.add('flex'); };
         const closeModal = (id) => { const m = $('#' + id); m.classList.add('hidden'); m.classList.remove('flex'); };
         $$('[data-close]').forEach((b) => b.addEventListener('click', () => closeModal(b.dataset.close)));
@@ -323,7 +313,6 @@
             if (e.key === 'Escape') ['trx-modal', 'trx-detail', 'del-modal'].forEach(closeModal);
         });
 
-        // ---------- Status pill ----------
         const PILL = {
             lunas:  ['bg-[#CDEFD5] text-[#0B3A22]', 'checkc', 'Lunas'],
             pending: ['bg-[#FBD9B0] text-[#6B4520]', 'clock', 'Menunggu'],
@@ -334,7 +323,6 @@
             return `<span class="inline-flex items-center gap-1.5 rounded-xl ${cls} px-3 py-1.5 text-[9px] font-bold leading-tight">${ic(icon, 'h-3 w-3 shrink-0', '2')} ${label}</span>`;
         };
 
-        // ---------- Baris tabel ----------
         const row = (h, i) => `<div class="${reduce ? '' : 'pop-in '}grid grid-cols-[90px_140px_minmax(0,1.4fr)_100px_130px_150px_160px] items-center gap-3 border-b border-slate-100 px-5 py-4 last:border-0" style="animation-delay:${i * 40}ms">
             <span class="font-mono text-[10px] text-slate-500">${esc(h.t)} WIB</span>
             <span class="break-words text-[11px] font-semibold text-slate-900">${esc(h.kode)}</span>
@@ -387,7 +375,6 @@
             renderStats();
         };
 
-        // ---------- Filter: bank ----------
         const on = ['bg-white', 'text-[#0B3A22]', 'shadow-sm'];
         const off = ['text-slate-600', 'hover:text-[#0B3A22]'];
         $$('[data-bank]').forEach((b) => b.addEventListener('click', () => {
@@ -398,10 +385,8 @@
             render();
         }));
 
-        // ---------- Filter: pencarian ----------
         $('#search').addEventListener('input', (e) => { state.q = e.target.value.trim().toLowerCase(); state.page = 1; render(); });
 
-        // ---------- Filter: status ----------
         const menu = $('#status-menu');
         $('#status-btn').addEventListener('click', (e) => { e.stopPropagation(); menu.classList.toggle('hidden'); });
         document.addEventListener('click', () => menu.classList.add('hidden'));
@@ -413,7 +398,6 @@
             render();
         }));
 
-        // ---------- Pagination ----------
         $('#pager').addEventListener('click', (e) => {
             const b = e.target.closest('[data-pg]');
             if (!b) return;
@@ -425,7 +409,6 @@
             render();
         });
 
-        // ---------- Form ----------
         const pad = (n) => String(n).padStart(2, '0');
         const autoNow = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; };
         const autoKode = () => { const d = new Date(); return 'TRX-' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + String(Math.floor(Math.random() * 900) + 100); };
@@ -477,7 +460,7 @@
             try {
                 if (state.editing) {
                     const saved = await http('PUT', `/admin/transaksi/${state.editing}`, payload);
-                    const idx = state.rows.findIndex((r) => r.id === state.editing);
+                    const idx = state.rows.findIndex((r) => String(r.id) === String(state.editing));
                     if (idx > -1) state.rows[idx] = saved;
                     toast('Transaksi ' + saved.kode + ' diperbarui.');
                 } else {
@@ -495,7 +478,6 @@
             }
         });
 
-        // ---------- Detail ----------
         const detailLine = (label, val) => `<div class="flex items-start justify-between gap-4 border-b border-slate-100 pb-2.5 last:border-0"><span class="shrink-0 text-[11px] text-slate-500">${label}</span><span class="text-right text-[12px] font-semibold text-slate-900">${val}</span></div>`;
         const openDetail = (h) => {
             state.viewing = h.id;
@@ -513,14 +495,15 @@
             openModal('trx-detail');
         };
         $('#dt-edit').addEventListener('click', () => {
-            const h = state.rows.find((r) => r.id === state.viewing);
+            const h = state.rows.find((r) => String(r.id) === String(state.viewing));
             if (!h) return;
             closeModal('trx-detail');
             openForm('edit', h);
         });
 
-        // ---------- Delegasi klik tabel ----------
-        const byId = (id) => state.rows.find((r) => r.id === id);
+        // PERBAIKAN UTAMA: byId menggunakan String comparison
+        const byId = (id) => state.rows.find((r) => String(r.id) === String(id));
+
         $('#trx-list').addEventListener('click', (e) => {
             const v = e.target.closest('[data-view]');
             const ed = e.target.closest('[data-edit]');
@@ -530,14 +513,13 @@
             else if (del) { const h = byId(del.dataset.del); if (h) { state.deleting = h.id; $('#del-kode').textContent = h.kode; openModal('del-modal'); } }
         });
 
-        // ---------- Hapus ----------
         $('#del-confirm').addEventListener('click', async () => {
             if (!state.deleting) return;
             const btn = $('#del-confirm');
             btn.disabled = true;
             try {
                 await http('DELETE', `/admin/transaksi/${state.deleting}`);
-                state.rows = state.rows.filter((r) => r.id !== state.deleting);
+                state.rows = state.rows.filter((r) => String(r.id) !== String(state.deleting));
                 closeModal('del-modal');
                 toast('Transaksi dihapus.');
                 state.page = 1;
@@ -550,10 +532,8 @@
             }
         });
 
-        // ---------- Tambah ----------
         $('#trx-add').addEventListener('click', () => openForm('create'));
 
-        // ---------- Mulai ----------
         render();
     });
 </script>

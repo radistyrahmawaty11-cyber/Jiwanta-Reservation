@@ -6,26 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('cabins', function (Blueprint $table) {
             $table->id();
             $table->string('nama_cabin', 100);
-            $table->enum('jenis_cabin', ['suite', 'shorts']);
-            $table->integer('kapasitas')->default(2);
-            $table->decimal('harga_per_malam', 10, 2);
-            $table->enum('status', ['tersedia', 'dipesan'])->default('tersedia');
             $table->text('deskripsi')->nullable();
+            $table->decimal('harga_per_malam', 10, 2);
+            $table->integer('kapasitas');
+            $table->text('fasilitas')->nullable();
+            $table->string('gambar')->nullable();
+            $table->enum('status', ['tersedia', 'terisi'])->default('tersedia');
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('cabins');

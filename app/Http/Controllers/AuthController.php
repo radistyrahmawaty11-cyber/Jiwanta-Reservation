@@ -2,66 +2,101 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pengguna;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use App\Models\Pengguna;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    // 1. Tampilkan halaman login
-    public function showLoginForm()
+    // Tampilkan halaman login
+    public function showLogin()
     {
         return view('auth.login');
     }
 
-    // 2. Proses login saat form disubmit
+    // Tampilkan halaman register
+    public function showRegister()
+    {
+        return view('auth.register');
+    }
+
+    // Proses login (Disesuaikan dengan input 'whatsapp' dari frontend)
     public function login(Request $request)
     {
-        // Validasi input
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ], [
-            'email.required' => 'Email wajib diisi.',
-            'email.email' => 'Format email tidak valid.',
-            'password.required' => 'Password wajib diisi.',
+        $validator = Validator::make($request->all(), [
+            'whatsapp' => 'required|string',
+            'password' => 'required|string',
         ]);
 
-        // Coba login menggunakan email dan password
-        $credentials = $request->only('email', 'password');
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
 
-        if (Auth::attempt($credentials)) {
-            // Jika berhasil, regenerate session untuk keamanan
+        // Cek apakah input berupa email atau nomor HP
+        $field = filter_var($request->whatsapp, FILTER_VALIDATE_EMAIL) ? 'email' : 'nohp';
+
+        $credentials = [
+            $field => $request->whatsapp,
+            'password' => $request->password,
+        ];
+
+        if (Auth::attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
 
-            // Ambil data user yang login
             $user = Auth::user();
 
-            // Redirect berdasarkan role (Nama route sudah disesuaikan dengan web.php)
+            // Redirect berdasarkan role
             if ($user->role === 'admin') {
-                return redirect()->route('admin.dashboard');
+                return redirect()->intended('/admin/dashboard');
             } elseif ($user->role === 'petugas') {
-                return redirect()->route('petugas.dashboard');
+                return redirect()->intended('/petugas/dashboard');
             } else {
-                // ✅ DIPERBAIKI: Mengarah ke route 'dashboard' (untuk pengunjung)
-                return redirect()->route('dashboard');
+                return redirect()->intended('/');
             }
         }
 
-        // Jika gagal, kembali ke halaman login dengan pesan error
+        // Jika gagal, kembalikan dengan pesan error yang sesuai label frontend
         return back()->withErrors([
-            'email' => 'Email atau password salah.',
-        ])->onlyInput('email');
+            'whatsapp' => 'No. WhatsApp / Email atau kata sandi salah.',
+        ])->withInput();
     }
 
-    // 3. Proses Logout
+    // Proses register
+    public function register(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'nama_pengguna' => 'required|string|max:100',
+            'email' => 'required|email|max:50|unique:penggunas,email',
+            'password' => 'required|string|min:6|confirmed',
+            'nohp' => 'required|string|max:15',
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $pengguna = Pengguna::create([
+            'nama_pengguna' => $request->nama_pengguna,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'nohp' => $request->nohp,
+            'role' => 'pengunjung', // Default role
+        ]);
+
+        Auth::login($pengguna);
+
+        return redirect('/')->with('success', 'Registrasi berhasil! Selamat datang di Jiwanta.');
+    }
+
+    // Logout
     public function logout(Request $request)
     {
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login');
+        return redirect('/login');
     }
 }

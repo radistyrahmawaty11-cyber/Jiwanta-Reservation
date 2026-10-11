@@ -12,18 +12,16 @@ class Transaksi extends Model
     protected $fillable = [
         'kode_transaksi',
         'pengguna_id',
-        'tgl_transaksi',
+        'tanggal_transaksi',
+        'total_amount',
         'total_bayar',
-        'jumlah_bayar',
         'kembalian',
-        'metode',
-        'bukti',
-        'jenis_transaksi',
+        'metode_pembayaran',
         'status',
     ];
 
     protected $casts = [
-        'tgl_transaksi' => 'datetime',
+        'tanggal_transaksi' => 'datetime',
     ];
 
     public function pengguna()
