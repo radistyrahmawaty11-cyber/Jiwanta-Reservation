@@ -11,11 +11,7 @@ use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\VerifikasiController;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\CabinController;
-use App\Http\Controllers\TiketController;
 use App\Http\Controllers\RenangController;
-use App\Http\Controllers\TransaksiController;
 
 // ================= AUTH =================
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
@@ -34,10 +30,7 @@ Route::get('/admin/dashboard', function () { return view('admin.dashboard'); })-
 Route::get('/admin/verifikasi', function () { return view('admin.verifikasi'); })->middleware('role:admin')->name('verifikasi');
 Route::get('/admin/tiket-renang', function () { return view('admin.tiket-renang'); })->middleware('role:admin')->name('tiket-renang');
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> cda8ee55bbea2f98005fe193b9416e649bb5bb95
+
 // Panel Admin (full desktop)
 Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
 Route::post('/admin/dashboard/kuota', [DashboardController::class, 'updateKuota'])->name('admin.dashboard.kuota');
@@ -212,9 +205,7 @@ Route::post('/transaksi/kirim', function () {
 
     return response()->json(['ok' => true, 'url' => route('tiket')]);
 })->name('kirim.bukti');
-<<<<<<< HEAD
-=======
-=======
+
 Route::get('/admin/cabin', [CabinController::class, 'index'])->middleware('role:admin')->name('cabin');
 Route::post('/admin/cabin', [CabinController::class, 'store'])->middleware('role:admin')->name('cabin.store');
 Route::delete('/admin/cabin/{id}', [CabinController::class, 'destroy'])->middleware('role:admin')->name('cabin.destroy');
@@ -234,5 +225,3 @@ Route::post('/admin/transaksi', [TransaksiController::class, 'store'])->middlewa
 
 // ================= PETUGAS =================
 Route::get('/petugas/dashboard', function () { return view('petugas.dashboard'); })->middleware('role:petugas')->name('petugas.dashboard');
->>>>>>> d0c70c8d31d52cecb4d10594c5c6910a3c2cf03b
->>>>>>> cda8ee55bbea2f98005fe193b9416e649bb5bb95

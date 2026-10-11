@@ -1,29 +1,13 @@
 <?php
 
 namespace Database\Seeders;
-
-<<<<<<< HEAD
-use App\Models\Pengguna;
-use Illuminate\Database\Seeder;
-=======
-<<<<<<< HEAD
-use App\Models\Pengguna;
-use Illuminate\Database\Seeder;
-=======
-use Illuminate\Database\Seeder;
 use App\Models\Pengguna;
 use Illuminate\Support\Facades\Hash;
->>>>>>> d0c70c8d31d52cecb4d10594c5c6910a3c2cf03b
->>>>>>> cda8ee55bbea2f98005fe193b9416e649bb5bb95
 
 class PenggunaSeeder extends Seeder
 {
     public function run(): void
     {
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> cda8ee55bbea2f98005fe193b9416e649bb5bb95
         $rows = [
             ['nama_pengguna' => 'Bagas Dananjaya', 'email' => 'admin@jiwanta.id', 'nohp' => '081200000001', 'role' => 'admin'],
             ['nama_pengguna' => 'Rian Hidayat', 'email' => 'petugas@jiwanta.id', 'nohp' => '081200000002', 'role' => 'petugas'],
@@ -38,9 +22,7 @@ class PenggunaSeeder extends Seeder
         foreach ($rows as $row) {
             Pengguna::create($row + ['password' => 'password']);
         }
-<<<<<<< HEAD
-=======
-=======
+
         // 1. Buat Akun ADMIN
         Pengguna::create([
             'nama' => 'Admin Jiwanta',
@@ -67,7 +49,5 @@ class PenggunaSeeder extends Seeder
             'nohp' => '081234567892',
             'role' => 'pengunjung',
         ]);
->>>>>>> d0c70c8d31d52cecb4d10594c5c6910a3c2cf03b
->>>>>>> cda8ee55bbea2f98005fe193b9416e649bb5bb95
     }
 }
