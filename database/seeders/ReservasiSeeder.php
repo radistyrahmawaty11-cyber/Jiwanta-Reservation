@@ -19,10 +19,10 @@ class ReservasiSeeder extends Seeder
         $rows = [
             ['email' => 'budi@gmail.com', 'cabin' => 'Cabin Suite Pinus', 'renang' => null, 'checkin' => 3, 'checkout' => 5, 'jumlah_tamu' => 2, 'total_harga' => 2080000, 'status' => 'confirmed'],
             ['email' => 'ani@gmail.com', 'cabin' => 'Cabin Shorts Melati', 'renang' => null, 'checkin' => 1, 'checkout' => 3, 'jumlah_tamu' => 2, 'total_harga' => 680000, 'status' => 'pending'],
-            ['email' => 'siti@jiwanta.id', 'cabin' => null, 'renang' => 'Kolam Private Hot Spring', 'checkin' => 2, 'checkout' => 2, 'jumlah_tamu' => 4, 'total_harga' => 600000, 'status' => 'confirmed'],
-            ['email' => 'ahmad@jiwanta.id', 'cabin' => 'Cabin Suite Magnolia', 'renang' => null, 'checkin' => 7, 'checkout' => 9, 'jumlah_tamu' => 4, 'total_harga' => 2080000, 'status' => 'pending'],
-            ['email' => 'dewi@jiwanta.id', 'cabin' => null, 'renang' => 'Kolam Air Panas Utama', 'checkin' => 2, 'checkout' => 2, 'jumlah_tamu' => 3, 'total_harga' => 180000, 'status' => 'cancelled'],
-            ['email' => 'rizky@jiwanta.id', 'cabin' => null, 'renang' => 'Kolam Infinity View', 'checkin' => 4, 'checkout' => 4, 'jumlah_tamu' => 2, 'total_harga' => 180000, 'status' => 'confirmed'],
+            ['email' => 'siti@gmail.com', 'cabin' => null, 'renang' => 'Kolam Private Hot Spring', 'checkin' => 2, 'checkout' => 2, 'jumlah_tamu' => 4, 'total_harga' => 600000, 'status' => 'confirmed'],
+            ['email' => 'ahmad@gmail.com', 'cabin' => 'Cabin Suite Magnolia', 'renang' => null, 'checkin' => 7, 'checkout' => 9, 'jumlah_tamu' => 4, 'total_harga' => 2080000, 'status' => 'pending'],
+            ['email' => 'dewi@gmail.com', 'cabin' => null, 'renang' => 'Kolam Air Panas Utama', 'checkin' => 2, 'checkout' => 2, 'jumlah_tamu' => 3, 'total_harga' => 180000, 'status' => 'cancelled'],
+            ['email' => 'rizky@gmail.com', 'cabin' => null, 'renang' => 'Kolam Infinity View', 'checkin' => 4, 'checkout' => 4, 'jumlah_tamu' => 2, 'total_harga' => 180000, 'status' => 'confirmed'],
         ];
 
         foreach ($rows as $row) {

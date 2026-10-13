@@ -29,12 +29,12 @@ class PenggunaSeeder extends Seeder
             ['nama_pengguna' => 'Eko Prasetyo', 'email' => 'eko@jiwanta.com', 'nohp' => '081200000015', 'role' => 'petugas'],
 
             // Pengunjung
-            ['nama_pengguna' => 'Siti Nurhaliza', 'email' => 'siti@jiwanta.id', 'nohp' => '081200000003', 'role' => 'pengunjung'],
-            ['nama_pengguna' => 'Ahmad Fauzi', 'email' => 'ahmad@jiwanta.id', 'nohp' => '081200000004', 'role' => 'pengunjung'],
-            ['nama_pengguna' => 'Dewi Lestari', 'email' => 'dewi@jiwanta.id', 'nohp' => '081200000005', 'role' => 'pengunjung'],
-            ['nama_pengguna' => 'Rizky Pratama', 'email' => 'rizky@jiwanta.id', 'nohp' => '081200000006', 'role' => 'pengunjung'],
-            ['nama_pengguna' => 'Putri Amelia', 'email' => 'putri@jiwanta.id', 'nohp' => '081200000007', 'role' => 'pengunjung'],
-            ['nama_pengguna' => 'Bayu Setiawan', 'email' => 'bayu@jiwanta.id', 'nohp' => '081200000008', 'role' => 'pengunjung'],
+            ['nama_pengguna' => 'Siti Nurhaliza', 'email' => 'siti@gmail.com', 'nohp' => '081200000003', 'role' => 'pengunjung'],
+            ['nama_pengguna' => 'Ahmad Fauzi', 'email' => 'ahmad@gmail.com', 'nohp' => '081200000004', 'role' => 'pengunjung'],
+            ['nama_pengguna' => 'Dewi Lestari', 'email' => 'dewi@gmail.com', 'nohp' => '081200000005', 'role' => 'pengunjung'],
+            ['nama_pengguna' => 'Rizky Pratama', 'email' => 'rizky@gmail.com', 'nohp' => '081200000006', 'role' => 'pengunjung'],
+            ['nama_pengguna' => 'Putri Amelia', 'email' => 'putri@gmail.com', 'nohp' => '081200000007', 'role' => 'pengunjung'],
+            ['nama_pengguna' => 'Bayu Setiawan', 'email' => 'bayu@gmail.com', 'nohp' => '081200000008', 'role' => 'pengunjung'],
             ['nama_pengguna' => 'Budi Santoso', 'email' => 'budi@gmail.com', 'nohp' => '081311112222', 'role' => 'pengunjung'],
             ['nama_pengguna' => 'Ani Wijaya', 'email' => 'ani@gmail.com', 'nohp' => '081333334444', 'role' => 'pengunjung'],
             ['nama_pengguna' => 'Dedi Kurniawan', 'email' => 'dedi@gmail.com', 'nohp' => '081355556666', 'role' => 'pengunjung'],

@@ -255,7 +255,7 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const LIVE_DEMO = true;
+        const LIVE_DEMO = false;
         const $ = (s, r = document) => r.querySelector(s);
         const $$ = (s, r = document) => [...r.querySelectorAll(s)];
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -460,21 +460,30 @@
             setTimeout(() => rip.remove(), 600);
         });
 
-        // ---------- Live demo: tiket scan masuk real-time ----------
-        if (LIVE_DEMO) {
-            setInterval(() => {
-                const today = DAYS[DAYS.length - 1];
-                const nc = 1 + Math.floor(Math.random() * 4), np = Math.random() < 0.5 ? 1 + Math.floor(Math.random() * 2) : 0;
-                const add = nc * PRICE.cls + np * PRICE.prem;
-                today.cls += nc; today.prem += np; today.tk += add;
-                live.cls += nc; live.prem += np; live.omzet += add;
-                SP[SP.length - 1] += 0.3;
-                renderRows(false);
-                flash($('[data-day="' + (DAYS.length - 1) + '"]'));
-                drawChart(false); drawSpark(false); updateStats();
-                touch(); bell();
-                toast('Scan valid: +' + (nc + np) + ' tiket kolam (' + rp(add) + ')');
-            }, 6000);
+        // ---------- Realtime: pesanan/pembayaran masuk via Reverb ----------
+        const applyOrder = (data) => {
+            if (!data) return;
+            const today = DAYS[DAYS.length - 1];
+            const qty = parseInt(String(data.tamu || '').replace(/[^0-9]/g, ''), 10) || 1;
+            const total = Number(data.total || 0);
+            today.cls += qty;
+            today.tk += total;
+            live.cls += qty;
+            live.omzet += total;
+            SP[SP.length - 1] += 0.4;
+            renderRows(false);
+            flash($('[data-day="' + (DAYS.length - 1) + '"]'));
+            drawChart(false); drawSpark(false); updateStats(false);
+            touch(); bell();
+            toast('Pesanan baru: ' + (data.kode || '') + ' • ' + (data.total_label || rp(total)));
+        };
+
+        if (window.JiwantaRealtime && window.JiwantaRealtime.onData) {
+            window.JiwantaRealtime.onData((detail) => {
+                if (!detail) return;
+                if (detail.type === 'order.placed') applyOrder(detail.data);
+                if (detail.type === 'order.placed' || detail.type === 'order.status') touch();
+            });
         }
 
         // ---------- Init ----------

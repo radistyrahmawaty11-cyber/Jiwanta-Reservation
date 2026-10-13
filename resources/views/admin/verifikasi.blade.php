@@ -312,7 +312,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const LIVE_DEMO = true;      // ganti dengan polling / Laravel Echo untuk data asli
+        const LIVE_DEMO = false;     // data asli via websocket (Reverb) + feed JSON
         const REFRESH_EVERY = 15;    // detik
         const MAX_QUEUE = 7;
 
@@ -619,6 +619,41 @@
             return true;
         };
 
+        // ---------- Realtime: struk/pesanan nyata dari feed ----------
+        const FEED_URL = @json(route('admin.feed'));
+        const PROOF = @json($proof);
+        const mapRow = (t) => ({
+            id: t.kode, name: t.name, email: '-', phone: '-',
+            service: ['Pembayaran', t.metode], unit: 'Transaksi Online',
+            session: `${t.date} • ${t.t} WIB`, amount: t.amount,
+            method: t.metode, channel: t.metode + ' Transfer', pay: t.metode + ' Transfer',
+            sender: [t.name, t.kode], dest: ['Jiwanta Wisata Mandiri', t.metode + ' • 4370-9008-21'],
+            file: '-', proof: PROOF, ocr: 96, at: Date.now(),
+            tag: 'Menunggu Verifikasi', tone: 'lav', dot: 'bg-slate-400',
+            act: 'quick', problem: false, note: '', fresh: true,
+        });
+        const applyFeed = (data) => {
+            const rows = data.pending_rows || [];
+            let added = false;
+            rows.forEach((t) => {
+                if (state.queue.some((i) => i.id === t.kode)) return;
+                if (state.queue.length >= MAX_QUEUE) return;
+                state.queue.unshift(mapRow(t));
+                added = true;
+            });
+            if (!state.active && state.queue[0]) state.active = state.queue[0].id;
+            if (added) { renderQueue(); showMain(false); toast(`${rows.length} pembayaran menunggu verifikasi.`); }
+            if (data.stats && typeof data.stats.pending === 'number') setCount('pending', data.stats.pending);
+        };
+        const refreshReal = async () => {
+            try {
+                const res = await fetch(FEED_URL, { headers: { 'Accept': 'application/json' } });
+                const json = await res.json();
+                applyFeed(json.data || json);
+            } catch (e) { /* abaikan gangguan jaringan */ }
+        };
+        window.addEventListener('jiwanta:realtime', refreshReal);
+
         // ---------- Siklus auto-refresh ----------
         let left = REFRESH_EVERY, cycles = 0;
         const cycle = (manual) => {
@@ -626,7 +661,7 @@
             renderQueue();
             updateUploaded();
             if (manual) {
-                if (!incoming()) toast('Antrean sudah yang terbaru.');
+                refreshReal();
             } else if (LIVE_DEMO && cycles % 3 === 0) incoming();
         };
         setInterval(() => {
@@ -655,6 +690,7 @@
         // ---------- Mulai ----------
         renderQueue();
         showMain(false);
+        refreshReal();
     });
 </script>
 @endpush

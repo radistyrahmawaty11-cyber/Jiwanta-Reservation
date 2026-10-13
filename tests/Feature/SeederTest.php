@@ -97,7 +97,7 @@ class SeederTest extends TestCase
 
         $this->assertNotNull($transaksi);
         $this->assertNotNull($transaksi->pengguna, 'Relasi transaksi->pengguna tidak valid.');
-        $this->assertSame('siti@jiwanta.id', $transaksi->pengguna->email);
+        $this->assertSame('siti@gmail.com', $transaksi->pengguna->email);
     }
 
     public function test_seeded_reservasi_links_to_pengguna_and_cabin_or_renang(): void

@@ -894,6 +894,21 @@
                 box.textContent = err.message; box.classList.remove('hidden');
             }
         });
+
+        // ---------- Realtime: sinkronkan angka dari feed saat ada pesanan/pembayaran ----------
+        const FEED_URL = @json(route('admin.feed'));
+        const syncLive = async () => {
+            try {
+                const res = await fetch(FEED_URL, { headers: { 'Accept': 'application/json' } });
+                const json = await res.json();
+                const st = (json.data || json).stats || {};
+                if (typeof st.revenue === 'number') S.revenue = st.revenue;
+                if (typeof st.sold === 'number') S.sold = st.sold;
+                render();
+                if (typeof st.pending === 'number') { batch = st.pending; setAll('[data-batch]', st.pending); setAll('[data-total]', st.pending); }
+            } catch (e) { /* abaikan gangguan jaringan */ }
+        };
+        window.addEventListener('jiwanta:realtime', syncLive);
     });
 </script>
 @endpush

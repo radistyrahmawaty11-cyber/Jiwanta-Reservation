@@ -125,8 +125,8 @@
                 </button>
                 <span class="hidden h-8 w-px bg-slate-200 sm:block"></span>
                 <div class="hidden text-right sm:block">
-                    <p class="text-[13px] font-bold leading-tight">Rian Hidayat</p>
-                    <p class="text-[10px] font-semibold uppercase leading-tight tracking-wide text-[#8B5E34]">Petugas Gate STF-042</p>
+                    <p class="text-[13px] font-bold leading-tight">{{ auth()->user()->nama_pengguna ?? 'Petugas Gate' }}</p>
+                    <p class="text-[10px] font-semibold uppercase leading-tight tracking-wide text-[#8B5E34]">Petugas Gate STF-{{ str_pad((string) (auth()->id() ?? 0), 3, '0', STR_PAD_LEFT) }}</p>
                 </div>
             </div>
         </header>

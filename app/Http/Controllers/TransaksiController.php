@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cabin;
 use App\Models\Transaksi;
-use App\Models\Pengguna;
-use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 class TransaksiController extends Controller
@@ -38,98 +37,55 @@ class TransaksiController extends Controller
         ];
     }
 
+    private function stats(): array
+    {
+        $today = Carbon::today();
+
+        return [
+            'today'       => Transaksi::whereDate('tanggal_transaksi', $today)->count(),
+            'omzet'       => (int) Transaksi::whereDate('tanggal_transaksi', $today)->where('status', 'lunas')->sum('total_bayar'),
+            'pending'     => Transaksi::where('status', 'pending')->count(),
+            'revenue'     => (int) Transaksi::where('status', 'lunas')->sum('total_bayar'),
+            'sold'        => Transaksi::where('status', 'lunas')->count(),
+            'cabin_used'  => Cabin::where('status', 'terisi')->count(),
+            'cabin_total' => Cabin::count(),
+        ];
+    }
+
     public function index()
     {
-        $penggunas = Pengguna::orderBy('nama_pengguna')->get();
-
         $transaksis = Transaksi::with('pengguna')->orderBy('tanggal_transaksi', 'desc')->get();
-
-        $today = Carbon::today();
-        $stats = [
-            'today'   => Transaksi::whereDate('tanggal_transaksi', $today)->count(),
-            'omzet'   => Transaksi::whereDate('tanggal_transaksi', $today)->where('status', 'lunas')->sum('total_bayar'),
-            'pending' => Transaksi::where('status', 'pending')->count(),
-        ];
 
         $formattedTransaksis = $transaksis->map(function($trx) {
             return $this->formatTransaksi($trx);
         })->values();
 
         return view('admin.transaksi', [
-            'stats' => $stats,
-            'penggunas' => $penggunas,
+            'stats' => $this->stats(),
             'transaksis' => $formattedTransaksis
         ]);
     }
 
-    public function store(Request $request)
+    /**
+     * Feed JSON untuk pembaruan realtime (websocket) di halaman admin.
+     */
+    public function feed()
     {
-        $validated = $request->validate([
-            'kode_transaksi' => 'required|string|unique:transaksis,kode_transaksi',
-            'pengguna_id'    => 'required|exists:penggunas,id',
-            'tgl_transaksi'  => 'required|date',
-            'total_bayar'    => 'required|numeric|min:0',
-            'kembalian'      => 'required|numeric|min:0',
-            'metode'         => 'required|string',
-            'status'         => 'required|in:pending,lunas,gagal',
-        ]);
-
-        $trx = Transaksi::create([
-            'kode_transaksi'    => $validated['kode_transaksi'],
-            'pengguna_id'       => $validated['pengguna_id'],
-            'tanggal_transaksi' => $validated['tgl_transaksi'],
-            'total_amount'      => $validated['total_bayar'],
-            'total_bayar'       => $validated['total_bayar'],
-            'kembalian'         => $validated['kembalian'],
-            'metode_pembayaran' => strtoupper($validated['metode']),
-            'status'            => $validated['status'],
-        ]);
+        $rows = Transaksi::with('pengguna')
+            ->orderBy('tanggal_transaksi', 'desc')
+            ->limit(100)
+            ->get()
+            ->map(fn ($trx) => $this->formatTransaksi($trx))
+            ->values();
 
         return response()->json([
             'ok' => true,
-            'data' => $this->formatTransaksi($trx)
+            'data' => [
+                'stats'        => $this->stats(),
+                'rows'         => $rows,
+                'pending_rows' => $rows->where('status', 'pending')->values(),
+            ],
         ]);
-    }
-
-    public function update(Request $request, $id)
-    {
-        $trx = Transaksi::findOrFail($id);
-
-        $validated = $request->validate([
-            'kode_transaksi' => 'required|string|unique:transaksis,kode_transaksi,' . $id,
-            'pengguna_id'    => 'required|exists:penggunas,id',
-            'tgl_transaksi'  => 'required|date',
-            'total_bayar'    => 'required|numeric|min:0',
-            'kembalian'      => 'required|numeric|min:0',
-            'metode'         => 'required|string',
-            'status'         => 'required|in:pending,lunas,gagal',
-        ]);
-
-        $trx->update([
-            'kode_transaksi'    => $validated['kode_transaksi'],
-            'pengguna_id'       => $validated['pengguna_id'],
-            'tanggal_transaksi' => $validated['tgl_transaksi'],
-            'total_amount'      => $validated['total_bayar'],
-            'total_bayar'       => $validated['total_bayar'],
-            'kembalian'         => $validated['kembalian'],
-            'metode_pembayaran' => strtoupper($validated['metode']),
-            'status'            => $validated['status'],
-        ]);
-
-        $trx->refresh();
-
-        return response()->json([
-            'ok' => true,
-            'data' => $this->formatTransaksi($trx)
-        ]);
-    }
-
-    public function destroy($id)
-    {
-        $trx = Transaksi::findOrFail($id);
-        $trx->delete();
-
-        return response()->json(['ok' => true, 'message' => 'Transaksi berhasil dihapus']);
     }
 
     public function export()

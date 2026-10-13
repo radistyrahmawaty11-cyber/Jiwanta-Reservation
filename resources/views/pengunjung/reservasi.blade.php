@@ -7,8 +7,6 @@
 @section('page-content')
 
 @php
-    // Tab awal: /reservasi (tiket) atau /reservasi?tab=cabin
-    $tab = request('tab') === 'cabin' ? 'cabin' : 'tiket';
     $home = \Illuminate\Support\Facades\Route::has('dashboard') ? route('dashboard') : url('/');
 
     // ---------- Helper ikon ----------
@@ -43,27 +41,40 @@
     // ---------- Data ----------
     $tabs = [['tiket', 'Tiket Renang', 'sauna'], ['cabin', 'Cabin Suite', 'home']];
 
-    $nav = [
-        ['Beranda', $home, false, 'tree'],
-        ['Reservasi', url('/reservasi'), true, 'home'],
-        ['Transaksi', '#', false, 'receipt'],
-        ['Tiket Saya', '#', false, 'ticket'],
+    $catMeta = [
+        'dewasa' => ['swim', 'bg-[#DDE6FB]'],
+        'anak-anak' => ['leaf', 'bg-[#FBE3C8]'],
+        'lansia' => ['leaf', 'bg-[#E4E8FB]'],
     ];
+    $featuredId = $tikets->where('kategori', 'dewasa')->sortByDesc('harga')->first()?->id;
+    $cats = $tikets->map(function ($t) use ($catMeta, $featuredId) {
+        [$icon, $bg] = $catMeta[$t->kategori] ?? ['swim', 'bg-[#DDE6FB]'];
 
-    // [key, nama, harga, ikon, warna ikon, badge]
-    $cats = [
-        ['classic', 'Tiket Classic', 60000, 'swim', 'bg-[#DDE6FB]', null],
-        ['premier', 'Tiket Premier', 75000, 'leaf', 'bg-[#CDEFD5]', 'Paling Diminati'],
-    ];
+        return [$t->id, $t->nama_tiket, (int) $t->harga, $icon, $bg, $t->id === $featuredId ? 'Paling Diminati' : null];
+    });
 
-    $units = [
-        ['key' => 'shorts', 'name' => 'Shorts', 'image' => asset('images/cabin-shorts.jpg'), 'badge' => 'Unit Favorit Keluarga',
-         'capacity' => 'Kapasitas 4 orang', 'feature' => ['Private Jacuzzi', 'bath'], 'price' => 340000, 'label' => 'Harga Sewa',
-         'per' => 'sewa', 'guests' => '4 Tamu Dewasa'],
-        ['key' => 'suite', 'name' => 'Suite', 'image' => asset('images/cabin-suite.jpg'), 'badge' => null,
-         'capacity' => 'Kapasitas 4-5 orang', 'feature' => ['Valley View', 'mountain'], 'price' => 1040000, 'label' => 'Harga per Malam',
-         'per' => 'malam', 'guests' => '4-5 Tamu Dewasa'],
-    ];
+    $cabinFallback = fn ($c) => $c->gambar
+        ? asset('storage/'.$c->gambar)
+        : asset(\Illuminate\Support\Str::contains($c->nama_cabin, 'Shorts') ? 'images/cabin-shorts.jpg' : 'images/cabin-suite.jpg');
+
+    $units = $cabins->map(function ($c) use ($cabinFallback) {
+        $feature = collect(explode(',', (string) $c->fasilitas))->map(fn ($f) => trim($f))->filter()->first() ?? 'Fasilitas Lengkap';
+
+        return [
+            'key' => $c->id,
+            'name' => $c->nama_cabin,
+            'image' => $cabinFallback($c),
+            'badge' => $c->status === 'terisi' ? 'Sedang Terisi' : null,
+            'sold' => $c->status === 'terisi',
+            'capacity' => 'Kapasitas '.$c->kapasitas.' orang',
+            'cap' => (int) $c->kapasitas,
+            'feature' => [$feature, 'bath'],
+            'price' => (int) $c->harga_per_malam,
+            'label' => 'Harga per Malam',
+            'per' => 'malam',
+            'guests' => $c->kapasitas.' Tamu Dewasa',
+        ];
+    });
 
     // ---------- Tanggal bebas (hari ini s/d 365 hari ke depan) ----------
     $today = now('Asia/Jakarta')->startOfDay();
@@ -79,12 +90,10 @@
     $dayFull = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
     $monShort = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
-    // Judul kartu tanggal: ketuk untuk membuka kalender bebas
     $dateTitle = fn (string $t) => '<label class="relative flex cursor-pointer items-center gap-2 text-[14px] font-bold text-[#0B3A22]">'
         .$ic('calendar').' '.e($t).' '.$ic('chevron', 'h-3.5 w-3.5 text-slate-500')
         .'<input type="date" data-date-input aria-label="Pilih tanggal" class="absolute inset-0 h-full w-full cursor-pointer opacity-0"></label>';
 
-    // 5 chip: 2 hari sebelum, tanggal terpilih (tengah), 2 hari sesudah
     $chips = function () use ($selected, $today, $dayShort, $dayFull, $monShort) {
         $out = '';
         foreach ([-2, -1, 0, 1, 2] as $off) {
@@ -116,7 +125,7 @@
                     <section data-reveal class="pt-1">
                         <div class="flex items-end justify-between">
                             <h2 class="text-[17px] font-bold text-[#0B3A22]">Pilih Kategori Tiket</h2>
-                            <span class="text-[9px] font-bold uppercase tracking-wider text-[#0B3A22]">Akses Pemandian</span>
+                            <span class="text-[9px] font-bold uppercase tracking-wider text-[#0B3A22]">Bisa pilih lebih dari satu</span>
                         </div>
                         <p class="mt-1 text-[12px] leading-snug text-slate-600">Nikmati kolam sulfur alami berkhasiat di kelilingi pepohonan<br>pinus berkabut.</p>
                     </section>
@@ -127,17 +136,28 @@
                                 @if ($badge)
                                     <span class="absolute -top-2 right-4 z-10 inline-flex items-center gap-1 rounded-t-lg bg-[#8B5E34] px-2.5 py-0.5 text-[9px] font-semibold text-white">{!! $ic('star', 'h-2.5 w-2.5') !!} {{ $badge }}</span>
                                 @endif
-                                <button type="button" data-cat="{{ $key }}" data-name="{{ $name }}" data-price="{{ $price }}"
-                                        class="flex w-full items-center gap-3 rounded-2xl bg-white p-3.5 text-left {{ $soft }} transition duration-300 active:scale-[0.98]">
-                                    <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full {{ $bg }} text-[#0B3A22]">{!! $ic($icon, 'h-5 w-5') !!}</span>
-                                    <span class="min-w-0 flex-1">
-                                        <b class="block text-[17px] leading-tight text-[#0B3A22]">{{ $name }}</b>
-                                        <span class="mt-0.5 block"><b class="text-[17px] text-[#0B3A22]">Rp {{ number_format($price, 0, ',', '.') }}</b> <span class="text-[11px] text-slate-600">/ orang</span></span>
-                                    </span>
-                                    <span data-ind class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#DDE6FB] text-white transition duration-300">
-                                        <span data-tick class="opacity-0 transition duration-300">{!! $ic('check', 'h-4 w-4', '3') !!}</span>
-                                    </span>
-                                </button>
+                                <div data-cat="{{ $key }}" data-name="{{ $name }}" data-price="{{ $price }}"
+                                     role="button" tabindex="0" aria-pressed="false"
+                                     class="rounded-2xl bg-white p-3.5 text-left {{ $soft }} ring-2 ring-transparent transition duration-300">
+                                    <div data-cat-toggle class="flex cursor-pointer items-center gap-3">
+                                        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full {{ $bg }} text-[#0B3A22]">{!! $ic($icon, 'h-5 w-5') !!}</span>
+                                        <span class="min-w-0 flex-1">
+                                            <b class="block text-[17px] leading-tight text-[#0B3A22]">{{ $name }}</b>
+                                            <span class="mt-0.5 block"><b class="text-[17px] text-[#0B3A22]">Rp {{ number_format($price, 0, ',', '.') }}</b> <span class="text-[11px] text-slate-600">/ orang</span></span>
+                                        </span>
+                                        <span data-ind class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#DDE6FB] text-white transition duration-300">
+                                            <span data-tick class="opacity-0 transition duration-300">{!! $ic('check', 'h-4 w-4', '3') !!}</span>
+                                        </span>
+                                    </div>
+                                    <div data-cat-qty class="mt-3 hidden items-center justify-between rounded-xl bg-[#E8ECFB] px-3 py-2">
+                                        <div class="flex items-center gap-2.5">
+                                            <button type="button" data-cat-step="-1" aria-label="Kurangi" class="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[#0B3A22] shadow-sm transition active:scale-90">{!! $ic('minus', 'h-3.5 w-3.5', '2.4') !!}</button>
+                                            <span data-cat-count class="w-4 text-center text-[15px] font-bold text-[#0B3A22]">1</span>
+                                            <button type="button" data-cat-step="1" aria-label="Tambah" class="flex h-7 w-7 items-center justify-center rounded-full bg-[#0B3A22] text-white shadow-sm transition active:scale-90">{!! $ic('plus', 'h-3.5 w-3.5', '2.4') !!}</button>
+                                        </div>
+                                        <b data-cat-sub class="text-[15px] text-[#0B3A22]">Rp {{ number_format($price, 0, ',', '.') }}</b>
+                                    </div>
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -150,25 +170,6 @@
                         </div>
                         <div data-chips class="mt-3 flex items-center justify-between transition-opacity duration-150">{!! $chips() !!}</div>
                         <p class="mt-3 flex items-start gap-2 text-[11px] leading-snug text-slate-600">{!! $ic('clock', 'mt-0.5 h-3.5 w-3.5 shrink-0') !!} <span>Jam Buka: 07:00 - 20:00 WIB • Akses Berlaku<br>Sepanjang Hari</span></p>
-                    </section>
-
-                    {{-- Jumlah pengunjung --}}
-                    <section data-reveal class="rounded-2xl bg-white p-4 {{ $soft }}">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="text-[14px] font-bold text-[#0B3A22]">Jumlah Pengunjung</h3>
-                                <p class="mt-0.5 text-[11px] text-slate-600">Usia 3 tahun ke atas wajib tiket</p>
-                            </div>
-                            <div class="flex items-center gap-3 rounded-full bg-[#DDE6FB] p-1.5">
-                                <button type="button" data-step="-1" aria-label="Kurangi" class="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#0B3A22] shadow-sm transition hover:bg-[#f3f4fd] active:scale-90">{!! $ic('minus', 'h-4 w-4', '2.4') !!}</button>
-                                <span data-qty class="w-4 text-center text-[18px] font-bold text-[#0B3A22]">2</span>
-                                <button type="button" data-step="1" aria-label="Tambah" class="flex h-9 w-9 items-center justify-center rounded-full bg-[#0B3A22] text-white shadow-sm transition hover:bg-[#124c2f] active:scale-90">{!! $ic('plus', 'h-4 w-4', '2.4') !!}</button>
-                            </div>
-                        </div>
-                        <div class="mt-3 flex items-center justify-between rounded-xl bg-[#E8ECFB] px-3 py-3">
-                            <span class="flex items-center gap-2 text-[12px] text-slate-700">{!! $ic('calc') !!} <span data-line>2 x Rp 75.000</span></span>
-                            <b data-sub class="text-[18px] text-[#0B3A22]">Rp 150.000</b>
-                        </div>
                     </section>
                 </div>
 
@@ -205,7 +206,7 @@
                         </div>
                         <div class="mt-2.5 flex items-center justify-between rounded-xl bg-[#E8ECFB] px-3 py-3">
                             <span class="flex items-center gap-2 text-[12px] text-slate-700">{!! $ic('users') !!} Kapasitas Tamu Terpilih</span>
-                            <b data-guests class="text-[13px] text-[#0B3A22]">4 Tamu Dewasa</b>
+                            <b data-guests class="text-[13px] text-[#0B3A22]">Belum ada unit</b>
                         </div>
                     </section>
 
@@ -214,19 +215,19 @@
                         <div class="flex items-start justify-between">
                             <div>
                                 <h2 class="text-[17px] font-bold text-[#0B3A22]">Cek Ketersediaan Real-time</h2>
-                                <p class="mt-0.5 text-[11px] text-slate-600">Unit Cabin Suite Ciwidey Highland</p>
+                                <p class="mt-0.5 text-[11px] text-slate-600">Unit Cabin Suite Ciwidey Highland • bisa pilih lebih dari satu</p>
                             </div>
                             <button type="button" data-refresh aria-label="Segarkan ketersediaan" class="mt-1 text-[#0B3A22] transition active:scale-90"><span data-refresh-icon class="block">{!! $ic('refresh', 'h-5 w-5', '2.2') !!}</span></button>
                         </div>
                     </section>
 
                     @foreach ($units as $u)
-                        <article data-reveal data-unit="{{ $u['key'] }}" data-name="{{ $u['name'] }}" data-price="{{ $u['price'] }}" data-per="{{ $u['per'] }}" data-guests="{{ $u['guests'] }}"
+                        <article data-reveal data-unit="{{ $u['key'] }}" data-name="{{ $u['name'] }}" data-price="{{ $u['price'] }}" data-per="{{ $u['per'] }}" data-guests="{{ $u['guests'] }}" data-cap="{{ $u['cap'] }}" data-sold="{{ $u['sold'] ? '1' : '0' }}"
                                  class="rounded-2xl bg-white p-3 {{ $soft }} ring-2 ring-transparent transition duration-300">
                             <div class="relative h-[158px] overflow-hidden rounded-xl bg-slate-300">
                                 <img src="{{ $u['image'] }}" alt="Cabin {{ $u['name'] }}" class="h-full w-full object-cover">
                                 <span data-status class="absolute right-2.5 top-2.5 inline-flex items-center gap-1.5 rounded-full bg-[#D5F5DC] px-2.5 py-1 text-[10px] font-semibold text-[#0B3A22] transition">
-                                    <span data-dot class="h-1.5 w-1.5 rounded-full bg-[#0B3A22]"></span><span data-status-text>Tersedia</span>
+                                    <span data-dot class="h-1.5 w-1.5 rounded-full bg-[#0B3A22]"></span><span data-status-text>{{ $u['sold'] ? 'Terisi' : 'Tersedia' }}</span>
                                 </span>
                                 @if ($u['badge'])
                                     <span class="absolute bottom-2.5 left-2.5 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-slate-800">{{ $u['badge'] }}</span>
@@ -243,9 +244,15 @@
                                     <p class="text-[10px] text-slate-600">{{ $u['label'] }}</p>
                                     <p class="text-[20px] font-bold leading-tight text-[#0B3A22]">Rp {{ number_format($u['price'], 0, ',', '.') }}</p>
                                 </div>
-                                <button type="button" data-pick class="flex items-center gap-1.5 rounded-full bg-[#0B3A22] px-5 py-2.5 text-[12px] font-bold text-white transition duration-300 hover:bg-[#124c2f] active:scale-95">
-                                    <span data-pick-icon class="hidden">{!! $ic('check', 'h-3.5 w-3.5', '3') !!}</span><span data-pick-text>Pilih Unit</span>
-                                </button>
+                                @if ($u['sold'])
+                                    <button type="button" data-pick disabled class="flex cursor-not-allowed items-center gap-1.5 rounded-full bg-slate-200 px-5 py-2.5 text-[12px] font-bold text-slate-500">
+                                        <span data-pick-icon class="hidden">{!! $ic('check', 'h-3.5 w-3.5', '3') !!}</span><span data-pick-text>Terisi</span>
+                                    </button>
+                                @else
+                                    <button type="button" data-pick class="flex items-center gap-1.5 rounded-full bg-[#0B3A22] px-5 py-2.5 text-[12px] font-bold text-white transition duration-300 hover:bg-[#124c2f] active:scale-95">
+                                        <span data-pick-icon class="hidden">{!! $ic('check', 'h-3.5 w-3.5', '3') !!}</span><span data-pick-text>Pilih Unit</span>
+                                    </button>
+                                @endif
                             </div>
                         </article>
                     @endforeach
@@ -264,10 +271,10 @@
                 <div class="flex items-center justify-between gap-3 rounded-2xl bg-white p-3.5 shadow-[0_8px_28px_rgba(15,69,39,0.16)]">
                     <div class="min-w-0">
                         <p class="text-[9px] font-bold uppercase leading-tight tracking-wide text-slate-600">Total<br>Pembayaran</p>
-                        <p data-total class="whitespace-nowrap text-[26px] font-bold leading-tight text-[#0B3A22]">Rp 150.000</p>
-                        <p data-total-sub class="truncate text-[10px] text-slate-600">2× Tiket Premier • 20 Sep</p>
+                        <p data-total class="whitespace-nowrap text-[26px] font-bold leading-tight text-[#0B3A22]">Rp 0</p>
+                        <p data-total-sub class="truncate text-[10px] text-slate-600">Pilih tiket atau cabin</p>
                     </div>
-                    <button type="submit" id="checkout-btn" class="flex shrink-0 cursor-pointer items-center gap-2 rounded-full bg-[#0B3A22] px-5 py-4 text-[13px] font-bold text-white shadow-lg transition hover:bg-[#124c2f] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40">
+                    <button type="submit" id="checkout-btn" disabled class="flex shrink-0 cursor-pointer items-center gap-2 rounded-full bg-[#0B3A22] px-5 py-4 text-[13px] font-bold text-white shadow-lg transition hover:bg-[#124c2f] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40">
                     <span data-btn-label>Checkout</span> {!! $ic('arrow', 'h-4 w-4', '2.2') !!}
                     </button>
                 </div>
@@ -292,7 +299,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const LIVE_DEMO = true; // ganti dengan polling / Laravel Echo untuk ketersediaan asli
+        const LIVE_DEMO = true;
         const $ = (s, r = document) => r.querySelector(s);
         const $$ = (s, r = document) => [...r.querySelectorAll(s)];
         const rp = (n) => 'Rp ' + Math.round(n).toLocaleString('id-ID');
@@ -310,7 +317,13 @@
         const MAX_DATE = addDays(TODAY, 365);
         const inRange = (dt) => dt >= TODAY && dt <= MAX_DATE;
 
-        const state = { tab: @json($tab), cat: 'premier', qty: 2, date: parseISO(@json($selected->toDateString())), nights: 2, unit: null };
+        const state = {
+            tab: @json($tab),
+            date: parseISO(@json($selected->toDateString())),
+            nights: 2,
+            tiket: {}, // id => qty
+            cabin: {}, // id => true
+        };
         const MAX_NIGHTS = 5, MAX_QTY = 20;
 
         // ---------- Util ----------
@@ -340,7 +353,7 @@
         const playIn = (panel) => {
             if (reduce) return;
             const els = $$('[data-reveal]', panel);
-            els.forEach((el, i) => {
+            els.forEach((el) => {
                 el.style.transitionDelay = '0ms';
                 el.classList.remove('transition', 'duration-700', 'ease-out');
                 el.classList.add(...hiddenCls);
@@ -386,16 +399,15 @@
             field('tanggal', iso(state.date));
         };
 
-        // ---------- Tab tiket ----------
+        // ---------- Tab tiket (multi-pilih) ----------
         const cats = $$('[data-cat]');
-        const ON = ['shadow-[0_10px_26px_rgba(15,69,39,0.18)]'];
-        const OFF = ['shadow-[0_2px_10px_rgba(15,69,39,0.06)]'];
-        const currentCat = () => cats.find((b) => b.dataset.cat === state.cat);
+        const ON = ['shadow-[0_10px_26px_rgba(15,69,39,0.18)]', 'ring-[#0B3A22]'];
+        const OFF = ['shadow-[0_2px_10px_rgba(15,69,39,0.06)]', 'ring-transparent'];
 
         const renderTiket = () => {
-            const cur = currentCat(), price = Number(cur.dataset.price);
             cats.forEach((b) => {
-                const on = b === cur;
+                const qty = state.tiket[b.dataset.cat] || 0;
+                const on = qty > 0;
                 b.classList.remove(...(on ? OFF : ON));
                 b.classList.add(...(on ? ON : OFF));
                 const ind = $('[data-ind]', b);
@@ -403,63 +415,80 @@
                 ind.classList.toggle('bg-[#DDE6FB]', !on);
                 $('[data-tick]', b).classList.toggle('opacity-0', !on);
                 b.setAttribute('aria-pressed', on);
+
+                const box = $('[data-cat-qty]', b);
+                box.classList.toggle('hidden', !on);
+                box.classList.toggle('flex', on);
+                $('[data-cat-count]', b).textContent = qty || 1;
+                $('[data-cat-sub]', b).textContent = rp(Number(b.dataset.price) * (qty || 1));
             });
-            $('[data-qty]').textContent = state.qty;
-            $('[data-line]').textContent = `${state.qty} x ${rp(price)}`;
-            animate($('[data-sub]'), price * state.qty);
-            field('kategori', state.cat);
-            field('jumlah', state.qty);
         };
 
-        // ---------- Tab cabin ----------
+        // ---------- Tab cabin (multi-pilih) ----------
         const units = $$('[data-unit]');
-        const currentUnit = () => units.find((u) => u.dataset.unit === state.unit);
         const ringOn = ['ring-[#0B3A22]', 'shadow-[0_10px_26px_rgba(15,69,39,0.16)]'];
 
         const renderCabin = () => {
             $('[data-in]').textContent = fmtDate(state.date);
             $('[data-out]').textContent = fmtDate(addDays(state.date, state.nights));
             $('[data-nights-text]').textContent = state.nights + ' Malam';
-            const chosen = currentUnit();
 
+            let guests = 0;
             units.forEach((u) => {
-                const on = u === chosen;
+                const on = !!state.cabin[u.dataset.unit];
                 toggleAll(u, ringOn, on);
                 u.classList.toggle('ring-transparent', !on);
-                const btn = $('[data-pick]', u);
-                btn.classList.toggle('bg-[#0B3A22]', !on);
-                btn.classList.toggle('text-white', !on);
-                btn.classList.toggle('bg-[#CDEFD5]', on);
-                btn.classList.toggle('text-[#0B3A22]', on);
-                $('[data-pick-icon]', u).classList.toggle('hidden', !on);
-                $('[data-pick-text]', u).textContent = on ? 'Terpilih' : 'Pilih Unit';
+
+                if (u.dataset.sold !== '1') {
+                    const btn = $('[data-pick]', u);
+                    btn.classList.toggle('bg-[#0B3A22]', !on);
+                    btn.classList.toggle('text-white', !on);
+                    btn.classList.toggle('bg-[#CDEFD5]', on);
+                    btn.classList.toggle('text-[#0B3A22]', on);
+                    $('[data-pick-icon]', u).classList.toggle('hidden', !on);
+                    $('[data-pick-text]', u).textContent = on ? 'Terpilih' : 'Pilih Unit';
+                }
+
+                if (on) guests += Number(u.dataset.cap || 0);
             });
-            $('[data-guests]').textContent = chosen ? chosen.dataset.guests : '4 Tamu Dewasa';
-            field('unit', state.unit ?? '');
+            $('[data-guests]').textContent = guests > 0 ? guests + ' Tamu Dewasa' : 'Belum ada unit';
             field('malam', state.nights);
         };
 
         // ---------- Total & checkout ----------
         const renderTotal = () => {
-            let total = 0, sub = '', enabled = true;
-            if (state.tab === 'tiket') {
-                const cur = currentCat();
-                total = Number(cur.dataset.price) * state.qty;
-                sub = `${state.qty}× ${cur.dataset.name} • ${shortDate(state.date)}`;
-            } else {
-                const chosen = currentUnit();
-                if (!chosen) { sub = 'Pilih unit cabin terlebih dahulu'; enabled = false; }
-                else {
-                    const price = Number(chosen.dataset.price), perSewa = chosen.dataset.per === 'sewa';
-                    total = perSewa ? price : price * state.nights;
-                    sub = `${chosen.dataset.name} • ${perSewa ? 'Sewa 3 jam' : state.nights + ' Malam'} • ${shortDate(state.date)}`;
-                }
-            }
+            let total = 0;
+            const parts = [];
+            const items = [];
+
+            Object.keys(state.tiket).forEach((id) => {
+                const b = cats.find((c) => c.dataset.cat === id);
+                if (!b) return;
+                const qty = state.tiket[id], price = Number(b.dataset.price);
+                total += price * qty;
+                parts.push(qty + '× ' + b.dataset.name);
+                items.push({ tipe: 'tiket', tiket_id: Number(id), jumlah: qty, harga_satuan: price, subtotal: price * qty });
+            });
+
+            Object.keys(state.cabin).forEach((id) => {
+                const u = units.find((x) => x.dataset.unit === id);
+                if (!u) return;
+                const nights = state.nights, price = Number(u.dataset.price);
+                const lineTotal = u.dataset.per === 'sewa' ? price : price * nights;
+                total += lineTotal;
+                parts.push(u.dataset.name + (u.dataset.per === 'sewa' ? '' : ' ' + nights + 'm'));
+                items.push({ tipe: 'cabin', cabin_id: Number(id), malam: nights, harga_satuan: price, subtotal: lineTotal });
+            });
+
             animate($('[data-total]'), total);
-            $('[data-total-sub]').textContent = sub;
-            $('#checkout-btn').disabled = !enabled;
+            $('[data-total-sub]').textContent = parts.length ? parts.join(' • ') : 'Pilih tiket atau cabin';
+            $('#checkout-btn').disabled = items.length === 0;
+
+            const hasTiket = items.some((i) => i.tipe === 'tiket');
+            const hasCabin = items.some((i) => i.tipe === 'cabin');
             field('total', total);
-            field('tipe', state.tab);
+            field('items', JSON.stringify(items));
+            field('tipe', hasTiket && hasCabin ? 'mixed' : (hasCabin ? 'cabin' : 'tiket'));
         };
 
         const renderAll = () => { renderDates(); renderTiket(); renderCabin(); renderTotal(); };
@@ -479,7 +508,6 @@
             const url = new URL(window.location);
             tab === 'cabin' ? url.searchParams.set('tab', 'cabin') : url.searchParams.delete('tab');
             history.replaceState(null, '', url);
-            renderTotal();
             if (animateIn) { window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' }); playIn($(`[data-panel="${tab}"]`)); }
         };
         $$('[data-tab-btn]').forEach((b) => b.addEventListener('click', () => { if (b.dataset.tabBtn !== state.tab) showTab(b.dataset.tabBtn); }));
@@ -492,19 +520,16 @@
             renderAll();
             setTimeout(() => wraps.forEach((w) => w.classList.remove('opacity-40')), 150);
         };
-        // Ketuk chip di kiri/kanan -> tanggal bergeser, chip tengah selalu tanggal terpilih
         $$('[data-date-chip]').forEach((c) => c.addEventListener('click', () => {
             const off = Number(c.dataset.offset);
             if (!off || c.disabled) return;
             setDate(addDays(state.date, off));
         }));
-        // Panah kiri/kanan pada keyboard
         $$('[data-chips]').forEach((w) => w.addEventListener('keydown', (e) => {
             if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
             const dt = addDays(state.date, e.key === 'ArrowRight' ? 1 : -1);
             if (inRange(dt)) { e.preventDefault(); setDate(dt); }
         }));
-        // Kalender bebas (ketuk judul tanggal)
         $$('[data-date-input]').forEach((i) => {
             i.addEventListener('click', () => { try { i.showPicker(); } catch (e) { /* browser tanpa showPicker */ } });
             i.addEventListener('change', () => {
@@ -513,19 +538,40 @@
                 inRange(dt) ? setDate(dt) : renderDates();
             });
         });
-        cats.forEach((b) => b.addEventListener('click', () => { state.cat = b.dataset.cat; renderAll(); }));
-        $$('[data-step]').forEach((b) => b.addEventListener('click', () => {
-            state.qty = Math.max(1, Math.min(MAX_QTY, state.qty + Number(b.dataset.step)));
-            renderAll();
-        }));
+
+        // Tiket: toggle kartu + stepper jumlah per kategori
+        cats.forEach((b) => {
+            const toggle = () => {
+                const id = b.dataset.cat;
+                if (state.tiket[id]) delete state.tiket[id];
+                else state.tiket[id] = 1;
+                renderAll();
+            };
+            b.addEventListener('click', (e) => { if (!e.target.closest('[data-cat-qty]')) toggle(); });
+            b.addEventListener('keydown', (e) => {
+                if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('[data-cat-qty]')) { e.preventDefault(); toggle(); }
+            });
+            $$('[data-cat-step]', b).forEach((s) => s.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = b.dataset.cat;
+                const cur = state.tiket[id] || 1;
+                state.tiket[id] = Math.max(1, Math.min(MAX_QTY, cur + Number(s.dataset.catStep)));
+                renderAll();
+            }));
+        });
+
         $('[data-nights]').addEventListener('click', () => { state.nights = state.nights >= MAX_NIGHTS ? 1 : state.nights + 1; renderAll(); });
         units.forEach((u) => $('[data-pick]', u).addEventListener('click', () => {
-            state.unit = state.unit === u.dataset.unit ? null : u.dataset.unit;
+            if (u.dataset.sold === '1') return;
+            const id = u.dataset.unit;
+            if (state.cabin[id]) delete state.cabin[id];
+            else state.cabin[id] = true;
             renderAll();
         }));
 
         // Ketersediaan real-time (simulasi)
         const setStatus = (u, low) => {
+            if (u.dataset.sold === '1') return;
             const badge = $('[data-status]', u);
             $('[data-status-text]', u).textContent = low ? 'Tersisa 1 Unit' : 'Tersedia';
             toggleAll(badge, ['bg-[#FBD9B0]', 'text-[#6B4520]'], low);
@@ -548,7 +594,9 @@
         onScroll();
 
         // Status memproses saat submit
-        $('#reservasi-form').addEventListener('submit', () => {
+        $('#reservasi-form').addEventListener('submit', (e) => {
+            renderTotal();
+            if ($('#checkout-btn').disabled) { e.preventDefault(); return; }
             const btn = $('#checkout-btn');
             $('[data-btn-label]', btn).textContent = 'Memproses...';
             btn.classList.add('pointer-events-none', 'opacity-80');

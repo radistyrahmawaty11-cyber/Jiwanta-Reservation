@@ -46,6 +46,10 @@
 
     @yield('content')
 
+    @auth
+        @include('partials.reverb')
+    @endauth
+
     @stack('scripts')
 
 </body>

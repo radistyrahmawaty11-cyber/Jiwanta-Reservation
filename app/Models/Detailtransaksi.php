@@ -18,7 +18,6 @@ class Detailtransaksi extends Model
         'subtotal',
     ];
 
-
     public function transaksi()
     {
         return $this->belongsTo(Transaksi::class);
@@ -27,5 +26,10 @@ class Detailtransaksi extends Model
     public function tiket()
     {
         return $this->belongsTo(Tiket::class);
+    }
+
+    public function reservasi()
+    {
+        return $this->belongsTo(Reservasi::class);
     }
 }

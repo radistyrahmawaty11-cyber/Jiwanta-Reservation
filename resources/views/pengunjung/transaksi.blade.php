@@ -36,7 +36,7 @@
         $tanggalLong = $hari[$d->dayOfWeek].', '.$d->day.' '.$bulan[$d->month - 1].' '.$d->year;
 
         $gambar = ($order['tipe'] === 'cabin')
-            ? asset($order['unit'] === 'shorts' ? 'images/cabin-shorts.jpg' : 'images/cabin-suite.jpg')
+            ? asset('images/cabin-suite.jpg')
             : asset('images/kolam jiwanta.jpg');
         $gambarAlt = $order['tipe'] === 'cabin' ? $judul : 'Kolam Jiwanta';
     } else {
@@ -54,6 +54,13 @@
     }
 
     // Status kiriman bukti (POST /transaksi/kirim) -> tampil konsisten saat halaman dibuka ulang
+    $user = $user ?? null;
+    $pemesanNama = $user?->nama_pengguna ?? '-';
+    $pemesanWa = $user?->nohp
+        ? preg_replace('/(\d{4})(\d{4})(\d+)/', '$1-$2-$3', preg_replace('/\D/', '', $user->nohp))
+        : '-';
+    $pemesanEmail = $user?->email ?? '-';
+
     $sudahKirim = $order && ($order['status'] ?? '') === 'terkirim';
     $monT = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
     $namaBukti = ($sudahKirim && !empty($order['bukti_nama'])) ? $order['bukti_nama'] : 'bukti_transfer_bca_ahmad.jpg';
@@ -153,6 +160,20 @@
                     </div>
                 </div>
 
+                @if (!empty($order['items']))
+                    <div class="mt-3 space-y-2 rounded-xl bg-[#eef0ff] px-3 py-3">
+                        @foreach ($order['items'] as $item)
+                            <div class="flex items-start justify-between gap-3 text-[12px]">
+                                <span class="min-w-0">
+                                    <span class="block font-bold text-[#0b2e22]">{{ $item['nama'] }}</span>
+                                    <span class="text-gray-500">{{ $item['keterangan'] }} × Rp {{ number_format($item['satuan'], 0, ',', '.') }}</span>
+                                </span>
+                                <span class="shrink-0 font-semibold tabular-nums text-[#0b2e22]">Rp {{ number_format($item['subtotal'], 0, ',', '.') }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
                 <div class="mt-4 space-y-1.5 text-[12px] text-[#0b2e22]/80">
                     <div class="flex justify-between">
                         <span>{{ $hargaLabel }}</span>
@@ -194,15 +215,15 @@
                 <div class="mt-3 space-y-2">
                     <div class="rounded-xl bg-[#eef0ff] px-3.5 py-2.5">
                         <p class="text-[10px] font-semibold text-gray-500">Nama Lengkap</p>
-                        <p class="text-[14.5px] font-bold text-[#0b2e22]">Ahmad Fadillah</p>
+                        <p class="text-[14.5px] font-bold text-[#0b2e22]">{{ $pemesanNama }}</p>
                     </div>
                     <div class="rounded-xl bg-[#eef0ff] px-3.5 py-2.5">
                         <p class="text-[10px] font-semibold text-gray-500">No. WhatsApp</p>
-                        <p class="text-[14.5px] font-bold tabular-nums text-[#0b2e22]">0812-3456-7890</p>
+                        <p class="text-[14.5px] font-bold tabular-nums text-[#0b2e22]">{{ $pemesanWa }}</p>
                     </div>
                     <div class="rounded-xl bg-[#eef0ff] px-3.5 py-2.5">
                         <p class="text-[10px] font-semibold text-gray-500">Email Konfirmasi</p>
-                        <p class="break-all text-[14.5px] font-bold text-[#0b2e22]">ahmad.fadillah@example.com</p>
+                        <p class="break-all text-[14.5px] font-bold text-[#0b2e22]">{{ $pemesanEmail }}</p>
                     </div>
                 </div>
             </section>
@@ -217,48 +238,40 @@
                 </h3>
                 <p class="mt-1 text-[11.5px] text-[#0b2e22]/75">Pilih salah satu rekening resmi Jiwanta di bawah ini:</p>
 
-                {{-- BCA --}}
-                <div class="mt-3 rounded-2xl bg-[#eef0ff] p-3">
-                    <div class="flex items-center justify-between">
-                        <span class="rounded-md bg-[#dbe4ff] px-3 py-1 text-[17px] font-extrabold tracking-wide text-[#0b2e5a]">BCA</span>
-                        <span class="text-[10.5px] text-gray-400">Bank Central Asia</span>
-                    </div>
-                    <div class="mt-2.5 flex items-center justify-between rounded-xl bg-white px-3.5 py-2.5 shadow-sm">
-                        <div>
-                            <p class="text-[10px] font-semibold text-gray-500">Nomor Rekening</p>
-                            <p class="text-[19px] font-extrabold tabular-nums tracking-[0.12em] text-[#0b2e22]">8405123499</p>
+                <div class="mt-3 space-y-4">
+                    @forelse ($banks as $bank)
+                        @php
+                            $namaBank = \Illuminate\Support\Str::lower($bank->nama_bank);
+                            $isBca = \Illuminate\Support\Str::contains($namaBank, 'bca');
+                            $brand = match (true) {
+                                $isBca => 'BCA',
+                                \Illuminate\Support\Str::contains($namaBank, 'mandiri') => 'MANDIRI',
+                                default => \Illuminate\Support\Str::upper(\Illuminate\Support\Str::words($bank->nama_bank, 1, '')),
+                            };
+                        @endphp
+                        <div class="rounded-2xl bg-[#eef0ff] p-3">
+                            <div class="flex items-center justify-between">
+                                <span class="rounded-md px-3 py-1 text-[17px] font-extrabold tracking-wide {{ $isBca ? 'bg-[#dbe4ff] text-[#0b2e5a]' : 'bg-[#e3e5f7] text-[#7a5a2e]' }}">{{ $brand }}</span>
+                                <span class="text-[10.5px] text-gray-400">{{ $bank->nama_bank }}</span>
+                            </div>
+                            <div class="mt-2.5 flex items-center justify-between rounded-xl bg-white px-3.5 py-2.5 shadow-sm">
+                                <div>
+                                    <p class="text-[10px] font-semibold text-gray-500">Nomor Rekening</p>
+                                    <p class="text-[19px] font-extrabold tabular-nums tracking-[0.12em] text-[#0b2e22]">{{ $bank->nomor_rekening }}</p>
+                                </div>
+                                <button type="button" data-copy="{{ $bank->nomor_rekening }}"
+                                        class="copy-btn flex items-center gap-1.5 rounded-full bg-[#0b2e22] px-3 py-2 text-[11px] font-bold text-white transition hover:bg-[#12442f] active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0b2e22] focus-visible:ring-offset-2">
+                                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                    </svg>
+                                    <span class="copy-label">Salin</span>
+                                </button>
+                            </div>
+                            <p class="mt-2 text-[11.5px] text-[#0b2e22]/80">a.n <span class="font-semibold">{{ $bank->atas_nama }}</span></p>
                         </div>
-                        <button type="button" data-copy="8405123499"
-                                class="copy-btn flex items-center gap-1.5 rounded-full bg-[#0b2e22] px-3 py-2 text-[11px] font-bold text-white transition hover:bg-[#12442f] active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0b2e22] focus-visible:ring-offset-2">
-                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                            </svg>
-                            <span class="copy-label">Salin</span>
-                        </button>
-                    </div>
-                    <p class="mt-2 text-[11.5px] text-[#0b2e22]/80">a.n <span class="font-semibold">Jiwanta Thermall Springs</span></p>
-                </div>
-
-                {{-- MANDIRI --}}
-                <div class="mt-4 rounded-2xl bg-[#eef0ff] p-3">
-                    <div class="flex items-center justify-between">
-                        <span class="rounded-md bg-[#e3e5f7] px-3 py-1 text-[15px] font-extrabold tracking-wide text-[#7a5a2e]">MANDIRI</span>
-                        <span class="text-[10.5px] text-gray-400">Bank Mandiri</span>
-                    </div>
-                    <div class="mt-2.5 flex items-center justify-between rounded-xl bg-white px-3.5 py-2.5 shadow-sm">
-                        <div>
-                            <p class="text-[10px] font-semibold text-gray-500">Nomor Rekening</p>
-                            <p class="text-[19px] font-extrabold tabular-nums tracking-[0.12em] text-[#0b2e22]">1310098765432</p>
-                        </div>
-                        <button type="button" data-copy="1310098765432"
-                                class="copy-btn flex items-center gap-1.5 rounded-full bg-[#0b2e22] px-3 py-2 text-[11px] font-bold text-white transition hover:bg-[#12442f] active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0b2e22] focus-visible:ring-offset-2">
-                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                            </svg>
-                            <span class="copy-label">Salin</span>
-                        </button>
-                    </div>
-                    <p class="mt-2 text-[11.5px] text-[#0b2e22]/80">a.n <span class="font-semibold">Jiwanta Thermall Springs</span></p>
+                    @empty
+                        <p class="rounded-xl bg-[#eef0ff] px-3 py-3 text-center text-[11.5px] text-[#0b2e22]/70">Belum ada rekening transfer yang aktif.</p>
+                    @endforelse
                 </div>
             </section>
 
@@ -538,6 +551,21 @@
             btn.disabled = false;
         }
     });
+
+    /* ---------- Realtime: status pembayaran dari petugas ---------- */
+    const ORDER_KODE = @json($order['kode'] ?? null);
+    const STATUS_LABEL = { lunas: 'Pembayaran Lunas', gagal: 'Pembayaran Gagal', pending: 'Menunggu Verifikasi Admin' };
+    if (window.JiwantaRealtime && window.JiwantaRealtime.userChannel) {
+        window.JiwantaRealtime.onData((detail) => {
+            if (!detail || detail.type !== 'order.status') return;
+            const data = detail.data || {};
+            if (ORDER_KODE && data.kode && data.kode !== ORDER_KODE) return;
+            const label = STATUS_LABEL[data.status] || 'Status diperbarui';
+            const badge = $('statusVerifying');
+            if (badge) { badge.querySelector('span:last-child').innerHTML = label + '<br>Admin'; showStatus('verifying'); }
+            toast(label + (data.kode ? ' • ' + data.kode : ''));
+        });
+    }
 })();
 </script>
 @endpush

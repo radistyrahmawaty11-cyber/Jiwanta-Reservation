@@ -122,10 +122,6 @@
             </div>
         </div>
 
-        <button type="button" id="trx-add" class="flex items-center gap-2 rounded-xl bg-[#0B3A22] px-4 py-2.5 text-[11px] font-bold text-white transition hover:bg-[#0e4a2c] active:scale-95">
-            {!! $ic($p['plus'], 'h-4 w-4', '2.2') !!} Tambah Transaksi
-        </button>
-
         <a href="{{ route('admin.transaksi.export') }}" class="flex items-center gap-2 rounded-xl {{ $lav }} px-4 py-2.5 text-[11px] font-bold text-slate-800 transition hover:bg-[#cfd9f7] active:scale-95">
             {!! $ic($p['download'], 'h-4 w-4', '2.2') !!} Unduh XLS
         </a>
@@ -145,6 +141,7 @@
                 <span class="text-right">Opsi</span>
             </div>
             <div id="trx-list"></div>
+            {{-- Riwayat transaksi bersifat read-only: laporan dari pemesanan pengunjung. --}}
         </div>
     </div>
     <div class="flex items-center justify-between gap-4 border-t border-slate-100 px-5 py-4">
@@ -155,81 +152,6 @@
 @endsection
 
 @section('overlays')
-    <div id="toast" role="status" class="pointer-events-none fixed right-6 top-20 z-[60] max-w-sm translate-y-[-8px] rounded-xl bg-[#0B3A22] px-4 py-3 text-[12px] font-semibold text-white opacity-0 shadow-[0_10px_24px_-8px_rgba(11,46,34,0.55)] transition duration-300"></div>
-
-    <div id="trx-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
-        <div class="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
-            <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                <h3 id="tf-title" class="text-[15px] font-bold text-[#0B3A22]">Tambah Transaksi</h3>
-                <button type="button" data-close="trx-modal" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">{!! $ic($p['x'], 'h-4 w-4') !!}</button>
-            </div>
-            <form id="tf-form" class="max-h-[70vh] overflow-y-auto px-6 py-5">
-                <input type="hidden" id="tf-id">
-                <div class="grid grid-cols-2 gap-x-4 gap-y-4">
-                    <label class="block">
-                        <span class="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-slate-500">Kode Transaksi</span>
-                        <input id="tf-kode" type="text" required class="w-full rounded-xl border border-slate-200 bg-[#F7F8FC] px-3.5 py-2.5 text-[12px] text-slate-800 outline-none transition focus:border-[#0B3A22] focus:bg-white">
-                    </label>
-                    <label class="block">
-                        <span class="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-slate-500">Pengguna</span>
-                        <select id="tf-user" required class="w-full rounded-xl border border-slate-200 bg-[#F7F8FC] px-3.5 py-2.5 text-[12px] text-slate-800 outline-none transition focus:border-[#0B3A22] focus:bg-white">
-                            @foreach ($penggunas as $u)
-                                <option value="{{ $u->id }}">{{ $u->nama_pengguna }} — {{ $u->email }}</option>
-                            @endforeach
-                        </select>
-                    </label>
-                    <label class="block">
-                        <span class="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-slate-500">Tanggal &amp; Waktu</span>
-                        <input id="tf-when" type="datetime-local" required class="w-full rounded-xl border border-slate-200 bg-[#F7F8FC] px-3.5 py-2.5 text-[12px] text-slate-800 outline-none transition focus:border-[#0B3A22] focus:bg-white">
-                    </label>
-                    <label class="block">
-                        <span class="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-slate-500">Metode Pembayaran</span>
-                        <select id="tf-metode" required class="w-full rounded-xl border border-slate-200 bg-[#F7F8FC] px-3.5 py-2.5 text-[12px] text-slate-800 outline-none transition focus:border-[#0B3A22] focus:bg-white">
-                            <option value="bca">BCA</option>
-                            <option value="mandiri">Mandiri</option>
-                        </select>
-                    </label>
-                    <label class="block">
-                        <span class="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-slate-500">Jenis Transaksi</span>
-                        <select id="tf-jenis" required class="w-full rounded-xl border border-slate-200 bg-[#F7F8FC] px-3.5 py-2.5 text-[12px] text-slate-800 outline-none transition focus:border-[#0B3A22] focus:bg-white">
-                            <option value="pembayaran_renang">Pembayaran Renang</option>
-                            <option value="pembayaran_cabin">Pembayaran Cabin</option>
-                        </select>
-                    </label>
-                    <label class="block">
-                        <span class="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-slate-500">Status</span>
-                        <select id="tf-status" required class="w-full rounded-xl border border-slate-200 bg-[#F7F8FC] px-3.5 py-2.5 text-[12px] text-slate-800 outline-none transition focus:border-[#0B3A22] focus:bg-white">
-                            <option value="pending">Menunggu Verifikasi</option>
-                            <option value="lunas">Lunas</option>
-                            <option value="gagal">Gagal</option>
-                        </select>
-                    </label>
-                    <label class="block">
-                        <span class="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-slate-500">Total Bayar (Rp)</span>
-                        <input id="tf-total" type="number" min="0" step="1" required class="w-full rounded-xl border border-slate-200 bg-[#F7F8FC] px-3.5 py-2.5 text-[12px] text-slate-800 outline-none transition focus:border-[#0B3A22] focus:bg-white">
-                    </label>
-                    <label class="block">
-                        <span class="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-slate-500">Jumlah Bayar (Rp)</span>
-                        <input id="tf-pay" type="number" min="0" step="1" required class="w-full rounded-xl border border-slate-200 bg-[#F7F8FC] px-3.5 py-2.5 text-[12px] text-slate-800 outline-none transition focus:border-[#0B3A22] focus:bg-white">
-                    </label>
-                    <label class="block">
-                        <span class="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-slate-500">Kembalian (Rp)</span>
-                        <input id="tf-change" type="number" min="0" step="1" readonly class="w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-[12px] text-slate-600 outline-none">
-                    </label>
-                    <label class="block">
-                        <span class="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-slate-500">Nama Bukti (opsional)</span>
-                        <input id="tf-bukti" type="text" placeholder="struk_bca_xxx.jpg" class="w-full rounded-xl border border-slate-200 bg-[#F7F8FC] px-3.5 py-2.5 text-[12px] text-slate-800 outline-none transition focus:border-[#0B3A22] focus:bg-white">
-                    </label>
-                </div>
-                <p id="tf-error" class="mt-4 hidden rounded-lg bg-[#FBD5D5] px-3 py-2 text-[11px] font-semibold text-[#B42318]"></p>
-                <div class="mt-5 flex justify-end gap-2">
-                    <button type="button" data-close="trx-modal" class="rounded-xl border border-slate-200 px-4 py-2.5 text-[11px] font-bold text-slate-700 transition hover:bg-slate-100">Batal</button>
-                    <button type="submit" id="tf-save" class="rounded-xl bg-[#0B3A22] px-5 py-2.5 text-[11px] font-bold text-white transition hover:bg-[#0e4a2c] active:scale-95">Simpan</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <div id="trx-detail" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
         <div class="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
             <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
@@ -238,20 +160,7 @@
             </div>
             <div id="dt-body" class="max-h-[60vh] space-y-3 overflow-y-auto px-6 py-5"></div>
             <div class="flex justify-end gap-2 border-t border-slate-100 px-6 py-4">
-                <button type="button" id="dt-edit" class="rounded-xl {{ $lav }} px-4 py-2 text-[11px] font-bold text-slate-800 transition hover:bg-[#cfd9f7]">Edit</button>
                 <button type="button" data-close="trx-detail" class="rounded-xl bg-[#0B3A22] px-4 py-2 text-[11px] font-bold text-white transition hover:bg-[#0e4a2c]">Tutup</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="del-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
-        <div class="w-full max-w-sm overflow-hidden rounded-2xl bg-white p-6 text-center shadow-2xl">
-            <span class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#FBD5D5] text-[#B42318]">{!! $ic($p['alert'], 'h-6 w-6') !!}</span>
-            <h3 class="text-[15px] font-bold text-[#0B3A22]">Hapus Transaksi?</h3>
-            <p class="mt-1.5 text-[11px] leading-relaxed text-slate-600">Transaksi <span id="del-kode" class="font-bold text-slate-900">-</span> akan dihapus permanen dari database.</p>
-            <div class="mt-5 flex justify-center gap-2">
-                <button type="button" data-close="del-modal" class="rounded-xl border border-slate-200 px-4 py-2 text-[11px] font-bold text-slate-700 transition hover:bg-slate-100">Batal</button>
-                <button type="button" id="del-confirm" class="rounded-xl bg-[#B42318] px-4 py-2 text-[11px] font-bold text-white transition hover:bg-[#8f1c13] active:scale-95">Hapus</button>
             </div>
         </div>
     </div>
@@ -268,49 +177,18 @@
         const ic = (n, c = 'h-4 w-4', sw = '1.8') => `<svg class="${c}" fill="none" stroke="currentColor" stroke-width="${sw}" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="${ICON[n]}"/></svg>`;
         const rp = (n) => 'Rp ' + Math.round(n).toLocaleString('id-ID');
         const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-        const CSRF = $('meta[name="csrf-token"]').content;
 
-        const http = async (method, url, body) => {
-            const res = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF, 'X-Requested-With': 'XMLHttpRequest' },
-                body: body ? JSON.stringify(body) : undefined,
-            });
-            let json = null;
-            try { json = await res.json(); } catch (e) { /* ignore */ }
-            if (!res.ok || (json && json.ok === false)) {
-                const msg = (json && json.message) || (json && json.errors ? Object.values(json.errors).flat()[0] : 'Terjadi kesalahan. Coba lagi.');
-                throw new Error(msg);
-            }
-            return json && Object.prototype.hasOwnProperty.call(json, 'data') ? json.data : json;
-        };
-
-        const state = { rows: @json($transaksis), q: '', bank: 'all', status: 'all', page: 1, per: 8, editing: null, deleting: null, viewing: null };
-
-        let toastTimer;
-        const toast = (msg, bad = false) => {
-            const el = $('#toast');
-            el.textContent = msg;
-            el.classList.toggle('bg-[#0B3A22]', !bad);
-            el.classList.toggle('bg-[#B42318]', bad);
-            el.classList.remove('opacity-0', 'translate-y-[-8px]');
-            el.classList.add('opacity-100', 'translate-y-0');
-            clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => {
-                el.classList.add('opacity-0', 'translate-y-[-8px]');
-                el.classList.remove('opacity-100', 'translate-y-0');
-            }, 2800);
-        };
+        const state = { rows: @json($transaksis), q: '', bank: 'all', status: 'all', page: 1, per: 8, viewing: null };
 
         const openModal = (id) => { const m = $('#' + id); m.classList.remove('hidden'); m.classList.add('flex'); };
         const closeModal = (id) => { const m = $('#' + id); m.classList.add('hidden'); m.classList.remove('flex'); };
         $$('[data-close]').forEach((b) => b.addEventListener('click', () => closeModal(b.dataset.close)));
-        ['trx-modal', 'trx-detail', 'del-modal'].forEach((id) => {
+        ['trx-detail'].forEach((id) => {
             const m = $('#' + id);
             m.addEventListener('click', (e) => { if (e.target === m) closeModal(id); });
         });
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') ['trx-modal', 'trx-detail', 'del-modal'].forEach(closeModal);
+            if (e.key === 'Escape') ['trx-detail'].forEach(closeModal);
         });
 
         const PILL = {
@@ -330,10 +208,8 @@
             <span><span class="inline-block rounded-lg bg-[#DDE6FB] px-3 py-1.5 text-[10px] font-bold text-slate-800">${esc(h.metode)}</span></span>
             <b class="text-[12px] text-slate-900">${rp(h.amount)}</b>
             <span>${pill(h.status)}</span>
-            <span class="flex justify-end gap-1.5">
+            <span class="flex justify-end">
                 <button type="button" data-view="${h.id}" class="rounded-lg bg-[#DDE6FB] px-3 py-2 text-[9px] font-bold text-slate-800 transition hover:bg-[#cfd9f7] active:scale-95">Detail</button>
-                <button type="button" data-edit="${h.id}" title="Edit" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#0B3A22] active:scale-95">${ic('edit', 'h-3.5 w-3.5', '2')}</button>
-                <button type="button" data-del="${h.id}" title="Hapus" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-[#FBD5D5] hover:text-[#B42318] active:scale-95">${ic('trash', 'h-3.5 w-3.5', '2')}</button>
             </span>
         </div>`;
 
@@ -409,75 +285,6 @@
             render();
         });
 
-        const pad = (n) => String(n).padStart(2, '0');
-        const autoNow = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; };
-        const autoKode = () => { const d = new Date(); return 'TRX-' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + String(Math.floor(Math.random() * 900) + 100); };
-        const toServer = (v) => (v ? v.replace('T', ' ') + ':00' : v);
-        const showErr = (msg) => { const el = $('#tf-error'); el.textContent = msg || ''; el.classList.toggle('hidden', !msg); };
-        const syncChange = () => { $('#tf-change').value = Math.max(0, Number($('#tf-pay').value || 0) - Number($('#tf-total').value || 0)); };
-        $('#tf-total').addEventListener('input', syncChange);
-        $('#tf-pay').addEventListener('input', syncChange);
-
-        const openForm = (mode, h) => {
-            showErr('');
-            state.editing = mode === 'edit' ? h.id : null;
-            $('#tf-title').textContent = mode === 'edit' ? 'Edit Transaksi' : 'Tambah Transaksi';
-            $('#tf-kode').value = mode === 'edit' ? h.kode : autoKode();
-            $('#tf-user').value = mode === 'edit' ? h.pengguna_id : ($('#tf-user').options[0]?.value || '');
-            $('#tf-when').value = mode === 'edit' ? h.datetime : autoNow();
-            $('#tf-metode').value = mode === 'edit' ? h.metode_raw : 'bca';
-            $('#tf-jenis').value = mode === 'edit' ? h.jenis : 'pembayaran_renang';
-            $('#tf-status').value = mode === 'edit' ? h.status : 'pending';
-            $('#tf-total').value = mode === 'edit' ? h.total_bayar : '';
-            $('#tf-pay').value = mode === 'edit' ? h.jumlah_bayar : '';
-            $('#tf-bukti').value = mode === 'edit' ? (h.bukti || '') : '';
-            syncChange();
-            openModal('trx-modal');
-        };
-
-        $('#tf-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            showErr('');
-            const payload = {
-                kode_transaksi: $('#tf-kode').value.trim(),
-                pengguna_id: $('#tf-user').value,
-                tgl_transaksi: toServer($('#tf-when').value),
-                total_bayar: Number($('#tf-total').value || 0),
-                jumlah_bayar: Number($('#tf-pay').value || 0),
-                kembalian: Math.max(0, Number($('#tf-pay').value || 0) - Number($('#tf-total').value || 0)),
-                metode: $('#tf-metode').value,
-                jenis_transaksi: $('#tf-jenis').value,
-                status: $('#tf-status').value,
-                bukti: $('#tf-bukti').value.trim() || null,
-            };
-            if (!payload.kode_transaksi) return showErr('Kode transaksi wajib diisi.');
-            if (!payload.pengguna_id) return showErr('Pengguna wajib dipilih.');
-            if (!payload.tgl_transaksi) return showErr('Tanggal & waktu wajib diisi.');
-            if (payload.jumlah_bayar < payload.total_bayar) return showErr('Jumlah bayar tidak boleh kurang dari total bayar.');
-
-            const saveBtn = $('#tf-save');
-            saveBtn.disabled = true;
-            try {
-                if (state.editing) {
-                    const saved = await http('PUT', `/admin/transaksi/${state.editing}`, payload);
-                    const idx = state.rows.findIndex((r) => String(r.id) === String(state.editing));
-                    if (idx > -1) state.rows[idx] = saved;
-                    toast('Transaksi ' + saved.kode + ' diperbarui.');
-                } else {
-                    const saved = await http('POST', '/admin/transaksi', payload);
-                    state.rows.unshift(saved);
-                    toast('Transaksi ' + saved.kode + ' ditambahkan.');
-                }
-                closeModal('trx-modal');
-                state.page = 1;
-                render();
-            } catch (err) {
-                showErr(err.message);
-            } finally {
-                saveBtn.disabled = false;
-            }
-        });
-
         const detailLine = (label, val) => `<div class="flex items-start justify-between gap-4 border-b border-slate-100 pb-2.5 last:border-0"><span class="shrink-0 text-[11px] text-slate-500">${label}</span><span class="text-right text-[12px] font-semibold text-slate-900">${val}</span></div>`;
         const openDetail = (h) => {
             state.viewing = h.id;
@@ -494,45 +301,27 @@
                 detailLine('Bukti', esc(h.bukti || '-'));
             openModal('trx-detail');
         };
-        $('#dt-edit').addEventListener('click', () => {
-            const h = state.rows.find((r) => String(r.id) === String(state.viewing));
-            if (!h) return;
-            closeModal('trx-detail');
-            openForm('edit', h);
-        });
-
-        // PERBAIKAN UTAMA: byId menggunakan String comparison
         const byId = (id) => state.rows.find((r) => String(r.id) === String(id));
 
         $('#trx-list').addEventListener('click', (e) => {
             const v = e.target.closest('[data-view]');
-            const ed = e.target.closest('[data-edit]');
-            const del = e.target.closest('[data-del]');
             if (v) { const h = byId(v.dataset.view); if (h) openDetail(h); }
-            else if (ed) { const h = byId(ed.dataset.edit); if (h) openForm('edit', h); }
-            else if (del) { const h = byId(del.dataset.del); if (h) { state.deleting = h.id; $('#del-kode').textContent = h.kode; openModal('del-modal'); } }
         });
 
-        $('#del-confirm').addEventListener('click', async () => {
-            if (!state.deleting) return;
-            const btn = $('#del-confirm');
-            btn.disabled = true;
+        const FEED_URL = @json(route('admin.feed'));
+        const refreshFeed = async () => {
             try {
-                await http('DELETE', `/admin/transaksi/${state.deleting}`);
-                state.rows = state.rows.filter((r) => String(r.id) !== String(state.deleting));
-                closeModal('del-modal');
-                toast('Transaksi dihapus.');
-                state.page = 1;
-                render();
-            } catch (err) {
-                toast(err.message, true);
-            } finally {
-                btn.disabled = false;
-                state.deleting = null;
-            }
-        });
-
-        $('#trx-add').addEventListener('click', () => openForm('create'));
+                const res = await fetch(FEED_URL, { headers: { 'Accept': 'application/json' } });
+                const json = await res.json();
+                const data = json.data || json;
+                if (Array.isArray(data.rows)) {
+                    state.rows = data.rows;
+                    if (state.viewing && !byId(state.viewing)) closeModal('trx-detail');
+                    render();
+                }
+            } catch (e) { /* abaikan gangguan jaringan */ }
+        };
+        window.addEventListener('jiwanta:realtime', () => refreshFeed());
 
         render();
     });

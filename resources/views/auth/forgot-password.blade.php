@@ -46,7 +46,7 @@
                 id="identifier"
                 name="identifier"
                 value="{{ old('identifier') }}"
-                placeholder="Contoh: admin@jiwanta.id atau 081200000001"
+                placeholder="Contoh: admin@jiwanta.com atau 081200000001"
                 required
                 class="mt-1.5 w-full px-4 py-2.5 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-jiwanta focus:border-transparent"
             >

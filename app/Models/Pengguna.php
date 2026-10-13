@@ -15,6 +15,7 @@ class Pengguna extends Authenticatable
         'nama_pengguna',
         'email',
         'nohp',
+        'foto',
         'role',
         'password',
     ];
@@ -26,4 +27,11 @@ class Pengguna extends Authenticatable
     protected $casts = [
         'password' => 'hashed',
     ];
+
+    public function fotoUrl(): string
+    {
+        return $this->foto
+            ? asset('storage/'.$this->foto)
+            : asset('images/profil.jpg');
+    }
 }

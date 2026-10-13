@@ -52,7 +52,7 @@
                     <p class="mt-1 max-w-xl text-[13px] leading-relaxed text-slate-600">Scan QR e-ticket pengunjung dan verifikasi bukti pembayaran transfer.</p>
                 </div>
                 <span class="flex items-center gap-2 rounded-full {{ $mint }} px-4 py-2 text-[11px] font-semibold">
-                    {!! $ic($p['cloud'], 'h-4 w-4') !!} Realtime • Sinkron <span data-sync>2</span> dtk lalu
+                    {!! $ic($p['cloud'], 'h-4 w-4') !!} <span data-realtime-text>Realtime • Sinkron <span data-sync>2</span> dtk lalu</span>
                 </span>
             </section>
 
@@ -122,13 +122,13 @@
                             <div class="mt-2 flex flex-wrap items-center gap-2">
                                 <label data-input-wrap class="flex min-w-[200px] flex-1 items-center gap-2 rounded-xl bg-white px-3 py-2.5 ring-2 ring-transparent transition focus-within:ring-[#0B3A22]/30">
                                     {!! $ic($p['search'], 'h-4 w-4 shrink-0 text-slate-500') !!}
-                                    <input id="code-input" type="text" autocomplete="off" placeholder="JW-20260920-001" class="w-full min-w-0 bg-transparent text-[12px] font-semibold uppercase outline-none placeholder:normal-case placeholder:text-slate-400">
+                                    <input id="code-input" type="text" autocomplete="off" placeholder="TRX-20260920-001" class="w-full min-w-0 bg-transparent text-[12px] font-semibold uppercase outline-none placeholder:normal-case placeholder:text-slate-400">
                                 </label>
                                 <button type="button" id="validate" class="flex items-center gap-2 rounded-xl bg-[#0B3A22] px-5 py-3 text-[12px] font-bold text-white transition hover:bg-[#124c2f] active:scale-95">{!! $ic($p['checkc'], 'h-4 w-4') !!} Validasi</button>
                             </div>
                             <p class="mt-2 flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-600">
                                 <span>Tekan <b>F2</b> untuk fokus • <b>Enter</b> untuk validasi</span>
-                                <button type="button" id="simulate" class="font-semibold text-[#8B5E34] underline-offset-2 transition hover:underline">Simulasi scan (demo)</button>
+                                <button type="button" id="simulate" class="font-semibold text-[#8B5E34] underline-offset-2 transition hover:underline">Simulasi scan</button>
                             </p>
                         </div>
                     </section>
@@ -139,7 +139,7 @@
                     {{-- Riwayat singkat --}}
                     <section class="jw-rise {{ $card }} p-5 lg:p-6" style="animation-delay:.14s">
                         <div class="flex items-center justify-between">
-                            <h2 class="text-[16px] font-bold">Scan Terakhir</h2>
+                            <h2 class="text-[16px] font-bold">Aktivitas Terakhir</h2>
                             <span class="text-[10px] text-slate-600">5 catatan terbaru</span>
                         </div>
                         <ul id="hist" class="mt-3"></ul>
@@ -184,8 +184,8 @@
 
 @push('scripts')
 <script>
+    window.__PETUGAS__ = @json($payload);
     document.addEventListener('DOMContentLoaded', () => {
-        const LIVE_DEMO = true; // ganti dengan polling / Laravel Echo untuk data asli
         const $ = (s, r = document) => r.querySelector(s);
         const $$ = (s, r = document) => [...r.querySelectorAll(s)];
         const fmt = (n) => Math.round(n).toLocaleString('id-ID');
@@ -226,34 +226,25 @@
         };
         $('#beeper').addEventListener('click', () => { beeper = !beeper; $('[data-beeper-state]').textContent = beeper ? 'On' : 'Off'; if (beeper) beep(true); });
 
-        // ---------- Data demo (ganti dengan API) ----------
-        const PRICE = { classic: 45000, premier: 75000 };
-        const PKG = { classic: 'Tiket Renang Classic', premier: 'Tiket Renang Premier' };
-        const REK = { BCA: '8405123499', Mandiri: '1310098765432' };
-        const NOW = Date.now();
+        // ---------- Data dari server ----------
+        const DATA = window.__PETUGAS__ || {};
+        const SCAN_URL = DATA.scanUrl || '/petugas/scan';
+        const ACTION_URL = DATA.actionUrl || '/petugas/transaksi';
+        const CSRF = ($('meta[name="csrf-token"]') || {}).content || '';
         const B = {};
-        let seq = 8;
-        const mk = (n, name, pax, pkg, status, extra = {}) => {
-            const b = { code: 'JW-20260920-' + String(n).padStart(3, '0'), name, pax, pkg, total: PRICE[pkg] * pax, status, ...extra };
-            B[b.code] = b; return b;
+        (DATA.pending || []).forEach((t) => { B[t.code] = { ...t, status: 'pending' }; });
+        const S = {
+            gate: (DATA.stats && DATA.stats.gate) || 0,
+            cap: (DATA.stats && DATA.stats.cap) || 250,
+            verified: (DATA.stats && DATA.stats.verified) || 0,
         };
-        mk(1, 'Ahmad Fadillah', 2, 'premier', 'pending', { bank: 'BCA', file: 'bukti_transfer_bca_ahmad.jpg', paid: 150000, uploaded: NOW - 4 * 60e3 });
-        mk(2, 'Bima Sakti', 2, 'premier', 'used');
-        mk(3, 'Rangga Pratama', 1, 'classic', 'used');
-        mk(4, 'Siti Rahmawati', 4, 'premier', 'paid');
-        mk(5, 'Maya Lestari', 3, 'premier', 'pending', { bank: 'Mandiri', file: 'bukti_mandiri_maya.png', paid: 225000, uploaded: NOW - 11 * 60e3 });
-        mk(6, 'Budi Santoso', 2, 'classic', 'pending', { bank: 'BCA', file: 'bukti_bca_budi.jpg', paid: 75000, uploaded: NOW - 2 * 60e3 });
-        mk(7, 'Dewi Maharani', 1, 'classic', 'paid');
-        mk(8, 'Aris Munandar', 2, 'classic', 'paid');
-        B['JW-20260919-014'] = { code: 'JW-20260919-014', name: 'Rendi Pratama', pax: 1, pkg: 'classic', total: 45000, status: 'expired' };
-
-        const S = { gate: 182, cap: 250, verified: 24 };
-        const hist = [
-            { t: '10:14:15', name: 'Bima Sakti', sub: '2 Dewasa • Premier', ok: true },
-            { t: '10:09:04', name: 'Rangga Pratama', sub: '1 Dewasa • Classic', ok: true },
-            { t: '10:01:22', name: 'Rendi Pratama', sub: 'Tiket kedaluwarsa (sesi kemarin)', ok: false },
-        ];
+        const hist = (DATA.history || []).slice();
         const pending = () => Object.values(B).filter((b) => b.status === 'pending').sort((a, b) => b.uploaded - a.uploaded);
+        const postAction = async (url) => {
+            const r = await fetch(url, { method: 'POST', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF } });
+            if (!r.ok) throw new Error('request failed');
+            return r.json();
+        };
 
         // ---------- Sinkron, jam & umur unggahan ----------
         let syncAge = 2;
@@ -283,7 +274,7 @@
         const proofSVG = (b) => {
             const c = b.bank === 'BCA' ? '#0A4AA8' : '#B8832F';
             const t = clockStr(new Date(b.uploaded)).slice(0, 5);
-            const s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 250" font-family="Arial,sans-serif"><rect width="180" height="250" rx="10" fill="#F4F7F5"/><rect width="180" height="38" rx="10" fill="${c}"/><rect y="20" width="180" height="18" fill="${c}"/><text x="14" y="25" font-size="13" font-weight="700" fill="#fff">${b.bank}</text><circle cx="90" cy="68" r="14" fill="#22C55E"/><path d="M83 68l5 5 9-10" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><text x="90" y="98" font-size="10" text-anchor="middle" fill="#334155">Transfer Berhasil</text><text x="90" y="122" font-size="17" font-weight="700" text-anchor="middle" fill="#0B3A22">Rp ${fmt(b.paid)}</text><line x1="16" x2="164" y1="136" y2="136" stroke="#D5DCD8"/><text x="16" y="154" font-size="8" fill="#64748B">Ke rekening</text><text x="16" y="165" font-size="9.5" font-weight="700" fill="#1F2937">${REK[b.bank]}</text><text x="16" y="182" font-size="8" fill="#64748B">Atas nama</text><text x="16" y="193" font-size="9.5" font-weight="700" fill="#1F2937">Jiwanta Thermall Springs</text><text x="16" y="210" font-size="8" fill="#64748B">Pengirim</text><text x="16" y="221" font-size="9.5" font-weight="700" fill="#1F2937">${esc(b.name)}</text><text x="164" y="240" font-size="8" text-anchor="end" fill="#94A3B8">20 Sep 2026 • ${t} WIB</text></svg>`;
+            const s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 250" font-family="Arial,sans-serif"><rect width="180" height="250" rx="10" fill="#F4F7F5"/><rect width="180" height="38" rx="10" fill="${c}"/><rect y="20" width="180" height="18" fill="${c}"/><text x="14" y="25" font-size="13" font-weight="700" fill="#fff">${b.bank}</text><circle cx="90" cy="68" r="14" fill="#22C55E"/><path d="M83 68l5 5 9-10" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><text x="90" y="98" font-size="10" text-anchor="middle" fill="#334155">Transfer Berhasil</text><text x="90" y="122" font-size="17" font-weight="700" text-anchor="middle" fill="#0B3A22">Rp ${fmt(b.paid)}</text><line x1="16" x2="164" y1="136" y2="136" stroke="#D5DCD8"/><text x="16" y="154" font-size="8" fill="#64748B">Ke rekening</text><text x="16" y="165" font-size="9.5" font-weight="700" fill="#1F2937">${esc(b.rek || '-')}</text><text x="16" y="182" font-size="8" fill="#64748B">Atas nama</text><text x="16" y="193" font-size="9.5" font-weight="700" fill="#1F2937">Jiwanta Thermall Springs</text><text x="16" y="210" font-size="8" fill="#64748B">Pengirim</text><text x="16" y="221" font-size="9.5" font-weight="700" fill="#1F2937">${esc(b.name)}</text><text x="164" y="240" font-size="8" text-anchor="end" fill="#94A3B8">${t} WIB</text></svg>`;
             return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);
         };
 
@@ -326,10 +317,10 @@
                     <dl class="space-y-2.5 text-[12px]">
                         <div class="flex justify-between gap-3"><dt class="text-slate-600">Pemesan</dt><dd class="text-right font-bold">${esc(b.name)}</dd></div>
                         <div class="flex justify-between gap-3"><dt class="text-slate-600">Kode booking</dt><dd class="text-right font-bold">${b.code}</dd></div>
-                        <div class="flex justify-between gap-3"><dt class="text-slate-600">Paket</dt><dd class="text-right font-bold">${PKG[b.pkg]} • ${b.pax} pax</dd></div>
+                        <div class="flex justify-between gap-3"><dt class="text-slate-600">Paket</dt><dd class="text-right font-bold">${esc(b.pkg)} • ${b.pax} pax</dd></div>
                         <div class="flex justify-between gap-3"><dt class="text-slate-600">Tagihan</dt><dd class="text-right font-bold">${rp(b.total)}</dd></div>
                         <div class="flex justify-between gap-3"><dt class="text-slate-600">Nominal di bukti</dt><dd class="text-right font-bold ${diff ? 'text-red-700' : 'text-[#0B3A22]'}">${rp(b.paid)}</dd></div>
-                        <div class="flex justify-between gap-3"><dt class="text-slate-600">Rekening tujuan</dt><dd class="text-right font-bold">${b.bank} ${REK[b.bank]}</dd></div>
+                        <div class="flex justify-between gap-3"><dt class="text-slate-600">Rekening tujuan</dt><dd class="text-right font-bold">${esc(b.bank)} ${esc(b.rek || '-')}</dd></div>
                         <div class="flex justify-between gap-3"><dt class="text-slate-600">Diunggah</dt><dd class="text-right font-bold"><span data-ago data-t="${b.uploaded}">${ago(b.uploaded)}</span></dd></div>
                         <div class="flex justify-between gap-3"><dt class="text-slate-600">File</dt><dd class="max-w-[160px] truncate text-right font-medium">${esc(b.file)}</dd></div>
                     </dl>
@@ -359,19 +350,27 @@
             if (el) el.classList.add('opacity-0', 'scale-95');
             setTimeout(renderPay, 280);
         };
-        modal.addEventListener('click', (e) => {
+        modal.addEventListener('click', async (e) => {
             if (e.target.closest('[data-m-verify]')) {
                 const b = B[payCode]; if (!b) return;
+                try { await postAction(ACTION_URL + '/' + b.id + '/verify'); }
+                catch (err) { return toast('Gagal memverifikasi pembayaran. Coba lagi.'); }
                 b.status = 'paid'; S.verified++;
                 const code = payCode; closeModal(); fadeOut(code); touch(); beep(true);
+                hist.unshift({ t: clockStr(), name: b.name, sub: b.code + ' • ' + b.pkg, ok: true });
+                renderHist();
                 toast('Pembayaran ' + esc(b.name) + ' terverifikasi. E-ticket diterbitkan.');
                 if (cur && cur.code === code) showValid(b);
             }
             if (e.target.closest('[data-m-reject]')) {
                 const b = B[payCode]; if (!b) return;
                 const why = $('#rej-reason').value;
+                try { await postAction(ACTION_URL + '/' + b.id + '/reject'); }
+                catch (err) { return toast('Gagal menolak pembayaran. Coba lagi.'); }
                 b.status = 'rejected'; b.why = why;
                 const code = payCode; closeModal(); fadeOut(code); touch(); beep(false);
+                hist.unshift({ t: clockStr(), name: b.name, sub: b.code + ' • ' + why, ok: false });
+                renderHist();
                 toast('Pembayaran ' + esc(b.name) + ' ditolak: ' + why + '. Pengunjung diberi tahu.');
                 if (cur && cur.code === code) showBad(b, 'Pembayaran ditolak', why + '. Pengunjung perlu mengunggah ulang bukti transfer.');
             }
@@ -395,9 +394,9 @@
             <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EEF1FD] text-slate-500">${ic(P.scan, 'h-6 w-6')}</span>
             <div><p class="text-[14px] font-bold">Menunggu scan tiket</p><p class="mt-0.5 text-[12px] text-slate-600">Hasil validasi QR pengunjung akan muncul di sini.</p></div></div>`;
         const info = (b) => `<div class="mt-4 grid gap-3 rounded-2xl bg-[#EEF1FD] p-4 text-[11px] sm:grid-cols-3">
-            <div><p class="text-slate-600">Paket</p><p class="mt-0.5 font-bold">${PKG[b.pkg]}</p></div>
+            <div><p class="text-slate-600">Paket</p><p class="mt-0.5 font-bold">${esc(b.pkg)}</p></div>
             <div><p class="text-slate-600">Pengunjung</p><p class="mt-0.5 font-bold">${b.pax} Dewasa</p></div>
-            <div><p class="text-slate-600">Tanggal Kunjungan</p><p class="mt-0.5 font-bold">Minggu, 20 Sep 2026</p></div></div>`;
+            <div><p class="text-slate-600">Tanggal Kunjungan</p><p class="mt-0.5 font-bold">${esc(b.date || '-')}</p></div></div>`;
 
         function showValid(b) {
             cur = { code: b.code };
@@ -446,19 +445,32 @@
 
         const normalize = (raw) => {
             const s = String(raw || '').toUpperCase().trim();
-            const m = s.match(/JW-\d{8}-\d{3}/);
+            const m = s.match(/[A-Z]{2,4}-\d{8}-\d{3}/);
             return m ? m[0] : s;
         };
-        function handleScan(raw) {
+        async function handleScan(raw) {
             const code = normalize(raw);
             if (!code) return;
             clearTimeout(idleTimer);
-            const b = B[code];
-            if (!b) return reject(null, 'Kode tidak ditemukan', 'Pastikan QR e-ticket asli atau ketik ulang kode booking.');
-            if (b.status === 'used') return reject(b, 'Tiket sudah digunakan', 'Tiket ini sudah dipakai untuk masuk' + (b.usedAt ? ' pukul ' + clockStr(b.usedAt) + ' WIB.' : '.'));
-            if (b.status === 'expired') return reject(b, 'Tiket kedaluwarsa', 'Tanggal kunjungan tiket ini sudah lewat.');
-            if (b.status === 'pending') return reject(b, 'Pembayaran belum terverifikasi', 'Verifikasi bukti transfer pengunjung terlebih dahulu.', true);
-            if (b.status === 'rejected') return reject(b, 'Pembayaran ditolak', (b.why || 'Bukti tidak sesuai') + '. Pengunjung perlu mengunggah ulang bukti transfer.');
+            let res = null;
+            try {
+                const r = await fetch(SCAN_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF },
+                    body: JSON.stringify({ code }),
+                });
+                res = await r.json();
+            } catch (err) {
+                return reject(null, 'Gagal terhubung', 'Tidak dapat memvalidasi tiket saat ini. Coba lagi.');
+            }
+            const t = res && res.transaksi;
+            if (!res || !res.ok) {
+                if (res && res.reason === 'pending') return reject({ code: t.code, id: t.id, name: t.name, pax: t.pax, pkg: t.pkg }, 'Pembayaran belum terverifikasi', 'Verifikasi bukti transfer pengunjung terlebih dahulu.', true);
+                if (res && res.reason === 'rejected') return reject({ code: t.code, id: t.id, name: t.name, pax: t.pax, pkg: t.pkg }, 'Pembayaran ditolak', 'Pengunjung perlu mengunggah ulang bukti transfer.');
+                return reject(null, 'Kode tidak ditemukan', 'Pastikan QR e-ticket asli atau ketik ulang kode booking.');
+            }
+            const b = { ...t, status: 'paid' };
+            B[b.code] = b;
             showValid(b); beep(true); touch();
         }
         function allow(code) {
@@ -466,7 +478,7 @@
             if (!b || b.status !== 'paid') return;
             b.status = 'used'; b.usedAt = new Date();
             S.gate = Math.min(S.cap, S.gate + b.pax);
-            hist.unshift({ t: clockStr(), name: b.name, sub: b.pax + ' Dewasa • ' + (b.pkg === 'premier' ? 'Premier' : 'Classic'), ok: true });
+            hist.unshift({ t: clockStr(), name: b.name, sub: b.pax + ' Dewasa • ' + b.pkg, ok: true });
             renderHist(); renderStats(); done(b); beep(true); touch();
             idleTimer = setTimeout(reset, 4000);
         }
@@ -544,20 +556,27 @@
         $('#cam-stop').addEventListener('click', stopCam);
         window.addEventListener('pagehide', stopCam);
 
-        // ---------- Pembayaran masuk real-time (demo) ----------
-        if (LIVE_DEMO) {
-            const NAMES = ['Fikri Ramadhan', 'Laras Wulandari', 'Anisa Putri', 'Hendra Gunawan', 'Nadia Safitri', 'Rizky Aditya', 'Salsabila Putri', 'Bayu Anggoro', 'Yoga Prasetyo', 'Citra Kirana'];
-            let ni = 0;
-            setInterval(() => {
-                if (pending().length >= 8) return;
-                const pkg = Math.random() < 0.5 ? 'classic' : 'premier', pax = 1 + Math.floor(Math.random() * 4);
-                const bank = Math.random() < 0.6 ? 'BCA' : 'Mandiri', name = NAMES[ni++ % NAMES.length];
-                const b = mk(++seq, name, pax, pkg, 'pending', { bank, file: 'bukti_transfer_' + bank.toLowerCase() + '_' + name.split(' ')[0].toLowerCase() + '.jpg', uploaded: Date.now() });
-                b.paid = Math.random() < 0.2 ? b.total - 15000 : b.total;
+        // ---------- Realtime (Reverb) ----------
+        const FEED_URL = DATA.feedUrl || '/petugas/feed';
+        const updateRealtimePill = (online) => {
+            const pill = $('[data-realtime-text]');
+            if (pill) pill.textContent = online ? 'Realtime aktif' : 'Realtime terputus';
+        };
+        if (window.JiwantaRealtime) {
+            window.JiwantaRealtime.onStatus((state) => updateRealtimePill(state === 'connected'));
+            window.JiwantaRealtime.subscribe('admin.orders', 'order.placed', async (data) => {
+                let added = 0;
+                try {
+                    const r = await fetch(FEED_URL, { headers: { 'Accept': 'application/json' } });
+                    const d = await r.json();
+                    (d.pending || []).forEach((t) => { if (!B[t.code]) { B[t.code] = { ...t, status: 'pending' }; added++; } });
+                    if (d.stats) { S.gate = d.stats.gate ?? S.gate; S.verified = d.stats.verified ?? S.verified; }
+                } catch (err) {}
                 renderPay(); touch(); beep(true);
-                anim($('#bell'), 'jw-wiggle'); anim($(`[data-pay="${b.code}"]`), 'jw-flash');
-                toast('Bukti transfer baru dari ' + esc(name) + ' (' + rp(b.total) + ')');
-            }, 17000);
+                if (added || (data && data.kode)) {
+                    toast('Pesanan baru dari ' + esc((data && data.pemesan) || 'Pengunjung') + (data && data.total_label ? ' • ' + esc(data.total_label) : ''));
+                }
+            });
         }
 
         // ---------- Init ----------

@@ -2,12 +2,18 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CabinController;
+use App\Http\Controllers\PengunjungController;
+use App\Http\Controllers\PetugasController;
 use App\Http\Controllers\TiketController;
 use App\Http\Controllers\TransaksiController;
 use App\Models\Cabin;
 use App\Models\Pengguna;
 use App\Models\Transaksi;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 // ==========================================
 // 1. ROUTES TAMU (GUEST) - Belum Login
@@ -35,10 +41,12 @@ Route::middleware('guest')->group(function () {
     Route::post('/otp/verify', function () {
         $code = request('code');
         if ($code === '123456') {
-            $user = \App\Models\Pengguna::first();
-            \Illuminate\Support\Facades\Auth::login($user);
+            $user = Pengguna::first();
+            Auth::login($user);
+
             return response()->json(['ok' => true, 'url' => '/']);
         }
+
         return response()->json(['ok' => false, 'message' => 'Kode OTP salah'], 422);
     })->name('otp.verify');
 
@@ -54,7 +62,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::get('/', function () {
-        return redirect()->route('admin.dashboard');
+        return match (auth()->user()->role) {
+            'admin' => redirect()->route('admin.dashboard'),
+            'petugas' => redirect()->route('petugas.dashboard'),
+            default => redirect()->route('dashboard'),
+        };
     })->name('home');
 });
 
@@ -101,22 +113,101 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/tiket/buka-semua', [TiketController::class, 'openAll'])->name('admin.tiket.buka-semua');
 
     // ==========================================
-    // ROUTES TRANSAKSI (SUDAH DIPERBAIKI NAMANYA)
+    // ROUTES TRANSAKSI (READ-ONLY: laporan dari pemesanan pengunjung)
     // ==========================================
-    Route::get('/admin/transaksi', [TransaksiController::class, 'index'])->name('admin.transaksi'); // <-- INI YANG DIPERBAIKI
-    Route::get('/transaksi', [TransaksiController::class, 'index'])->name('transaksi');
-    Route::post('/admin/transaksi', [TransaksiController::class, 'store'])->name('admin.transaksi.store');
-    Route::put('/admin/transaksi/{id}', [TransaksiController::class, 'update'])->name('admin.transaksi.update');
-    Route::delete('/admin/transaksi/{id}', [TransaksiController::class, 'destroy'])->name('admin.transaksi.destroy');
+    Route::get('/admin/transaksi', [TransaksiController::class, 'index'])->name('admin.transaksi');
     Route::get('/admin/transaksi/export', [TransaksiController::class, 'export'])->name('admin.transaksi.export');
+    Route::get('/admin/feed', [TransaksiController::class, 'feed'])->name('admin.feed');
 
     // ==========================================
     // ROUTES LAINNYA (Fallback agar sidebar tidak error)
     // ==========================================
-    Route::get('/admin/verifikasi', function () { return view('admin.verifikasi'); })->name('verifikasi');
-    Route::get('/verifikasi', function () { return view('admin.verifikasi'); })->name('admin.verifikasi');
+    Route::get('/admin/verifikasi', function () {
+        return view('admin.verifikasi');
+    })->name('verifikasi');
+    Route::get('/verifikasi', function () {
+        return view('admin.verifikasi');
+    })->name('admin.verifikasi');
 
-    Route::get('/admin/manajemen-pengguna', function () { return view('admin.manajemen-pengguna'); })->name('manajemen-pengguna');
-    Route::get('/admin/laporan', function () { return view('admin.laporan'); })->name('laporan');
-    Route::get('/admin/pengaturan', function () { return view('admin.pengaturan'); })->name('pengaturan');
+    Route::get('/admin/manajemen-pengguna', function () {
+        return view('admin.manajemen-pengguna');
+    })->name('manajemen-pengguna');
+    Route::get('/admin/laporan', function () {
+        return view('admin.laporan');
+    })->name('laporan');
+    Route::get('/admin/pengaturan', function () {
+        return view('admin.pengaturan');
+    })->name('pengaturan');
+});
+
+// ==========================================
+// 4. ROUTES KHUSUS PETUGAS
+// ==========================================
+Route::middleware(['auth', 'role:petugas'])->group(function () {
+    Route::get('/petugas/dashboard', [PetugasController::class, 'index'])->name('petugas.dashboard');
+    Route::get('/petugas/feed', [PetugasController::class, 'feed'])->name('petugas.feed');
+    Route::post('/petugas/scan', [PetugasController::class, 'scan'])->name('petugas.scan');
+    Route::post('/petugas/transaksi/{transaksi}/verify', [PetugasController::class, 'verify'])->name('petugas.transaksi.verify');
+    Route::post('/petugas/transaksi/{transaksi}/reject', [PetugasController::class, 'reject'])->name('petugas.transaksi.reject');
+});
+
+// ==========================================
+// 5. ROUTES KHUSUS PENGUNJUNG
+// ==========================================
+Route::middleware(['auth', 'role:pengunjung'])->group(function () {
+    Route::get('/dashboard', [PengunjungController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard/feed', [PengunjungController::class, 'feed'])->name('dashboard.feed');
+    Route::get('/tiket', [PengunjungController::class, 'tiket'])->name('tiket');
+    Route::get('/reservasi', [PengunjungController::class, 'reservasi'])->name('reservasi');
+    Route::get('/transaksi', [PengunjungController::class, 'transaksi'])->name('transaksi');
+
+    // Simpan pesanan dari form reservasi ke session + database, lalu arahkan ke checkout
+    Route::post('/reservasi/checkout', [PengunjungController::class, 'checkout'])->name('reservasi.checkout');
+
+    // Tandai bukti transfer terkirim lalu arahkan ke halaman Tiket Saya
+    Route::post('/transaksi/kirim', [PengunjungController::class, 'kirim'])->name('transaksi.kirim');
+
+    // Pengaturan profil: lihat & ubah data akun
+    Route::get('/profil', function (Request $request) {
+        return view('pengunjung.profil', ['user' => $request->user()]);
+    })->name('profil');
+
+    Route::post('/profil', function (Request $request) {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'nama_pengguna' => ['required', 'string', 'max:100'],
+            'email' => ['required', 'email', 'max:50', 'unique:penggunas,email,'.$user->id],
+            'nohp' => ['required', 'string', 'max:15'],
+            'foto' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
+            'password_lama' => ['nullable', 'string'],
+            'password' => ['nullable', 'string', 'min:6', 'confirmed'],
+        ]);
+
+        $user->nama_pengguna = $data['nama_pengguna'];
+        $user->email = $data['email'];
+        $user->nohp = $data['nohp'];
+
+        if ($request->hasFile('foto')) {
+            if ($user->foto) {
+                Storage::disk('public')->delete($user->foto);
+            }
+
+            $user->foto = $request->file('foto')->store('profil', 'public');
+        }
+
+        if (! empty($data['password'])) {
+            if (! Hash::check($data['password_lama'] ?? '', $user->password)) {
+                return back()
+                    ->withErrors(['password_lama' => 'Kata sandi saat ini tidak sesuai.'])
+                    ->withInput();
+            }
+
+            $user->password = $data['password'];
+        }
+
+        $user->save();
+
+        return redirect()->route('profil')->with('status', 'Profil berhasil diperbarui.');
+    })->name('profil.update');
 });

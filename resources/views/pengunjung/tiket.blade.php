@@ -29,71 +29,93 @@
     $reveal   = 'opacity-0 translate-y-8 transition duration-700 ease-out';
     $revealSm = 'opacity-0 translate-y-3 transition duration-500 ease-out';
 
-    // ---------- Data tiket: ikut pesanan di session; tanpa pesanan -> data demo ----------
+    // ---------- Data tiket: pesanan sesi > transaksi terbaru > kosong ----------
     $order = $order ?? null;
+    $transaksis = $transaksis ?? collect();
+    $user = auth()->user();
     $monShort = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-    $ticket = [
-        'code'     => 'JW-20260920-001',
-        'name'     => 'Ahmad Fadillah',
-        'phone'    => '0812-3456-7890',
-        'date'     => '20 Sep 2026',
-        'open_at'  => '2026-09-20T08:00:00+07:00',
-        'close_at' => '2026-09-20T18:00:00+07:00',
-        'hours'    => '08.00 - 18.00 WIB',
-        'guests'   => 2,
-        'guest_type' => 'Dewasa Reguler',
-        'type'     => 'Tiket Premier',
-        'includes' => 'Termasuk: Semua Fasilitas Area Classic',
-        'total'    => 150000,
-        'method'   => 'Lunas via Transfer BCA',
-        'status'   => 'lunas',
-        'pass'     => 'PREMIER<br>PASS',
-    ];
+
+    $phoneOf = fn ($p) => $p && $p->nohp
+        ? preg_replace('/(\d{4})(\d{4})(\d+)/', '$1-$2-$3', preg_replace('/\D/', '', $p->nohp))
+        : '-';
+
+    $ticket = null;
 
     if ($order) {
         $isCabin = ($order['tipe'] ?? 'tiket') === 'cabin';
         $d = \Illuminate\Support\Carbon::parse($order['tanggal']);
 
-        $ticket['code'] = $order['kode'];
-        $ticket['date'] = $d->day.' '.$monShort[$d->month - 1].' '.$d->year;
-        $ticket['open_at'] = $d->format('Y-m-d').'T08:00:00+07:00';
-        $ticket['close_at'] = $d->format('Y-m-d').'T18:00:00+07:00';
-        $ticket['type'] = $order['judul'];
-        $ticket['total'] = $order['total'];
+        $ticket = [
+            'code' => $order['kode'],
+            'name' => $user?->nama_pengguna ?? ($order['pemesan'] ?? '-'),
+            'phone' => $phoneOf($user),
+            'date' => $d->day.' '.$monShort[$d->month - 1].' '.$d->year,
+            'open_at' => $d->format('Y-m-d').'T08:00:00+07:00',
+            'close_at' => $d->format('Y-m-d').'T18:00:00+07:00',
+            'hours' => $isCabin ? 'Check-in 14.00 WIB' : '08.00 - 18.00 WIB',
+            'guests' => (string) ($order['jumlah'] ?? $order['malam'] ?? 2),
+            'guest_type' => $isCabin ? ($order['tamu'] ?? 'Tamu Dewasa') : 'Dewasa Reguler',
+            'type' => $order['judul'],
+            'includes' => $isCabin
+                ? 'Termasuk: Akses Kolam Panas & Fasilitas Cabin'
+                : 'Termasuk: Tiket '.$order['judul'],
+            'total' => (int) $order['total'],
+            'method' => ($order['status'] ?? '') === 'terkirim'
+                ? 'Transfer Bank • Menunggu Verifikasi'
+                : 'Belum Dikirim',
+            'status' => ($order['status'] ?? '') === 'terkirim' ? 'terkirim' : 'pending',
+            'pass' => $isCabin ? 'CABIN<br>SUITE' : 'TIKET<br>PASS',
+        ];
+    } elseif ($transaksis->isNotEmpty()) {
+        $t = $transaksis->first();
+        $d = \Illuminate\Support\Carbon::parse($t->tanggal_transaksi);
+        $detail = $t->detailtransaksis->first();
+        $qty = max(1, (int) $t->detailtransaksis->sum('jumlah'));
 
-        if ($isCabin) {
-            $ticket['guests'] = ($order['unit'] ?? 'suite') === 'shorts' ? '4' : '4-5';
-            $ticket['guest_type'] = $order['tamu'];
-            $ticket['hours'] = 'Check-in 14.00 WIB';
-            $ticket['includes'] = 'Termasuk: Akses Kolam Panas & Fasilitas Cabin';
-            $ticket['pass'] = 'CABIN<br>SUITE';
-        } else {
-            $kategori = ($order['kategori'] ?? 'premier') === 'classic' ? 'Classic' : 'Premier';
-            $ticket['guests'] = (string) ($order['jumlah'] ?? 2);
-            $ticket['guest_type'] = 'Dewasa Reguler';
-            $ticket['hours'] = '08.00 - 18.00 WIB';
-            $ticket['includes'] = 'Termasuk: Semua Fasilitas Area '.$kategori;
-            $ticket['pass'] = strtoupper($kategori).'<br>PASS';
-        }
+        $isCabin = (bool) ($detail?->reservasi?->cabin);
+        $type = $detail?->tiket?->nama_tiket
+            ?? ($detail?->reservasi?->cabin ? 'Cabin '.$detail->reservasi->cabin->nama_cabin : 'Tiket Jiwanta');
 
-        $ticket['status'] = ($order['status'] ?? '') === 'terkirim' ? 'terkirim' : 'pending';
-        $ticket['method'] = $ticket['status'] === 'terkirim'
-            ? 'Transfer Bank • Menunggu Verifikasi'
-            : 'Belum Dikirim';
+        $ticket = [
+            'code' => $t->kode_transaksi,
+            'name' => $user?->nama_pengguna ?? '-',
+            'phone' => $phoneOf($user),
+            'date' => $d->day.' '.$monShort[$d->month - 1].' '.$d->year,
+            'open_at' => $d->format('Y-m-d').'T08:00:00+07:00',
+            'close_at' => $d->format('Y-m-d').'T18:00:00+07:00',
+            'hours' => $isCabin ? 'Check-in 14.00 WIB' : '08.00 - 18.00 WIB',
+            'guests' => (string) $qty,
+            'guest_type' => $isCabin ? $qty.' Tamu Dewasa' : 'Dewasa Reguler',
+            'type' => $type,
+            'includes' => $isCabin
+                ? 'Termasuk: Akses Kolam Panas & Fasilitas Cabin'
+                : 'Termasuk: Tiket '.$type,
+            'total' => (int) $t->total_amount,
+            'method' => 'Transfer via '.$t->metode_pembayaran,
+            'status' => in_array($t->status, ['lunas', 'gagal'], true) ? $t->status : 'pending',
+            'pass' => $isCabin ? 'CABIN<br>SUITE' : 'TIKET<br>PASS',
+        ];
     }
 
-    $statusLabel = [
-        'lunas'    => 'LUNAS & DIKONFIRMASI',
-        'terkirim' => 'MENUNGGU VERIFIKASI',
-        'pending'  => 'MENUNGGU PEMBAYARAN',
-    ][$ticket['status']] ?? 'LUNAS & DIKONFIRMASI';
-    $statusIcon = $ticket['status'] === 'lunas' ? $p['check'] : $p['clock'];
-    $statusColor = $ticket['status'] === 'lunas' ? 'text-[#B5F0BE]' : 'text-[#FDD9B0]';
+    $statusMeta = [
+        'lunas' => ['LUNAS & DIKONFIRMASI', 'text-[#B5F0BE]'],
+        'terkirim' => ['MENUNGGU VERIFIKASI', 'text-[#FDD9B0]'],
+        'pending' => ['MENUNGGU PEMBAYARAN', 'text-[#FDD9B0]'],
+        'gagal' => ['PEMBAYARAN GAGAL', 'text-[#F7B0B0]'],
+    ];
+    $statusKey = $ticket['status'] ?? 'pending';
+    $statusLabel = $statusMeta[$statusKey][0] ?? 'MENUNGGU PEMBAYARAN';
+    $statusColor = $statusMeta[$statusKey][1] ?? 'text-[#FDD9B0]';
+    $statusIcon = $statusKey === 'lunas' ? $p['check'] : $p['clock'];
+    $gateOpen = $ticket['open_at'] ?? '';
+    $gateClose = $ticket['close_at'] ?? '';
+    $gateForce = $statusKey === 'lunas';
 
     // ---------- QR (placeholder visual, deterministik dari kode booking) ----------
     // Produksi: ganti dengan QR asli, mis. simplesoftwareio/simple-qrcode
+    $bookingCode = $ticket['code'] ?? 'JW-00000000-000';
     $n = 15;
-    mt_srand(crc32($ticket['code']));
+    mt_srand(crc32($bookingCode));
     $finders = [[0, 0], [$n - 5, 0], [0, $n - 5]];
     $cells = '';
     for ($y = 0; $y < $n; $y++) {
@@ -116,7 +138,7 @@
     }
 
     // ---------- Barcode (kelas lebar ditulis utuh agar terbaca Tailwind) ----------
-    mt_srand(crc32($ticket['code'].'bar'));
+    mt_srand(crc32($bookingCode.'bar'));
     $barW = ['w-[1px]', 'w-[2px]', 'w-[3px]', 'w-[4px]'];
     $bars = [];
     for ($i = 0; $i < 46; $i++) $bars[] = $barW[mt_rand(0, 3)];
@@ -126,13 +148,15 @@
 
         <main class="px-4 pt-2">
 
+        @if ($ticket)
+
             {{-- ========== STATUS RESERVASI ========== --}}
             <section data-reveal class="{{ $reveal }} flex items-center justify-between rounded-2xl bg-[#0B3A22] px-4 py-3.5 text-white">
                 <div class="flex items-center gap-3">
-                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 {!! $statusColor !!}">{!! $ic($statusIcon, 'h-6 w-6', '2') !!}</span>
+                    <span id="status-icon" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 {!! $statusColor !!}">{!! $ic($statusIcon, 'h-6 w-6', '2') !!}</span>
                     <div>
                         <p class="text-[9px] font-semibold uppercase tracking-wider text-white/70">Status Reservasi</p>
-                        <p class="text-[17px] font-bold leading-tight">{{ $statusLabel }}</p>
+                        <p id="status-label" class="text-[17px] font-bold leading-tight">{{ $statusLabel }}</p>
                     </div>
                 </div>
                 <span id="gate-pill" class="ml-2 shrink-0 whitespace-nowrap rounded-full bg-white/15 px-2.5 py-1.5 text-[10px] font-semibold text-white transition-colors duration-500">Gate Siap Masuk</span>
@@ -280,6 +304,54 @@
                 </button>
                 <a href="{{ route('dashboard') }}" class="block py-3 text-center text-[13px] font-medium text-slate-600 transition hover:text-[#0B3A22]">Kembali ke Beranda</a>
             </section>
+
+        @else
+
+            {{-- ========== KOSONG ========== --}}
+            <section data-reveal class="{{ $reveal }} rounded-2xl bg-white p-6 text-center {{ $shadow }}">
+                <span class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#FDD9B0] text-[#8B5E34]">{!! $ic($p['image'], 'h-6 w-6', '1.8') !!}</span>
+                <h2 class="mt-3 text-[18px] font-bold text-[#0B3A22]">Belum Ada Tiket</h2>
+                <p class="mt-1 text-[12.5px] leading-relaxed text-slate-600">Anda belum memiliki pesanan aktif. Buat reservasi untuk mendapatkan e-ticket QR.</p>
+                <a href="{{ route('reservasi') }}" class="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-[#0B3A22] px-5 py-3 text-[13px] font-bold text-white transition hover:bg-[#0F4527] active:scale-95">Buat Reservasi Sekarang</a>
+            </section>
+
+        @endif
+
+        {{-- ========== RIWAYAT TRANSAKSI ========== --}}
+        @if ($transaksis->isNotEmpty())
+            <section data-reveal class="{{ $reveal }} mt-6">
+                <div class="mb-3 flex items-end justify-between">
+                    <h2 class="text-[16px] font-bold text-[#0B3A22]">Riwayat Transaksi</h2>
+                    <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{{ $transaksis->count() }} Pesanan</span>
+                </div>
+                <div class="space-y-3">
+                    @foreach ($transaksis as $trx)
+                        @php
+                            $dtrx = \Illuminate\Support\Carbon::parse($trx->tanggal_transaksi);
+                            $dFirst = $trx->detailtransaksis->first();
+                            $jenis = $dFirst?->tiket?->nama_tiket
+                                ?? ($dFirst?->reservasi?->cabin ? 'Cabin '.$dFirst->reservasi->cabin->nama_cabin : 'Pesanan Jiwanta');
+                            $qtyTrx = max(1, (int) $trx->detailtransaksis->sum('jumlah'));
+                            $badge = [
+                                'lunas' => ['Lunas', 'bg-[#CDEFD5] text-[#0B3A22]'],
+                                'gagal' => ['Gagal', 'bg-[#FBD5D5] text-[#8B1F1F]'],
+                            ][$trx->status] ?? ['Menunggu', 'bg-[#FBD9B0] text-[#8B5E34]'];
+                        @endphp
+                        <article class="flex items-center gap-3 rounded-2xl bg-white p-3.5 {{ $shadow }}">
+                            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#EEF0FB] text-[#0B3A22]">{!! $ic($p['check'], 'h-5 w-5', '1.8') !!}</span>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2">
+                                    <p class="truncate text-[14px] font-bold text-[#0B3A22]">{{ $jenis }}</p>
+                                    <span data-trx-badge="{{ $trx->kode_transaksi }}" class="shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold {{ $badge[1] }}">{{ $badge[0] }}</span>
+                                </div>
+                                <p class="mt-0.5 truncate text-[10.5px] text-slate-500">{{ $trx->kode_transaksi }} • {{ $dtrx->day.' '.$monShort[$dtrx->month - 1].' '.$dtrx->year }} • {{ $qtyTrx }} pax</p>
+                            </div>
+                            <p class="shrink-0 text-[14px] font-extrabold text-[#0B3A22]">Rp {{ number_format($trx->total_amount, 0, ',', '.') }}</p>
+                        </article>
+                    @endforeach
+                </div>
+            </section>
+        @endif
         </main>
 
         {{-- Toast (muncul saat kode disalin) --}}
@@ -312,6 +384,9 @@
             });
         }, { threshold: 0.1 });
         $$('[data-reveal]').forEach((el) => (reduce ? el.classList.remove(...hidden) : io.observe(el)));
+
+        // Tanpa tiket aktif: cukup animasi muncul, hentikan Fitur tiket.
+        if (!document.getElementById('booking-code')) return;
 
         // 2. Total pembayaran menghitung naik saat terlihat
         if (!reduce) {
@@ -353,9 +428,9 @@
 
         // 5. Status gate real-time (dihitung ulang tiap detik)
         const pill = document.getElementById('gate-pill');
-        const openAt  = new Date('{{ $ticket['open_at'] }}').getTime();
-        const closeAt = new Date('{{ $ticket['close_at'] }}').getTime();
-        const FORCE_ACTIVE = {{ $ticket['status'] === 'lunas' ? 'true' : 'false' }}; // demo data lunas -> selalu "Gate Siap Masuk"; pesanan session -> ikut jam buka
+        const openAt  = new Date(@json($gateOpen)).getTime();
+        const closeAt = new Date(@json($gateClose)).getTime();
+        let FORCE_ACTIVE = {{ $gateForce ? 'true' : 'false' }}; // tiket lunas -> selalu "Gate Siap Masuk"; pesanan session -> ikut jam buka
         const pad = (n) => String(n).padStart(2, '0');
 
         const updateGate = () => {
@@ -380,6 +455,48 @@
         };
         updateGate();
         setInterval(updateGate, 1000);
+
+        // 5b. Status realtime (Reverb) — update tanpa refresh
+        const IC_CHECK = `{!! $ic($p['check'], 'h-6 w-6', '2') !!}`;
+        const IC_CLOCK = `{!! $ic($p['clock'], 'h-6 w-6', '2') !!}`;
+        const STATUS_META = {
+            lunas: { label: 'LUNAS & DIKONFIRMASI', color: 'text-[#B5F0BE]' },
+            terkirim: { label: 'MENUNGGU VERIFIKASI', color: 'text-[#FDD9B0]' },
+            pending: { label: 'MENUNGGU PEMBAYARAN', color: 'text-[#FDD9B0]' },
+            gagal: { label: 'PEMBAYARAN GAGAL', color: 'text-[#F7B0B0]' },
+        };
+        const BADGE_META = {
+            lunas: ['Lunas', 'bg-[#CDEFD5] text-[#0B3A22]'],
+            gagal: ['Gagal', 'bg-[#FBD5D5] text-[#8B1F1F]'],
+            pending: ['Menunggu', 'bg-[#FBD9B0] text-[#8B5E34]'],
+        };
+        const bookingCode = document.getElementById('booking-code').textContent.trim();
+        const applyBadge = (code, status) => {
+            const badge = document.querySelector('[data-trx-badge="' + code + '"]');
+            if (!badge) return;
+            const meta = BADGE_META[status] || BADGE_META.pending;
+            badge.textContent = meta[0];
+            badge.className = 'shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold ' + meta[1];
+        };
+        const applyStatus = (status) => {
+            const meta = STATUS_META[status] || STATUS_META.pending;
+            const label = document.getElementById('status-label');
+            const icon = document.getElementById('status-icon');
+            if (label) label.textContent = meta.label;
+            if (icon) {
+                icon.className = 'flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 ' + meta.color;
+                icon.innerHTML = status === 'lunas' ? IC_CHECK : IC_CLOCK;
+            }
+            if (status === 'lunas') { FORCE_ACTIVE = true; updateGate(); }
+        };
+        if (window.JiwantaRealtime && window.JiwantaRealtime.userChannel) {
+            window.JiwantaRealtime.subscribe(window.JiwantaRealtime.userChannel, 'order.status', (e) => {
+                const code = (e && e.kode) || '';
+                const status = (e && e.status) || 'pending';
+                applyBadge(code, status);
+                if (code && code === bookingCode) applyStatus(status);
+            });
+        }
 
         // 6. Salin kode booking
         const copyBtn = document.getElementById('copy-btn');
@@ -423,7 +540,7 @@
         document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') keepAwake(); });
 
         // 8. Tombol unduh (sambungkan ke route Anda)
-        // document.getElementById('btn-download').href = "{{ url('/tiket-saya/'.$ticket['code'].'/pdf') }}";
+        // document.getElementById('btn-download').href = "{{ url('/tiket-saya/'.$bookingCode.'/pdf') }}";
         // document.getElementById('btn-save-image').addEventListener('click', () => { /* html-to-image / endpoint gambar */ });
 
         // 9. Scroll halus
