@@ -15,8 +15,12 @@ class DatabaseSeeder extends Seeder
             PenggunaSeeder::class,
             CabinSeeder::class,
             TiketSeeder::class,
+            RenangSeeder::class,
             BankSeeder::class,
             TransaksiSeeder::class,
+            DetailTiketSeeder::class,
+            ReservasiSeeder::class,
+            DetailTransaksiSeeder::class,
         ]);
 
         $pengunjungIds = Pengguna::where('role', 'pengunjung')->pluck('id')->toArray();
@@ -49,6 +53,6 @@ class DatabaseSeeder extends Seeder
             );
         }
 
-        $this->command->info('Data seeder (Pengguna, Cabin, Tiket, Bank & Transaksi) berhasil di-generate!');
+        $this->command->info('Data seeder (Pengguna, Cabin, Tiket, Renang, Bank, Transaksi, DetailTiket, Reservasi & DetailTransaksi) berhasil di-generate!');
     }
 }
