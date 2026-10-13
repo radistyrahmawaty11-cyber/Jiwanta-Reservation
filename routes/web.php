@@ -10,7 +10,6 @@ use App\Models\Cabin;
 use App\Models\Pengguna;
 use App\Models\Transaksi;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -25,34 +24,16 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.process');
 
-    // Route dummy agar komponen frontend tidak error
-    Route::get('/forgot-password', function () {
-        return back()->with('status', 'Fitur Lupa Password sedang dalam pengembangan.');
-    })->name('password.request');
+    // Lupa & atur ulang kata sandi
+    Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+    Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 
-    Route::post('/forgot-password', function () {
-        return back()->with('status', 'Fitur Lupa Password sedang dalam pengembangan.');
-    })->name('password.email');
-
-    Route::post('/otp/send', function () {
-        return response()->json(['target' => request('whatsapp'), 'dev_code' => '123456', 'message' => 'OTP dikirim (Demo)']);
-    })->name('otp.send');
-
-    Route::post('/otp/verify', function () {
-        $code = request('code');
-        if ($code === '123456') {
-            $user = Pengguna::first();
-            Auth::login($user);
-
-            return response()->json(['ok' => true, 'url' => '/']);
-        }
-
-        return response()->json(['ok' => false, 'message' => 'Kode OTP salah'], 422);
-    })->name('otp.verify');
-
-    Route::post('/auth/google', function () {
-        return redirect('/login')->with('status', 'Fitur Google Login akan segera hadir!');
-    })->name('auth.google');
+    // Login cepat: OTP WhatsApp & Google
+    Route::post('/otp/send', [AuthController::class, 'sendOtp'])->name('otp.send');
+    Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('otp.verify');
+    Route::post('/auth/google', [AuthController::class, 'google'])->name('auth.google');
 });
 
 // ==========================================

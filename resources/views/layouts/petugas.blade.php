@@ -44,67 +44,12 @@
 </style>
 @endpush
 
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const shell = document.getElementById('page-anim');
-
-        window.addEventListener('pageshow', (e) => {
-            if (e.persisted && shell) shell.classList.remove('page-leave');
-        });
-        if (!shell || reduce) return;
-
-        document.querySelectorAll('aside a[href]').forEach((a) => {
-            a.addEventListener('click', (e) => {
-                if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-                let url;
-                try { url = new URL(a.href, location.href); } catch (err) { return; }
-                if (url.origin !== location.origin) return;
-                if (url.href === location.href) { e.preventDefault(); return; }
-                e.preventDefault();
-                shell.classList.add('page-leave');
-                setTimeout(() => { location.href = a.href; }, 160);
-            });
-        });
-    });
-</script>
-@endpush
-
 @section('content')
 <div class="flex h-screen w-full overflow-hidden bg-[#F8F7FF] text-[#0B3A22]">
 
     <form id="logout-form" method="POST" action="{{ route('logout') }}" class="hidden">@csrf</form>
 
-    {{-- ================= SIDEBAR (full desktop, selalu tampil) ================= --}}
-    <aside class="flex w-[250px] shrink-0 flex-col border-r border-slate-100 bg-white">
-        <div class="px-6 pt-7">
-            <div class="flex items-center gap-3">
-                <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#0B3A22] text-[#B5F0BE]">{!! $ic($p['tree'], 'h-5 w-5') !!}</span>
-                <div>
-                    <p class="text-[17px] font-bold leading-tight">Jiwanta Gate<br>Portal</p>
-                </div>
-            </div>
-            <p class="mt-3 text-[10px] font-bold uppercase tracking-wide text-slate-600">Petugas &amp; Akses Masuk</p>
-        </div>
-
-        <nav class="mt-8 flex-1 px-5">
-            <p class="mb-2 px-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">Menu</p>
-            <a href="#" aria-current="page" class="flex items-center gap-3 rounded-xl bg-[#0B3A22] px-3.5 py-3 text-[13px] font-semibold text-white shadow-sm">
-                {!! $ic($p['grid'], 'h-4 w-4 shrink-0') !!} Dashboard
-            </a>
-        </nav>
-
-        <div class="m-5 flex items-center justify-between rounded-2xl bg-[#E8ECFB] px-4 py-4">
-            <div>
-                <p class="text-[12px] font-bold leading-tight">Shift Pagi Gate</p>
-                <p class="mt-0.5 text-[11px] leading-tight text-slate-700">07:00 - 15:00 WIB</p>
-            </div>
-            <button type="submit" form="logout-form" class="transition hover:text-red-600" aria-label="Keluar">{!! $ic($p['logout'], 'h-5 w-5') !!}</button>
-        </div>
-    </aside>
-
-    {{-- ================= MAIN (scroll di dalam, full desktop) ================= --}}
+    {{-- ================= MAIN (full width, tanpa sidebar) ================= --}}
     <div class="flex min-w-0 flex-1 flex-col">
 
         {{-- Topbar --}}
@@ -128,6 +73,7 @@
                     <p class="text-[13px] font-bold leading-tight">{{ auth()->user()->nama_pengguna ?? 'Petugas Gate' }}</p>
                     <p class="text-[10px] font-semibold uppercase leading-tight tracking-wide text-[#8B5E34]">Petugas Gate STF-{{ str_pad((string) (auth()->id() ?? 0), 3, '0', STR_PAD_LEFT) }}</p>
                 </div>
+                <button type="submit" form="logout-form" class="flex h-10 w-10 items-center justify-center rounded-full bg-[#E4E8FB] transition hover:bg-red-100 hover:text-red-600" aria-label="Keluar">{!! $ic($p['logout'], 'h-5 w-5') !!}</button>
             </div>
         </header>
 

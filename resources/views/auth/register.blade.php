@@ -20,6 +20,12 @@
     {{-- Divider --}}
     <hr class="border-gray-200 mb-6">
 
+    @if ($errors->any())
+        <div class="mb-4 rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+            {{ $errors->first() }}
+        </div>
+    @endif
+
     {{-- Form Register --}}
     <form action="{{ route('register.process') }}" method="POST" class="space-y-4">
         @csrf
@@ -28,12 +34,16 @@
         <div>
             <input
                 type="text"
-                id="name"
-                name="name"
+                id="nama_pengguna"
+                name="nama_pengguna"
+                value="{{ old('nama_pengguna') }}"
                 placeholder="Nama Lengkap"
                 required
                 class="w-full px-4 py-2.5 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent bg-gray-50"
             >
+            @error('nama_pengguna')
+                <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
+            @enderror
         </div>
 
         {{-- Email --}}
@@ -42,10 +52,31 @@
                 type="email"
                 id="email"
                 name="email"
+                value="{{ old('email') }}"
                 placeholder="Email"
                 required
                 class="w-full px-4 py-2.5 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent bg-gray-50"
             >
+            @error('email')
+                <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
+            @enderror
+        </div>
+
+        {{-- No. WhatsApp --}}
+        <div>
+            <input
+                type="text"
+                id="nohp"
+                name="nohp"
+                value="{{ old('nohp') }}"
+                placeholder="No. WhatsApp"
+                inputmode="tel"
+                required
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent bg-gray-50"
+            >
+            @error('nohp')
+                <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
+            @enderror
         </div>
 
         {{-- Kata Sandi --}}
@@ -54,7 +85,7 @@
                 type="password"
                 id="password"
                 name="password"
-                placeholder="Kata Sandi"
+                placeholder="Kata Sandi (min. 6 karakter)"
                 required
                 class="w-full px-4 py-2.5 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-transparent bg-gray-50"
             >
@@ -64,6 +95,9 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
             </button>
+            @error('password')
+                <p class="mt-1.5 text-xs text-red-600">{{ $message }}</p>
+            @enderror
         </div>
 
         {{-- Konfirmasi Kata Sandi --}}

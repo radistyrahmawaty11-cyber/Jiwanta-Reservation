@@ -44,7 +44,7 @@
                     type="password"
                     id="password"
                     name="password"
-                    placeholder="Minimal 8 karakter"
+                    placeholder="Minimal 6 karakter"
                     required
                     class="mt-1.5 w-full px-4 py-2.5 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-jiwanta focus:border-transparent"
                 >
