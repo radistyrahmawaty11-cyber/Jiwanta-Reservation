@@ -9,7 +9,7 @@ class PengaturanController extends Controller
 {
     public function index()
     {
-        $banks = Bank::orderByDesc('is_utama')->orderBy('kode')->get();
+        $banks = Bank::orderByDesc('status')->orderBy('nama_bank')->get();
 
         return view('admin.pengaturan', compact('banks'));
     }
@@ -17,10 +17,10 @@ class PengaturanController extends Controller
     public function storeBank(Request $request)
     {
         $d = $this->validated($request);
-        $d['is_utama'] = (bool) ($d['is_utama'] ?? false);
+        $d['status'] = (bool) ($d['status'] ?? false);
 
-        if ($d['is_utama']) {
-            Bank::query()->update(['is_utama' => false]);
+        if ($d['status']) {
+            Bank::query()->update(['status' => false]);
         }
 
         $bank = Bank::create($d);
@@ -31,10 +31,10 @@ class PengaturanController extends Controller
     public function updateBank(Request $request, Bank $bank)
     {
         $d = $this->validated($request);
-        $d['is_utama'] = (bool) ($d['is_utama'] ?? false);
+        $d['status'] = (bool) ($d['status'] ?? false);
 
-        if ($d['is_utama']) {
-            Bank::whereKeyNot($bank->id)->update(['is_utama' => false]);
+        if ($d['status']) {
+            Bank::whereKeyNot($bank->id)->update(['status' => false]);
         }
 
         $bank->update($d);
@@ -52,12 +52,10 @@ class PengaturanController extends Controller
     private function validated(Request $request): array
     {
         return $request->validate([
-            'kode' => ['required', 'in:bca,mandiri'],
-            'nama' => ['required', 'string', 'max:100'],
+            'nama_bank' => ['required', 'string', 'max:100'],
             'nomor_rekening' => ['required', 'string', 'max:50'],
             'atas_nama' => ['required', 'string', 'max:100'],
-            'cabang' => ['nullable', 'string', 'max:100'],
-            'is_utama' => ['nullable', 'boolean'],
+            'status' => ['nullable', 'boolean'],
         ]);
     }
 }

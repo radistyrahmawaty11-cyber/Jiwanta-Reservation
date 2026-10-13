@@ -11,20 +11,12 @@ class Detailtiket extends Model
 
     protected $fillable = [
         'tiket_id',
-        'pengguna_id',
         'jumlah',
-        'total_harga',
-        'tgl_pembelian',
-        'status',
+        'subtotal',
     ];
 
     public function tiket()
     {
         return $this->belongsTo(Tiket::class);
-    }
-
-    public function pengguna()
-    {
-        return $this->belongsTo(Pengguna::class);
     }
 }

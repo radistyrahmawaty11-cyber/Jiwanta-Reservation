@@ -10,12 +10,12 @@ class VerifikasiController extends Controller
     {
         $pending = Transaksi::with('pengguna')
             ->where('status', 'pending')
-            ->orderBy('tgl_transaksi')
+            ->orderBy('tanggal_transaksi')
             ->get();
 
         $riwayat = Transaksi::with('pengguna')
             ->whereIn('status', ['lunas', 'gagal'])
-            ->orderByDesc('tgl_transaksi')
+            ->orderByDesc('tanggal_transaksi')
             ->take(10)
             ->get();
 

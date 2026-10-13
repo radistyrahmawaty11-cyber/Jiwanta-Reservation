@@ -10,12 +10,14 @@ class Renang extends Model
     use HasFactory;
 
     protected $fillable = [
-        'nama_renang',
-        'jenis_renang',
-        'kapasitas',
-        'harga_per_jam',
-        'status',
+        'nama_kolam',
         'deskripsi',
+        'harga_tiket',
+        'kedalaman',
+        'kapasitas',
+        'jam_buka',
+        'jam_tutup',
+        'gambar',
     ];
 
     public function reservasis()

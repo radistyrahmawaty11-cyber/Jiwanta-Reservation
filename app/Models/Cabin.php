@@ -11,11 +11,12 @@ class Cabin extends Model
 
     protected $fillable = [
         'nama_cabin',
-        'jenis_cabin',
-        'kapasitas',
-        'harga_per_malam',
-        'status',
         'deskripsi',
+        'harga_per_malam',
+        'kapasitas',
+        'fasilitas',
+        'gambar',
+        'status',
     ];
 
     public function reservasis()

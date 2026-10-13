@@ -19,20 +19,22 @@ class RenangController extends Controller
     public function store(Request $request)
     {
         // Validasi data (sesuai kolom di database renangs)
-        $request->validate([
-            'nama_renang'   => 'required|string|max:100',
-            'jenis_renang'  => 'required|string',
-            'kapasitas'     => 'required|integer|min:1',
-            'harga_per_jam' => 'required|numeric|min:0',
-            'status'        => 'required|in:tersedia,penuh,maintenance',
+        $validated = $request->validate([
+            'nama_kolam'    => 'required|string|max:100',
             'deskripsi'     => 'nullable|string',
+            'harga_tiket'   => 'required|numeric|min:0',
+            'kedalaman'     => 'nullable|string|max:50',
+            'kapasitas'     => 'required|integer|min:1',
+            'jam_buka'      => 'required|date_format:H:i',
+            'jam_tutup'     => 'required|date_format:H:i',
+            'gambar'        => 'nullable|string|max:255',
         ], [
-            'nama_renang.required'   => 'Nama fasilitas wajib diisi.',
-            'harga_per_jam.numeric'  => 'Harga harus berupa angka.',
+            'nama_kolam.required'  => 'Nama fasilitas wajib diisi.',
+            'harga_tiket.numeric'  => 'Harga harus berupa angka.',
         ]);
 
         // Simpan ke database
-        Renang::create($request->all());
+        Renang::create($validated);
 
         // Balik ke halaman sebelumnya dengan pesan sukses
         return redirect()->back()->with('success', 'Fasilitas renang berhasil ditambahkan!');

@@ -13,9 +13,9 @@ class DashboardController extends Controller
     public function index()
     {
         $tikets = Tiket::orderBy('kategori')->orderBy('id')->get();
-        $pending = Transaksi::with('pengguna')->where('status', 'pending')->orderByDesc('tgl_transaksi')->take(6)->get();
-        $recent = Transaksi::with('pengguna')->orderByDesc('tgl_transaksi')->take(6)->get();
-        $cabins = Cabin::orderBy('jenis_cabin')->orderBy('id')->get();
+        $pending = Transaksi::with('pengguna')->where('status', 'pending')->orderByDesc('tanggal_transaksi')->take(6)->get();
+        $recent = Transaksi::with('pengguna')->orderByDesc('tanggal_transaksi')->take(6)->get();
+        $cabins = Cabin::orderBy('nama_cabin')->orderBy('id')->get();
 
         $stats = [
             'total_transaksi' => Transaksi::count(),
@@ -24,9 +24,9 @@ class DashboardController extends Controller
             'gagal' => Transaksi::where('status', 'gagal')->count(),
             'pendapatan' => (float) Transaksi::where('status', 'lunas')->sum('total_bayar'),
             'pengguna' => Pengguna::count(),
-            'kuota_renang' => (int) Tiket::where('kategori', 'renang')->sum('kuota'),
+            'kuota_renang' => (int) Tiket::sum('stok'),
             'cabin_tersedia' => Cabin::where('status', 'tersedia')->count(),
-            'cabin_dipesan' => Cabin::where('status', 'dipesan')->count(),
+            'cabin_dipesan' => Cabin::where('status', 'terisi')->count(),
         ];
 
         return view('admin.dashboard', compact('tikets', 'pending', 'recent', 'cabins', 'stats'));
@@ -40,10 +40,9 @@ class DashboardController extends Controller
         ]);
 
         $tiket = Tiket::findOrFail($d['tiket_id']);
-        $tiket->kuota = $d['kuota'];
-        $tiket->status = $d['kuota'] > 0 ? 'tersedia' : 'habis';
+        $tiket->stok = $d['kuota'];
         $tiket->save();
 
-        return response()->json(['ok' => true, 'kuota' => $tiket->kuota, 'status' => $tiket->status]);
+        return response()->json(['ok' => true, 'kuota' => $tiket->stok]);
     }
 }

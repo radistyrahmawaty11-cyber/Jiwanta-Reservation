@@ -10,18 +10,16 @@ class Bank extends Model
     use HasFactory;
 
     protected $fillable = [
-        'kode',
-        'nama',
+        'nama_bank',
         'nomor_rekening',
         'atas_nama',
-        'cabang',
-        'is_utama',
+        'status',
     ];
 
     protected function casts(): array
     {
         return [
-            'is_utama' => 'boolean',
+            'status' => 'boolean',
         ];
     }
 }

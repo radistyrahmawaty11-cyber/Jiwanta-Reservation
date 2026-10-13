@@ -11,11 +11,10 @@ class Tiket extends Model
 
     protected $fillable = [
         'nama_tiket',
-        'jenis_tiket',
-        'kategori',
+        'deskripsi',
         'harga',
-        'kuota',
-        'status',
+        'stok',
+        'kategori',
     ];
 
     public function detail_tikets()
