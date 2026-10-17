@@ -37,34 +37,15 @@
         'x'         => 'M6 6l12 12M18 6L6 18',
     ];
 
-    $nav = [
-        'Navigasi Utama' => [['Dashboard', 'dashboard', true, null], ['Verifikasi & Transaksi', 'receipt', false, 14]],
-        'Manajemen Resort' => [['Kelola Tiket', 'ticket', false, null], ['Kelola Cabin Suite', 'cabin', false, null]],
-        'Administrasi & Sistem' => [['Manajemen Pengguna', 'users', false, null], ['Laporan & Export', 'chart', false, null], ['Pengaturan Profil', 'gear', false, null]],
-    ];
-
     $mint = 'bg-[#CDEFD5]';
     $peach = 'bg-[#FBD9B0]';
     $lav = 'bg-[#DDE6FB]';
-
-    $queue = [
-        ['AM', $mint, 'Aris Munandar', 'JW-TKT-089', 'bg-[#DDE2F5]', ['Bank BCA', 'Transfer'], ['Tiket Renang', 'Classic'], 170412, 3],
-        ['CK', $peach, 'Citra Kirana', 'JW-CAB-014', 'bg-[#F5C89A]', ['Mandiri', 'Transfer'], ['Cabin Suite', '(1 Malam)'], 2450000, 0],
-        ['DA', $mint, 'Dini Anggraini', 'JW-TKT-092', 'bg-[#DDE2F5]', ['Bank BCA', 'Transfer'], ['Tiket Renang', 'Premier'], 240000, 2],
-    ];
 
     $status = [
         'Check-in' => [$mint, 'bg-[#0B3A22]'],
         'Lunas'    => [$peach, 'bg-[#C2762B]'],
         'Menunggu' => [$lav, 'bg-slate-500'],
-    ];
-
-    $reservations = [
-        ['tiket', ['#JW-', '8821'], ['Bambang', 'Wicaksono'], ['+62 812-', '4421-900'], ['Tiket Renang', 'Classic'], ['20 Sep', '2026,', '09:00 WIB'], 'Check-in'],
-        ['cabin', ['#JW-', '8820'], ['Larasati', 'Dewi'], ['+62 857-', '1190-332'], ['Cabin', 'Suite'], ['20 - 21 Sep', '(1 Malam)'], 'Lunas'],
-        ['tiket', ['#JW-', '8819'], ['Reza', 'Pratama'], ['+62 821-', '9988-121'], ['Tiket Renang', 'Premier'], ['20 Sep', '2026,', '14:00 WIB'], 'Menunggu'],
-        ['cabin', ['#JW-', '8818'], ['Nabila', 'Syakieb'], ['+62 813-', '7722-109'], ['Cabin', 'Short'], ['20 - 22', 'Sep (2', 'Malam)'], 'Check-in'],
-        ['tiket', ['#JW-', '8817'], ['Fajar', 'Nugraha'], ['+62 878-', '3341-002'], ['Tiket Renang', 'Classic'], ['20 Sep', '2026,', '11:00 WIB'], 'Lunas'],
+        'Gagal'    => ['bg-[#FBD5D5]', 'bg-red-500'],
     ];
 
     $tabs = [['all', 'Semua'], ['tiket', 'Tiket<br>Renang'], ['cabin', 'Cabin']];
@@ -88,7 +69,7 @@
                     </div>
                     <div class="flex items-center gap-3">
                         <span class="flex items-center gap-2 rounded-lg bg-white border border-slate-200 px-4 py-2 text-[11px] font-medium shadow-sm">
-                            {!! $ic($p['calendar'], 'h-4 w-4') !!} Hari ini: 20 Sep 2026 <span class="h-1.5 w-1.5 rounded-full bg-[#C2762B]"></span>
+                            {!! $ic($p['calendar'], 'h-4 w-4') !!} Hari ini: {{ $todayLabel ?? now()->format('d M Y') }} <span class="h-1.5 w-1.5 rounded-full bg-[#C2762B]"></span>
                         </span>
                         <button type="button" data-open="report" class="flex items-center gap-2 rounded-lg bg-slate-100 px-4 py-2 text-[11px] font-medium transition hover:bg-slate-200">
                             {!! $ic($p['download'], 'h-4 w-4') !!} Unduh Laporan Ringkas
@@ -108,7 +89,7 @@
                         </div>
                         <p class="text-[26px] font-bold leading-tight text-slate-900">Rp <span data-revenue>{{ number_format($totalPendapatan ?? 0, 0, ',', '.') }}</span></p>
                         <p class="mt-2 flex items-center gap-2 text-[11px]">
-                            <b class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700">{!! $ic($p['trend'], 'h-3 w-3') !!}+8.5%</b>
+                            <b class="inline-flex items-center gap-1 rounded-full {{ ($growthPct ?? 0) >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700' }} px-2 py-0.5">{!! $ic($p['trend'], 'h-3 w-3') !!}{{ ($growthPct ?? 0) >= 0 ? '+' : '' }}{{ $growthPct ?? 0 }}%</b>
                             <span class="text-slate-600">dibandingkan kemarin</span>
                         </p>
                     </div>
@@ -165,14 +146,14 @@
                                     </div>
                                     <div class="flex items-center gap-4">
                                         <span class="rounded-lg {{ $peach }} px-3 py-1.5 text-center text-[10px] font-bold text-[#6B4520]"><span data-batch>{{ $perluVerifikasi ?? 0 }}</span> Menunggu</span>
-                                        <a href="#" class="text-[11px] font-semibold text-slate-700 hover:text-[#0B3A22]">Lihat Semua (<span data-total>14</span>)</a>
+                                        <a href="#" class="text-[11px] font-semibold text-slate-700 hover:text-[#0B3A22]">Lihat Semua (<span data-total>{{ $totalTransaksi ?? 0 }}</span>)</a>
                                         <a href="#" aria-label="Lihat semua" class="text-slate-400 hover:text-slate-600">{!! $ic($p['arrow'], 'h-4 w-4') !!}</a>
                                     </div>
                                 </div>
                             </div>
 
                             <div id="queue" class="p-5 space-y-3">
-                                @foreach ($queue as [$ini, $avBg, $name, $code, $codeBg, $method, $item, $amount, $tix])
+                                @forelse ($queue ?? [] as [$ini, $avBg, $name, $code, $codeBg, $method, $item, $amount, $tix])
                                     <div data-queue-row data-amount="{{ $amount }}" data-tickets="{{ $tix }}" class="flex items-center gap-4 rounded-xl bg-slate-50 p-4 transition-all hover:bg-slate-100">
                                         <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg {{ $avBg }} text-[14px] font-bold">{{ $ini }}</span>
                                         <div class="min-w-0 flex-1">
@@ -193,7 +174,9 @@
                                             {!! $ic($p['check'], 'h-4 w-4') !!} Verifikasi
                                         </button>
                                     </div>
-                                @endforeach
+                                @empty
+                                    <p class="p-4 text-center text-[11px] text-slate-500">Tidak ada struk transfer yang menunggu verifikasi.</p>
+                                @endforelse
                             </div>
                             <p id="queue-empty" class="hidden p-8 text-center text-[12px] font-medium text-slate-500">Semua struk transfer sudah diproses.</p>
                         </section>
@@ -220,7 +203,7 @@
                             </div>
 
                             <div id="reservations">
-                                @foreach ($reservations as [$type, $code, $guest, $phone, $service, $date, $st])
+                                @forelse ($reservations ?? [] as [$type, $code, $guest, $phone, $service, $date, $st])
                                     <div data-type="{{ $type }}" class="grid grid-cols-[60px_120px_100px_100px_90px_1fr] items-center px-5 py-4 transition hover:bg-slate-50 border-b border-slate-100 last:border-0">
                                         <span class="text-[10px] font-bold">{!! $br($code) !!}</span>
                                         <span>
@@ -229,12 +212,14 @@
                                         </span>
                                         <span class="text-[11px] leading-relaxed">{!! $br($service) !!}</span>
                                         <span class="text-[10px] leading-relaxed">{!! $br($date) !!}</span>
-                                        <span><span class="inline-flex items-center gap-1.5 rounded-full {{ $status[$st][0] }} px-2.5 py-1 text-[9px] font-bold"><span class="h-1.5 w-1.5 rounded-full {{ $status[$st][1] }}"></span>{{ $st }}</span></span>
+                                        <span><span class="inline-flex items-center gap-1.5 rounded-full {{ $status[$st][0] ?? 'bg-slate-100' }} px-2.5 py-1 text-[9px] font-bold"><span class="h-1.5 w-1.5 rounded-full {{ $status[$st][1] ?? 'bg-slate-400' }}"></span>{{ $st }}</span></span>
                                         <button type="button" data-resv-action class="justify-self-center text-slate-400 hover:text-slate-600" aria-label="Aksi">
                                             <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
                                         </button>
                                     </div>
-                                @endforeach
+                                @empty
+                                    <p class="p-8 text-center text-[12px] font-medium text-slate-500">Belum ada reservasi.</p>
+                                @endforelse
                             </div>
                         </section>
                     </div>
@@ -252,17 +237,21 @@
                             </div>
 
                             <div class="space-y-4">
-                                <div>
-                                    <div class="flex justify-between text-[11px] mb-1"><span class="font-semibold text-slate-700">Tiket Renang Classic</span><b class="text-[11px]"><span data-q1-used>120</span> / <span data-q1-cap>200</span></b></div>
-                                    <div class="h-2 overflow-hidden rounded-full bg-slate-100"><div data-q1-bar style="width: 60%" class="h-full rounded-full bg-[#0B3A22] transition-all duration-1000"></div></div>
-                                    <p data-q1-text class="mt-1.5 text-right text-[10px] text-slate-600">Sisa 80 tiket (60%)</p>
-                                </div>
-
-                                <div>
-                                    <div class="flex justify-between text-[11px] mb-1"><span class="font-semibold text-slate-700">Tiket Renang Premier</span><b class="text-[11px] text-[#7A5230]"><span data-q2-used>65</span> / <span data-q2-cap>100</span></b></div>
-                                    <div class="h-2 overflow-hidden rounded-full bg-slate-100"><div data-q2-bar style="width: 65%" class="h-full rounded-full bg-[#7A5230] transition-all duration-1000"></div></div>
-                                    <p data-q2-text class="mt-1.5 text-right text-[10px] text-slate-600">Sisa 35 tiket (65%)</p>
-                                </div>
+                                @forelse ($tiketKuota ?? [] as $t)
+                                    @php
+                                        $cap = max(1, $t['kapasitas']);
+                                        $used = $t['terjual'];
+                                        $sisa = max(0, $t['kapasitas'] - $used);
+                                        $pct = min(100, (int) round(($used / $cap) * 100));
+                                    @endphp
+                                    <div data-quota-item data-used="{{ $used }}" data-cap="{{ $t['kapasitas'] }}">
+                                        <div class="flex justify-between text-[11px] mb-1"><span class="font-semibold text-slate-700">{{ $t['nama'] }}</span><b class="text-[11px]"><span data-q-used>{{ $used }}</span> / <span data-q-cap>{{ $t['kapasitas'] }}</span></b></div>
+                                        <div class="h-2 overflow-hidden rounded-full bg-slate-100"><div data-q-bar style="width: {{ $pct }}%" class="h-full rounded-full bg-[#0B3A22] transition-all duration-1000"></div></div>
+                                        <p data-q-text class="mt-1.5 text-right text-[10px] text-slate-600">Sisa {{ $sisa }} tiket ({{ $pct }}%)</p>
+                                    </div>
+                                @empty
+                                    <p class="py-4 text-center text-[11px] text-slate-500">Belum ada data tiket.</p>
+                                @endforelse
 
                                 <button type="button" data-open="quota" class="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-slate-100 py-2.5 text-[11px] font-bold transition hover:bg-slate-200">
                                     {!! $ic($p['sliders'], 'h-4 w-4') !!} + Atur Kuota
@@ -277,7 +266,7 @@
                                 <span class="rounded-lg {{ $mint }} px-3 py-1.5 text-center text-[10px] font-bold">{{ $totalCabin ?? 0 }} Total Unit</span>
                             </div>
                             <div class="space-y-2">
-                                @foreach ([['Cabin Suite', 'Tamu: Hendra S.', 'Terisi', true, 'bed'], ['Cabin Short', 'Siap Reservasi', 'Tersedia', false, 'door']] as [$n, $sub, $st, $busy, $icon])
+                                @forelse ($cabins ?? [] as [$n, $sub, $st, $busy, $icon])
                                     <div class="flex items-center gap-3 rounded-lg bg-slate-50 p-3">
                                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg {{ $busy ? $lav : $mint }}">{!! $ic($p[$icon], 'h-4 w-4') !!}</span>
                                         <div class="min-w-0 flex-1">
@@ -286,7 +275,9 @@
                                         </div>
                                         <span class="shrink-0 rounded-full {{ $busy ? $peach : $mint }} px-2.5 py-1 text-[9px] font-bold">{{ $st }}</span>
                                     </div>
-                                @endforeach
+                                @empty
+                                    <p class="py-4 text-center text-[11px] text-slate-500">Belum ada data cabin.</p>
+                                @endforelse
                             </div>
                         </section>
 
@@ -297,7 +288,7 @@
                                 <span class="relative flex h-2 w-2"><span class="absolute h-full w-full animate-ping rounded-full bg-[#0B3A22] opacity-60"></span><span class="relative h-2 w-2 rounded-full bg-[#0B3A22]"></span></span>
                             </div>
                             <div class="space-y-3">
-                                @foreach ([['RH', $lav, 'Rian H.', ['Gate 1 & Scanner', 'Turnstile']], ['HG', $peach, 'Hendra G.', ['Area Kolam & Life', 'Safety']]] as [$ini, $bg, $n, $sub])
+                                @forelse ($staff ?? [] as [$ini, $bg, $n, $sub])
                                     <div class="flex items-center gap-3">
                                         <span class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full {{ $bg }} text-[11px] font-bold">
                                             {{ $ini }}<span class="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#0B3A22]"></span>
@@ -308,7 +299,9 @@
                                         </div>
                                         <span class="rounded-full {{ $mint }} px-2.5 py-1 text-[9px] font-bold">Online</span>
                                     </div>
-                                @endforeach
+                                @empty
+                                    <p class="py-4 text-center text-[11px] text-slate-500">Belum ada petugas terdaftar.</p>
+                                @endforelse
                             </div>
                         </section>
                     </div>
@@ -499,7 +492,6 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const LIVE_DEMO = true;
         const $ = (s) => document.querySelector(s);
         const $$ = (s) => document.querySelectorAll(s);
         const fmt = (n) => Math.round(n).toLocaleString('id-ID');
@@ -518,36 +510,38 @@
             requestAnimationFrame(tick);
         };
 
-        // INI BAGIAN YANG SUDAH DIUPDATE AGAR MEMBACA DARI DATABASE
+        // Data asli dari database
         const S = {
             revenue: {{ $totalPendapatan ?? 0 }},
             sold: {{ $tiketTerjual ?? 0 }},
-            q1: 120,
-            q2: 65
         };
-        let CAP = 300, Q1_CAP = 200, Q2_CAP = 100;
+        const CAP = {{ \App\Models\Tiket::sum('stok') ?: 1 }};
+
+        const renderQuota = () => {
+            $$('[data-quota-item]').forEach((el) => {
+                const used = Number(el.dataset.used);
+                const cap = Math.max(1, Number(el.dataset.cap));
+                const pct = Math.min(100, Math.round((used / cap) * 100));
+                const bar = $('[data-q-bar]', el), txt = $('[data-q-text]', el);
+                if (bar) bar.style.width = pct + '%';
+                if (txt) txt.textContent = 'Sisa ' + Math.max(0, cap - used) + ' tiket (' + pct + '%)';
+                animate($('[data-q-used]', el), used, 900);
+            });
+        };
 
         const render = () => {
             animate($('[data-revenue]'), S.revenue, 1200);
             animate($('[data-sold]'), S.sold);
-            animate($('[data-q1-used]'), S.q1);
-            animate($('[data-q2-used]'), S.q2);
-            const pct = Math.round((S.sold / CAP) * 100);
+            const pct = Math.min(100, Math.round((S.sold / CAP) * 100));
             $('[data-sold-bar]').style.width = pct + '%';
             $('[data-sold-pct]').textContent = pct + '% Terisi';
-            $('[data-sold-left]').textContent = 'Sisa ' + (CAP - S.sold) + ' Slot';
-            $('[data-q1-cap]').textContent = Q1_CAP;
-            $('[data-q2-cap]').textContent = Q2_CAP;
-            const q1pct = Q1_CAP ? Math.round((S.q1 / Q1_CAP) * 100) : 0;
-            $('[data-q1-bar]').style.width = q1pct + '%';
-            $('[data-q1-text]').textContent = 'Sisa ' + (Q1_CAP - S.q1) + ' tiket (' + q1pct + '%)';
-            const q2pct = Q2_CAP ? Math.round((S.q2 / Q2_CAP) * 100) : 0;
-            $('[data-q2-bar]').style.width = q2pct + '%';
-            $('[data-q2-text]').textContent = 'Sisa ' + (Q2_CAP - S.q2) + ' tiket (' + q2pct + '%)';
+            $('[data-sold-left]').textContent = 'Sisa ' + Math.max(0, CAP - S.sold) + ' Slot';
+            renderQuota();
         };
 
-        ['[data-revenue]', '[data-sold]', '[data-q1-used]', '[data-q2-used]'].forEach((s) => ($(s).dataset.val = 0));
-        $$('[data-q2-bar], [data-sold-bar], [data-q1-bar]').forEach((bar) => {
+        ['[data-revenue]', '[data-sold]'].forEach((s) => ($(s).dataset.val = 0));
+        $$('[data-q-used]').forEach((el) => (el.dataset.val = 0));
+        $$('[data-q-bar], [data-sold-bar]').forEach((bar) => {
             const w = bar.style.width;
             bar.style.width = '0%';
             requestAnimationFrame(() => requestAnimationFrame(() => (bar.style.width = w)));
@@ -597,16 +591,6 @@
                 });
             });
         });
-
-        if (LIVE_DEMO) {
-            setInterval(() => {
-                if (S.q1 >= Q1_CAP || S.sold >= CAP) return;
-                S.q1 += 1;
-                S.sold += 1;
-                S.revenue += 45000;
-                render();
-            }, 8000);
-        }
 
         const rp = (n) => 'Rp ' + fmt(n);
         const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -909,6 +893,7 @@
             } catch (e) { /* abaikan gangguan jaringan */ }
         };
         window.addEventListener('jiwanta:realtime', syncLive);
+        setInterval(syncLive, 15000);
     });
 </script>
 @endpush

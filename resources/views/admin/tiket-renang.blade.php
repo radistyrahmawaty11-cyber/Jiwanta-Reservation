@@ -46,12 +46,6 @@
         'bolt'      => 'M13 3L5 14h6l-1 7 8-11h-6l1-7z',
     ];
 
-    $nav = [
-        'Navigasi Utama' => [['Dashboard', 'dashboard', false, null], ['Verifikasi & Transaksi', 'receipt', false, 14]],
-        'Manajemen Resort' => [['Kelola Tiket', 'ticket', true, null], ['Kelola Cabin Suite', 'cabin', false, null]],
-        'Administrasi & Sistem' => [['Manajemen Pengguna', 'users', false, null], ['Laporan & Export', 'chart', false, null], ['Pengaturan Profil', 'gear', false, null]],
-    ];
-
     $mint = 'bg-[#CDEFD5]';
     $peach = 'bg-[#FBD9B0]';
     $lav = 'bg-[#DDE6FB]';
@@ -418,7 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })) : [],
         sessions: @json($sessions),
         log: @json($log),
-        revenue: 12400000,
+        revenue: {{ $revenue ?? 0 }},
         variant: null,
         draftCap: null,
     };

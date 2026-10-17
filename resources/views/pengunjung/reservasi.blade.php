@@ -299,7 +299,6 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const LIVE_DEMO = true;
         const $ = (s, r = document) => r.querySelector(s);
         const $$ = (s, r = document) => [...r.querySelectorAll(s)];
         const rp = (n) => 'Rp ' + Math.round(n).toLocaleString('id-ID');
@@ -569,23 +568,46 @@
             renderAll();
         }));
 
-        // Ketersediaan real-time (simulasi)
-        const setStatus = (u, low) => {
-            if (u.dataset.sold === '1') return;
+        // Ketersediaan real dari database
+        const AVAIL_URL = @json(route('reservasi.availability'));
+        const setStatus = (u, sold) => {
             const badge = $('[data-status]', u);
-            $('[data-status-text]', u).textContent = low ? 'Tersisa 1 Unit' : 'Tersedia';
-            toggleAll(badge, ['bg-[#FBD9B0]', 'text-[#6B4520]'], low);
-            toggleAll(badge, ['bg-[#D5F5DC]', 'text-[#0B3A22]'], !low);
-            $('[data-dot]', u).classList.toggle('bg-[#8B5E34]', low);
-            $('[data-dot]', u).classList.toggle('bg-[#0B3A22]', !low);
+            const text = $('[data-status-text]', u);
+            const dot = $('[data-dot]', u);
+            if (sold) {
+                u.dataset.sold = '1';
+                text.textContent = 'Terisi';
+                toggleAll(badge, ['bg-[#FBD9B0]', 'text-[#6B4520]'], true);
+                toggleAll(badge, ['bg-[#D5F5DC]', 'text-[#0B3A22]'], false);
+                dot.classList.add('bg-[#8B5E34]');
+                dot.classList.remove('bg-[#0B3A22]');
+            } else {
+                u.dataset.sold = '0';
+                text.textContent = 'Tersedia';
+                toggleAll(badge, ['bg-[#FBD9B0]', 'text-[#6B4520]'], false);
+                toggleAll(badge, ['bg-[#D5F5DC]', 'text-[#0B3A22]'], true);
+                dot.classList.remove('bg-[#8B5E34]');
+                dot.classList.add('bg-[#0B3A22]');
+            }
         };
-        const refresh = () => units.forEach((u) => setStatus(u, Math.random() < 0.3));
+        const refresh = async () => {
+            try {
+                const res = await fetch(AVAIL_URL, { headers: { 'Accept': 'application/json' } });
+                const json = await res.json();
+                (json.data || []).forEach((row) => {
+                    const u = units.find((x) => String(x.dataset.unit) === String(row.key));
+                    if (u) setStatus(u, !!row.sold);
+                });
+            } catch (e) { /* abaikan gangguan jaringan */ }
+        };
         $('[data-refresh]').addEventListener('click', () => {
             const icon = $('[data-refresh-icon]');
             if (icon.animate && !reduce) icon.animate([{ transform: 'rotate(0)' }, { transform: 'rotate(360deg)' }], { duration: 800, easing: 'ease-in-out' });
-            setTimeout(refresh, 600);
+            setTimeout(refresh, 400);
         });
-        if (LIVE_DEMO) setInterval(refresh, 20000);
+
+        // Sinkronkan tampilan status dengan data asli saat halaman dimuat
+        units.forEach((u) => setStatus(u, u.dataset.sold === '1'));
 
         // Bayangan header saat scroll
         const head = $('#top-header');

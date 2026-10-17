@@ -53,12 +53,6 @@
         'pin'       => 'M12 21s-6-5.5-6-11a6 6 0 1112 0c0 5.5-6 11-6 11zM12 12a2 2 0 100-4 2 2 0 000 4z',
     ];
 
-    $nav = [
-        'Navigasi Utama' => [['Dashboard', 'dashboard', false, null], ['Verifikasi & Transaksi', 'receipt', true, 14]],
-        'Manajemen Resort' => [['Kelola Tiket', 'ticket', false, null], ['Kelola Cabin Suite', 'cabin', false, null]],
-        'Administrasi & Sistem' => [['Manajemen Pengguna', 'users', false, null], ['Laporan & Export', 'chart', false, null], ['Pengaturan Profil', 'gear', false, null]],
-    ];
-
     $mint  = 'bg-[#CDEFD5]';
     $peach = 'bg-[#FBD9B0]';
     $lav   = 'bg-[#DDE6FB]';
@@ -67,46 +61,17 @@
 
     $banks = [['all', 'Semua'], ['BCA', 'BCA'], ['Mandiri', 'Mandiri']];
 
-    // ---------- Data antrean (ganti dengan data dari controller) ----------
-    // act: quick = Pratinjau + Cepat Verifikasi | proof = Buka Bukti Transfer | reupload = Minta Upload Ulang
+    // Placeholder netral panel utama; diisi oleh JS dari feed data asli (admin.feed).
     $proof = asset('images/bukti-transfer.jpg');
-    $queue = [
-        [
-            'id' => 'JW-20260920-001', 'name' => 'Ahmad Fadillah', 'email' => 'ahmad.fadillah@gmail.com', 'phone' => '+62 812-4491-0982',
-            'service' => ['2× Tiket', 'Premier Onsen'], 'unit' => '2 Tiket Premier Onsen', 'session' => 'Sesi Siang (13:00 - 16:00)',
-            'amount' => 170412, 'method' => 'BCA', 'channel' => 'BCA Virtual Account / Manual', 'pay' => 'BCA Transfer',
-            'sender' => ['Ahmad Fadillah', 'BCA • 8271-0329-11'], 'dest' => ['Jiwanta Wisata Mandiri', 'BCA • 4370-9008-21'],
-            'file' => 'bukti-transfer-001.jpg', 'proof' => $proof, 'ocr' => 99, 'mins' => 4,
-            'tag' => 'Tiket Reguler', 'tone' => 'lav', 'dot' => 'bg-slate-400', 'act' => 'quick', 'problem' => false, 'note' => '',
-        ],
-        [
-            'id' => 'JW-20260920-004', 'name' => 'Siti Nurhaliza', 'email' => 'siti.nurhaliza@gmail.com', 'phone' => '+62 857-1190-3321',
-            'service' => ['1× Cabin', 'Pinus Suite (2 Malam)'], 'unit' => 'Pinus Suite Cabin (2 Malam)', 'session' => 'Check-in 14:00 WIB',
-            'amount' => 2450789, 'method' => 'Mandiri', 'channel' => 'Mandiri Transfer / Manual', 'pay' => 'Mandiri Transfer',
-            'sender' => ['Siti Nurhaliza', 'Mandiri • 1310-0452-88'], 'dest' => ['Jiwanta Wisata Mandiri', 'Mandiri • 1310-0987-65'],
-            'file' => 'bukti-transfer-004.jpg', 'proof' => $proof, 'ocr' => 98, 'mins' => 9,
-            'tag' => 'Glamping Resort', 'tone' => 'peach', 'dot' => 'bg-[#C2762B]', 'act' => 'quick', 'problem' => false, 'note' => '',
-        ],
-        [
-            'id' => 'JW-20260920-009', 'name' => 'Danang Wijaya', 'email' => 'danang.wijaya@gmail.com', 'phone' => '+62 821-9988-1210',
-            'service' => ['4× Classic Ticket', '+ Gazebo Pinus'], 'unit' => '4x Classic Ticket + Gazebo Pinus', 'session' => 'Sesi Pagi (08:00 - 11:00)',
-            'amount' => 360120, 'method' => 'Mandiri', 'channel' => 'Mandiri Transfer / Manual', 'pay' => 'Mandiri Transfer',
-            'sender' => ['Danang Wijaya', 'Mandiri • 0456-1129-03'], 'dest' => ['Jiwanta Wisata Mandiri', 'Mandiri • 1310-0987-65'],
-            'file' => 'bukti-transfer-009.jpg', 'proof' => $proof, 'ocr' => 97, 'mins' => 18,
-            'tag' => 'Tiket Rombongan', 'tone' => 'lav', 'dot' => 'bg-slate-400', 'act' => 'proof', 'problem' => false, 'note' => '',
-        ],
-        [
-            'id' => 'JW-20260920-012', 'name' => 'Rendi Pratama', 'email' => 'rendi.pratama@gmail.com', 'phone' => '+62 878-3341-0020',
-            'service' => ['1× Tiket', 'Classic Hot Spring'], 'unit' => '1x Tiket Classic Hot Spring', 'session' => 'Sesi Siang (13:00 - 16:00)',
-            'amount' => 45319, 'method' => 'BCA', 'channel' => 'BCA Transfer / Manual', 'pay' => 'BCA Transfer',
-            'sender' => ['Rendi Pratama', 'BCA • 7712-0045-09'], 'dest' => ['Jiwanta Wisata Mandiri', 'BCA • 4370-9008-21'],
-            'file' => 'bukti-transfer-012.jpg', 'proof' => $proof, 'ocr' => 61, 'mins' => 26,
-            'tag' => 'Struk Buram', 'tone' => 'red', 'dot' => 'bg-red-600', 'act' => 'reupload', 'problem' => true,
-            'note' => 'OCR gagal membaca 3 digit terakhir. Perlu audit visual staf.',
-        ],
-    ];
 
-    $first = $queue[0];
+    $first = [
+        'id' => '-', 'channel' => '-', 'file' => '-',
+        'proof' => $proof, 'ocr' => 0,
+        'name' => '-', 'email' => '-', 'phone' => '-',
+        'service' => ['-'], 'session' => '-',
+        'sender' => ['-', '-'], 'dest' => ['-', '-'],
+        'amount' => 0,
+    ];
 @endphp
 
 
@@ -125,21 +90,21 @@
                         <div class="{{ $card }} flex items-center gap-3 px-4 py-3.5">
                             <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $peach }} text-[#8B5E34]">{!! $ic($p['clock'], 'h-5 w-5') !!}</span>
                             <div>
-                                <p data-c="pending" class="text-[22px] font-bold leading-tight text-slate-900">14</p>
+                                <p data-c="pending" class="text-[22px] font-bold leading-tight text-slate-900">0</p>
                                 <p class="text-[10px] leading-tight text-slate-600">Menunggu Verifikasi</p>
                             </div>
                         </div>
                         <div class="{{ $card }} flex items-center gap-3 px-4 py-3.5">
                             <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $mint }} text-[#0B3A22]">{!! $ic($p['shield'], 'h-5 w-5') !!}</span>
                             <div>
-                                <p data-c="verified" class="text-[22px] font-bold leading-tight text-slate-900">86</p>
+                                <p data-c="verified" class="text-[22px] font-bold leading-tight text-slate-900">0</p>
                                 <p class="text-[10px] leading-tight text-slate-600">Terverifikasi Hari Ini</p>
                             </div>
                         </div>
                         <div class="{{ $card }} flex items-center gap-3 px-4 py-3.5">
                             <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FBD5D5] text-[#B42318]">{!! $ic($p['alert'], 'h-5 w-5') !!}</span>
                             <div>
-                                <p data-c="rejected" class="text-[22px] font-bold leading-tight text-[#B42318]">2</p>
+                                <p data-c="rejected" class="text-[22px] font-bold leading-tight text-[#B42318]">0</p>
                                 <p class="text-[10px] leading-tight text-slate-600">Ditolak / Bermasalah</p>
                             </div>
                         </div>
@@ -241,7 +206,7 @@
                                             <span id="match-icon" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0B3A22] text-white transition-colors duration-300">{!! $ic($p['checkc'], 'h-5 w-5', '2') !!}</span>
                                             <div class="min-w-0">
                                                 <p class="flex flex-wrap items-center gap-2">
-                                                    <b data-f="amount" class="text-[20px] font-bold leading-tight text-[#0B3A22]">Rp 170.412</b>
+                                                    <b data-f="amount" class="text-[20px] font-bold leading-tight text-[#0B3A22]">Rp 0</b>
                                                     <span id="match-chip" class="rounded-md bg-white px-2 py-0.5 text-[9px] font-bold text-[#0B3A22] ring-1 ring-[#0B3A22]/25">Kode Unik: <span data-f="unik">412</span> <span data-f="match">COCOK</span></span>
                                                 </p>
                                                 <p data-f="match-text" class="mt-1 text-[10px] leading-snug text-[#0B3A22]/80">Nominal mutasi rekening bank terdeteksi sesuai tanpa selisih.</p>
@@ -279,7 +244,7 @@
                                     <p class="mt-0.5 text-[10px] leading-snug text-slate-600">Tiket barcode terenkripsi akan langsung terkirim ke WhatsApp pemesan saat disetujui.</p>
                                 </div>
                             </div>
-                            <p class="shrink-0 text-[10px] leading-snug text-slate-600">Latensi:<br><b data-latency class="text-[12px] text-slate-900">142ms</b></p>
+                            <p class="shrink-0 text-[10px] leading-snug text-slate-600">Latensi:<br><b data-latency class="text-[12px] text-slate-900">-</b></b></p>
                         </section>
                     </div>
 
@@ -323,8 +288,6 @@
         const rp = (n) => 'Rp ' + Math.round(n).toLocaleString('id-ID');
         const pad = (n) => String(n).padStart(2, '0');
         const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-        const rand = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
-        const pick = (arr) => arr[rand(0, arr.length - 1)];
         const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
         const wib = (ms) => { const d = new Date(ms + 7 * 3600e3); return pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()); };
         const mins = (at) => Math.floor((Date.now() - at) / 60000);
@@ -332,14 +295,14 @@
         const agoLong = (at) => { const m = mins(at); return m < 1 ? 'baru saja' : m < 60 ? m + ' menit lalu' : Math.floor(m / 60) + ' jam lalu'; };
 
         // ---------- State ----------
+        // Antrean murni dari data asli (feed JSON / websocket Reverb), bukan data contoh.
         const state = {
-            queue: @json($queue).map((i) => ({ ...i, at: Date.now() - i.mins * 60000 })),
-            active: @json($first['id']),
+            queue: [],
+            active: null,
             bank: 'all', status: 'waiting', q: '',
-            c: { pending: 14, verified: 86, rejected: 2 },
+            c: { pending: 0, verified: 0, rejected: 0 },
             busy: false, page: 1,
         };
-        let seq = 13;
 
         // ---------- Toast ----------
         let toastTimer;
@@ -584,54 +547,22 @@
             renderQueue();
         }));
 
-        // ---------- Struk masuk (real-time) ----------
-        const names = ['Putri Maharani', 'Galih Pramudya', 'Intan Permata', 'Yoga Saputra', 'Melati Kusuma', 'Fikri Ramadhan', 'Anindya Putri', 'Teguh Santoso'];
-        const services = [
-            { unit: '2x Tiket Premier Onsen', service: ['2× Tiket', 'Premier Onsen'], session: 'Sesi Pagi (08:00 - 11:00)', base: 170000, tag: 'Tiket Reguler', tone: 'lav' },
-            { unit: '3x Tiket Classic Hot Spring', service: ['3× Tiket', 'Classic Hot Spring'], session: 'Sesi Siang (13:00 - 16:00)', base: 180000, tag: 'Tiket Reguler', tone: 'lav' },
-            { unit: 'Magnolia Cabin Suite (1 Malam)', service: ['1× Cabin', 'Magnolia Suite'], session: 'Check-in 14:00 WIB', base: 1040000, tag: 'Glamping Resort', tone: 'peach' },
-            { unit: 'Cabin Shorts (3 Jam)', service: ['1× Cabin', 'Shorts (3 Jam)'], session: 'Mulai 13:00 WIB', base: 340000, tag: 'Glamping Resort', tone: 'peach' },
-        ];
-        const banks = [
-            { m: 'BCA', channel: 'BCA Virtual Account / Manual', pay: 'BCA Transfer' },
-            { m: 'Mandiri', channel: 'Mandiri Transfer / Manual', pay: 'Mandiri Transfer' },
-        ];
-
-        const incoming = () => {
-            if (state.queue.length >= MAX_QUEUE) return false;
-            const n = pick(names), s = pick(services), b = pick(banks), code = rand(100, 999);
-            const bad = Math.random() < 0.15;
-            const id = 'JW-20260920-' + String(seq++).padStart(3, '0');
-            state.queue.push({
-                id, name: n, email: n.toLowerCase().replace(/\s+/g, '.') + '\u0040gmail.com', phone: '+62 8' + rand(11, 78) + '-' + rand(1000, 9999) + '-' + rand(1000, 9999),
-                service: s.service, unit: s.unit, session: s.session, amount: s.base + code, method: b.m, channel: b.channel, pay: b.pay,
-                sender: [n, b.m + ' • ' + rand(1000, 9999) + '-' + rand(1000, 9999) + '-' + rand(10, 99)],
-                dest: ['Jiwanta Wisata Mandiri', b.m + ' • 4370-9008-21'],
-                file: `bukti-transfer-${String(seq - 1).padStart(3, '0')}.jpg`, proof: @json($proof), ocr: bad ? rand(52, 68) : rand(94, 99),
-                at: Date.now(), tag: bad ? 'Struk Buram' : s.tag, tone: bad ? 'red' : s.tone, dot: bad ? 'bg-red-600' : 'bg-slate-400',
-                act: bad ? 'reupload' : pick(['quick', 'proof']), problem: bad, note: bad ? 'OCR gagal membaca 3 digit terakhir. Perlu audit visual staf.' : '', fresh: true,
-            });
-            if (!state.active) state.active = state.queue[state.queue.length - 1].id;
-            setCount('pending', state.c.pending + 1);
-            renderQueue();
-            showMain(false);
-            toast(`Struk baru masuk: ${n} (${rp(s.base + code)})`);
-            return true;
-        };
-
         // ---------- Realtime: struk/pesanan nyata dari feed ----------
         const FEED_URL = @json(route('admin.feed'));
         const PROOF = @json($proof);
-        const mapRow = (t) => ({
-            id: t.kode, name: t.name, email: '-', phone: '-',
-            service: ['Pembayaran', t.metode], unit: 'Transaksi Online',
-            session: `${t.date} • ${t.t} WIB`, amount: t.amount,
-            method: t.metode, channel: t.metode + ' Transfer', pay: t.metode + ' Transfer',
-            sender: [t.name, t.kode], dest: ['Jiwanta Wisata Mandiri', t.metode + ' • 4370-9008-21'],
-            file: '-', proof: PROOF, ocr: 96, at: Date.now(),
-            tag: 'Menunggu Verifikasi', tone: 'lav', dot: 'bg-slate-400',
-            act: 'quick', problem: false, note: '', fresh: true,
-        });
+        const mapRow = (t) => {
+            const hasProof = t.bukti && t.bukti !== '-';
+            return {
+                id: t.kode, name: t.name, email: '-', phone: '-',
+                service: ['Pembayaran', t.metode], unit: 'Transaksi Online',
+                session: `${t.date} • ${t.t} WIB`, amount: t.amount,
+                method: t.metode, channel: t.metode + ' Transfer', pay: t.metode + ' Transfer',
+                sender: [t.name, t.kode], dest: ['Jiwanta Wisata Mandiri', t.metode + ' • 4370-9008-21'],
+                file: hasProof ? t.bukti.split('/').pop() : '-', proof: hasProof ? t.bukti : PROOF, ocr: 96, at: Date.now(),
+                tag: 'Menunggu Verifikasi', tone: 'lav', dot: 'bg-slate-400',
+                act: 'quick', problem: false, note: '', fresh: true,
+            };
+        };
         const applyFeed = (data) => {
             const rows = data.pending_rows || [];
             let added = false;
@@ -643,7 +574,11 @@
             });
             if (!state.active && state.queue[0]) state.active = state.queue[0].id;
             if (added) { renderQueue(); showMain(false); toast(`${rows.length} pembayaran menunggu verifikasi.`); }
-            if (data.stats && typeof data.stats.pending === 'number') setCount('pending', data.stats.pending);
+            if (data.stats) {
+                if (typeof data.stats.pending === 'number') setCount('pending', data.stats.pending);
+                if (typeof data.stats.verified === 'number') setCount('verified', data.stats.verified);
+                if (typeof data.stats.rejected === 'number') setCount('rejected', data.stats.rejected);
+            }
         };
         const refreshReal = async () => {
             try {
@@ -660,9 +595,7 @@
             cycles++;
             renderQueue();
             updateUploaded();
-            if (manual) {
-                refreshReal();
-            } else if (LIVE_DEMO && cycles % 3 === 0) incoming();
+            refreshReal();
         };
         setInterval(() => {
             left--;
@@ -676,16 +609,6 @@
             left = REFRESH_EVERY;
             setTimeout(() => cycle(true), 600);
         });
-
-        // Latensi gateway (simulasi)
-        setInterval(() => {
-            const ms = rand(118, 182);
-            $$('[data-latency]').forEach((el) => {
-                el.textContent = ms + 'ms';
-                el.classList.toggle('text-[#8B5E34]', ms > 165);
-                el.classList.toggle('text-slate-900', ms <= 165);
-            });
-        }, 2500);
 
         // ---------- Mulai ----------
         renderQueue();

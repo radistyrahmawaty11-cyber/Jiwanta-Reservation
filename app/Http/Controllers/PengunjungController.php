@@ -11,6 +11,8 @@ use App\Models\Tiket;
 use App\Models\Transaksi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PengunjungController extends Controller
 {
@@ -46,6 +48,16 @@ class PengunjungController extends Controller
             'tikets' => Tiket::orderBy('id')->get(),
             'cabins' => Cabin::orderBy('id')->get(),
         ]);
+    }
+
+    public function availability()
+    {
+        $cabins = Cabin::orderBy('id')->get()->map(fn ($c) => [
+            'key' => $c->id,
+            'sold' => $c->status === 'terisi',
+        ])->values();
+
+        return response()->json(['ok' => true, 'data' => $cabins]);
     }
 
     public function transaksi(Request $request)
@@ -338,12 +350,43 @@ class PengunjungController extends Controller
     {
         $order = $request->session()->get('order', []);
 
+        $buktiPath = null;
+        $buktiNama = $request->input('bukti') ?: null;
+
+        if ($request->hasFile('bukti')) {
+            $request->validate([
+                'bukti' => ['image', 'mimes:jpg,jpeg,png', 'max:5120'],
+            ]);
+
+            $file = $request->file('bukti');
+            $buktiNama = $file->getClientOriginalName();
+            $ext = strtolower($file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'jpg');
+            $base = Str::slug(pathinfo($buktiNama, PATHINFO_FILENAME)) ?: 'bukti';
+            $buktiPath = $file->storeAs('bukti-transfer', Str::random(8).'_'.$base.'.'.$ext, 'public');
+        }
+
         $order['status'] = 'terkirim';
-        $order['bukti_nama'] = $request->input('bukti') ?: 'bukti_transfer.jpg';
+        $order['bukti_nama'] = $buktiNama ?: 'bukti_transfer.jpg';
+        if ($buktiPath) {
+            $order['bukti_path'] = $buktiPath;
+            $order['bukti_url'] = Storage::url($buktiPath);
+        }
         $order['dikirim_at'] = now()->toDateTimeString();
         $order['pemesan'] = $request->user()->nama_pengguna;
 
         $request->session()->put('order', $order);
+
+        if ($buktiPath) {
+            $query = Transaksi::query();
+            if (! empty($order['transaksi_id'])) {
+                $query->where('id', $order['transaksi_id']);
+            } elseif (! empty($order['kode'])) {
+                $query->where('kode_transaksi', $order['kode']);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+            $query->update(['bukti_transfer' => $buktiPath]);
+        }
 
         try {
             NewOrderPlaced::dispatch($order);

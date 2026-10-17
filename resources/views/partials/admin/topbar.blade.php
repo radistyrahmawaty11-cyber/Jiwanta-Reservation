@@ -30,10 +30,16 @@
             </div>
         </div>
         <div class="flex items-center gap-3 pl-3 border-l border-slate-200">
-            <img data-avatar-mini src="{{ asset('images/profil.jpg') }}" alt="Profil" class="h-10 w-10 rounded-full bg-[#C9B99A] object-cover border-2 border-white shadow-sm">
+            @php
+                $authUser = auth()->user();
+                $avatarUrl = $authUser && $authUser->foto
+                    ? \Illuminate\Support\Facades\Storage::url($authUser->foto)
+                    : asset('images/profil.jpg');
+            @endphp
+            <img data-avatar-mini src="{{ $avatarUrl }}" alt="Profil" class="h-10 w-10 rounded-full bg-[#C9B99A] object-cover border-2 border-white shadow-sm">
             <div>
-                <p data-name-mini class="text-[11px] font-bold leading-tight">Bagas Dananjaya</p>
-                <p class="text-[9px] font-medium uppercase leading-tight text-slate-600">Super Admin Resort</p>
+                <p data-name-mini class="text-[11px] font-bold leading-tight">{{ $authUser->nama_pengguna ?? 'Pengguna' }}</p>
+                <p class="text-[9px] font-medium uppercase leading-tight text-slate-600">{{ ucfirst($authUser->role ?? 'admin') }} Resort</p>
             </div>
         </div>
     </div>

@@ -2,10 +2,12 @@
     $mint  = 'bg-[#CDEFD5]';
     $peach = 'bg-[#FBD9B0]';
 
+    $pendingVerifikasi = \App\Models\Transaksi::where('status', 'pending')->count();
+
     $sideNav = [
         'Navigasi Utama' => [
             ['Dashboard', 'dashboard', 'admin.dashboard', null],
-            ['Verifikasi', 'shield', 'verifikasi', 14],
+            ['Verifikasi', 'shield', 'verifikasi', $pendingVerifikasi ?: null],
             ['Transaksi', 'receipt', 'admin.transaksi', null],
         ],
         'Manajemen Resort' => [

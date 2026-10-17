@@ -57,12 +57,6 @@
         'up'        => 'M7 17L17 7M9 7h8v8',
     ];
 
-    $nav = [
-        'Navigasi Utama' => [['Dashboard', 'dashboard', false, null], ['Verifikasi & Transaksi', 'receipt', false, 14]],
-        'Manajemen Resort' => [['Kelola Tiket', 'ticket', false, null], ['Kelola Cabin Suite', 'cabin', false, null]],
-        'Administrasi & Sistem' => [['Manajemen Pengguna', 'users', false, null], ['Laporan & Export', 'chart', true, null], ['Pengaturan Profil', 'gear', false, null]],
-    ];
-
     $mint = 'bg-[#CDEFD5]';
     $peach = 'bg-[#FBD9B0]';
     $lav = 'bg-[#DDE6FB]';
@@ -110,7 +104,7 @@
                                 <button type="button" data-quick="{{ $k }}" class="rounded-full px-4 py-2 text-[11px] font-semibold transition {{ $k === 'month' ? 'bg-[#0B3A22] text-white shadow-sm' : $lav.' text-slate-800 hover:brightness-95' }}">{{ $l }}</button>
                             @endforeach
                         </div>
-                        <span class="flex items-center gap-2 rounded-full bg-[#F1F4FC] px-4 py-2 text-[10px] text-slate-600">{!! $ic($p['cal'], 'h-3.5 w-3.5') !!} Periode Aktif: <b data-period class="text-slate-900">01 Sep 2026 – 20 Sep 2026</b> {!! $ic($p['chev'], 'h-3 w-3') !!}</span>
+                        <span class="flex items-center gap-2 rounded-full bg-[#F1F4FC] px-4 py-2 text-[10px] text-slate-600">{!! $ic($p['cal'], 'h-3.5 w-3.5') !!} Periode Aktif: <b data-period class="text-slate-900">{{ $periodLabel ?? '' }}</b> {!! $ic($p['chev'], 'h-3 w-3') !!}</span>
                     </div>
                 </div>
 
@@ -118,7 +112,7 @@
                 <div class="grid grid-cols-3 gap-4">
                     <div data-reveal class="{{ $card }} p-5 hover:shadow-md">
                         <div class="flex items-start justify-between">
-                            <p class="text-[10px] font-bold uppercase leading-snug text-slate-600">Total Omzet<br>Terverifikasi<br><span class="normal-case text-[#0B3A22]">Bulan September 2026</span></p>
+                            <p class="text-[10px] font-bold uppercase leading-snug text-slate-600">Total Omzet<br>Terverifikasi<br><span class="normal-case text-[#0B3A22]">{{ $periodLabel ?? '' }}</span></p>
                             <span class="flex h-9 w-9 items-center justify-center rounded-xl {{ $mint }} text-[#0B3A22]">{!! $ic($p['cash'], 'h-4 w-4') !!}</span>
                         </div>
                         <p class="mt-2 text-[12px] font-bold text-[#0B3A22]">Rp</p>
@@ -147,15 +141,15 @@
 
                     <div data-reveal class="{{ $card }} p-5 hover:shadow-md">
                         <div class="flex items-start justify-between">
-                            <p class="text-[10px] font-bold uppercase leading-snug text-slate-600">Okupansi Cabin<br><span class="normal-case text-slate-800">12 Unit Villa</span></p>
+                            <p class="text-[10px] font-bold uppercase leading-snug text-slate-600">Okupansi Cabin<br><span class="normal-case text-slate-800">{{ $totalCabinsLabel ?? '' }} Villa</span></p>
                             <span class="flex h-9 w-9 items-center justify-center rounded-xl {{ $mint }} text-[#0B3A22]">{!! $ic($p['house'], 'h-4 w-4') !!}</span>
                         </div>
                         <p class="mt-3 text-[32px] font-bold leading-tight text-[#0B3A22]"><span data-occ>0</span>%</p>
                         <div class="mt-2 flex items-center gap-2">
                             <span class="rounded-full {{ $mint }} px-2.5 py-1 text-[9px] font-bold text-[#0B3A22]">Status: Sangat Tinggi</span>
-                            <span class="text-[10px] text-slate-600">Sisa <span data-sisa>9</span> room-night</span>
+                            <span class="text-[10px] text-slate-600">Sisa <span data-sisa>{{ max(0, ($totalCabins ?? 0) * 6 - ($cabNights ?? 0)) }}</span> room-night</span>
                         </div>
-                        <div class="mt-5 h-1.5 overflow-hidden rounded-full bg-slate-100"><div data-occ-bar style="width:92.5%;animation:jw-fill 1.4s cubic-bezier(.2,.8,.2,1)" class="h-full rounded-full bg-[#0B3A22]"></div></div>
+                        <div class="mt-5 h-1.5 overflow-hidden rounded-full bg-slate-100"><div data-occ-bar style="width:{{ $occupancy ?? 0 }}%;animation:jw-fill 1.4s cubic-bezier(.2,.8,.2,1)" class="h-full rounded-full bg-[#0B3A22]"></div></div>
                     </div>
                 </div>
 
@@ -168,7 +162,7 @@
                                     <h2 class="text-[16px] font-bold leading-tight text-[#0B3A22]">Grafik Komparasi<br>Pendapatan &amp; Kunjungan</h2>
                                     <span class="flex items-center gap-1.5 rounded-full {{ $mint }} px-2 py-1 text-[8px] font-bold text-[#0B3A22]"><span class="relative flex h-1.5 w-1.5"><span class="absolute h-full w-full animate-ping rounded-full bg-[#0B3A22] opacity-60"></span><span class="relative h-1.5 w-1.5 rounded-full bg-[#0B3A22]"></span></span>Live Feed</span>
                                 </div>
-                                <p class="mt-1 text-[10px] leading-snug text-slate-600">Korelasi harian tiket kolam air panas dan okupansi kabin 15–20 Sep 2026</p>
+                                <p class="mt-1 text-[10px] leading-snug text-slate-600">Korelasi harian tiket kolam air panas dan okupansi kabin {{ $periodLabel ?? '' }}</p>
                             </div>
                             <div class="flex items-center gap-3 text-[10px] font-semibold text-slate-700">
                                 <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-[#0B3A22]"></span>Kabin</span>
@@ -178,7 +172,7 @@
                         </div>
                         <svg data-chart viewBox="0 0 540 260" class="mt-3 w-full"></svg>
                         <div class="mt-2 flex items-center justify-between gap-4 rounded-xl bg-[#EEF2FC] px-4 py-3">
-                            <p class="flex items-center gap-2 text-[10px] leading-snug text-slate-800"><span class="text-[#8B5E34]">{!! $ic($p['star'], 'h-4 w-4') !!}</span><span><b>Puncak Terverifikasi:</b> Sabtu 19 Sep menghasilkan omzet harian <b>Rp 42.150.000</b> dengan 890 tiket scan valid.</span></p>
+                            <p class="flex items-center gap-2 text-[10px] leading-snug text-slate-800"><span class="text-[#8B5E34]">{!! $ic($p['star'], 'h-4 w-4') !!}</span><span>@if (! empty($peakDay))<b>Puncak Terverifikasi:</b> {{ $peakDay['d'] }} menghasilkan omzet harian <b>Rp {{ number_format($peakOmzet, 0, ',', '.') }}</b> dengan {{ number_format($peakTiket, 0, ',', '.') }} tiket terjual.@else<b>Puncak Terverifikasi:</b> belum ada transaksi lunas pada periode ini.@endif</span></p>
                             <p class="shrink-0 text-right text-[9px] leading-snug text-slate-600">Tingkat akurasi<br>audit: <b class="text-[#0B3A22]">99.8%</b></p>
                         </div>
                     </div>
@@ -192,7 +186,7 @@
                         <p class="mt-3 text-[10px] leading-relaxed text-white/80">Penerapan gate turnstile QR-code terintegrasi telah memangkas antrian tiket fisik kolam hingga 8 menit per rombongan saat peak weekend kabut Ciwidey.</p>
                         <div class="mt-4 space-y-2 rounded-xl bg-white/10 p-3 text-[10px]">
                             <p class="flex items-start justify-between gap-3"><span class="font-semibold text-white/85">Rata-rata Durasi Kolam:</span><b>2 Jam 45 Menit</b></p>
-                            <p class="flex items-start justify-between gap-3"><span class="font-semibold text-white/85">RevPAR Glamping Kabin:</span><b class="text-right leading-snug">Rp 1.480.000 / malam</b></p>
+                            <p class="flex items-start justify-between gap-3"><span class="font-semibold text-white/85">RevPAR Glamping Kabin:</span><b class="text-right leading-snug">Rp {{ number_format($revpar ?? 0, 0, ',', '.') }} / malam</b></p>
                         </div>
                         <button type="button" data-summary class="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-[#8B6B43] px-4 py-3 text-[11px] font-bold text-white transition hover:brightness-110">{!! $ic($p['download'], 'h-4 w-4') !!} Unduh Executive Summary (1-Pager)</button>
                     </div>
@@ -203,7 +197,7 @@
                     <div class="mb-3 flex items-end justify-between">
                         <div>
                             <h2 class="text-[18px] font-bold text-[#0B3A22]">Tabel Rekap Laporan Finansial Harian (Periode Terpilih)</h2>
-                            <p class="mt-0.5 text-[11px] text-slate-600">Rincian breakdown pemasukan per unit bisnis dari 15 September sampai dengan 20 September 2026.</p>
+                            <p class="mt-0.5 text-[11px] text-slate-600">Rincian breakdown pemasukan per unit bisnis periode {{ $periodLabel ?? '' }}.</p>
                         </div>
                         <p class="text-[10px] text-slate-600">Total 6 hari transaksi terverifikasi</p>
                     </div>
@@ -297,18 +291,13 @@
 
         // ---------- Data ----------
         const PRICE = { cls: 35000, prem: 55000 };
-        const DAYS = [
-            { d: 'Selasa, 15 Sep 2026', s: 'Sel (15)', cls: 170, prem: 40, cab: 8, tk: 7850000, cb: 12800000 },
-            { d: 'Rabu, 16 Sep 2026', s: 'Rab (16)', cls: 195, prem: 50, cab: 9, tk: 9150000, cb: 14400000 },
-            { d: 'Kamis, 17 Sep 2026', s: 'Kam (17)', cls: 220, prem: 70, cab: 10, tk: 11200000, cb: 16000000 },
-            { d: 'Jumat, 18 Sep 2026', s: 'Jum (18)', cls: 360, prem: 120, cab: 12, tk: 18600000, cb: 20400000 },
-            { d: 'Sabtu, 19 Sep 2026', s: 'Sab (19) ✦', cls: 680, prem: 210, cab: 12, tk: 34550000, cb: 21600000, peak: true, audit: 'ok' },
-            { d: 'Minggu, 20 Sep 2026', s: 'Min (20) ✦', cls: 590, prem: 190, cab: 12, tk: 30200000, cb: 21600000, peak: true, audit: 'run' },
-        ];
-        DAYS.forEach((x) => x.audit = x.audit || 'ok');
-        const BASE = { omzet: 184250000, pax: 3120, cls: 2380, prem: 740 };
+        const DAYS = @json($days);
+        const BASE = @json($base);
         const live = { omzet: 0, cls: 0, prem: 0 };
-        const SP = [4, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 17];
+        const SP = @json($spark);
+        const OCC = {{ $occupancy ?? 0 }};
+        const REVPAR = {{ $revpar ?? 0 }};
+        const CAB_TOTAL = {{ $totalCabins ?? 0 }};
 
         const pax = (x) => x.cls + x.prem;
         const net = (x) => x.tk + x.cb;
@@ -316,10 +305,10 @@
         // ---------- Tabel ----------
         const COLS = 'grid grid-cols-[1.1fr_1.3fr_.9fr_1fr_1fr_1.1fr_.9fr]';
         const rowHTML = (x, i, anim) => {
-            const full = x.cab === 12;
+            const full = CAB_TOTAL > 0 && x.cab >= CAB_TOTAL;
             const cab = full
-                ? `<span class="inline-block rounded-full bg-[#CDEFD5] px-2.5 py-1 text-center text-[9px] font-bold leading-tight text-[#0B3A22]">12 / 12<br>(Penuh)</span>`
-                : `<span class="inline-block rounded-full bg-[#DDE6FB] px-2.5 py-1 text-[9px] font-bold text-slate-700">${x.cab} / 12 Unit</span>`;
+                ? `<span class="inline-block rounded-full bg-[#CDEFD5] px-2.5 py-1 text-center text-[9px] font-bold leading-tight text-[#0B3A22]">${x.cab} / ${CAB_TOTAL}<br>(Penuh)</span>`
+                : `<span class="inline-block rounded-full bg-[#DDE6FB] px-2.5 py-1 text-[9px] font-bold text-slate-700">${x.cab} / ${CAB_TOTAL} Unit</span>`;
             const au = x.audit === 'ok'
                 ? `<span class="inline-flex items-center gap-1 rounded-full bg-[#CDEFD5] px-2.5 py-1 text-[9px] font-bold text-[#0B3A22]">${ic(I.checkc, 'h-3 w-3')} Reconciled</span>`
                 : `<span class="inline-flex items-center gap-1 rounded-full bg-[#FBD9B0] px-2.5 py-1 text-center text-[9px] font-bold leading-tight text-[#6B4520]">${ic(I.clock, 'h-3 w-3')} Audit<br>Berjalan</span>`;
@@ -340,7 +329,7 @@
             $('#total').innerHTML = `
                 <p class="text-[10px] font-bold uppercase leading-snug">Total<br>Periode (6<br>Hari)</p>
                 <p class="text-[12px] font-bold leading-snug">${fmt(s(pax))} Pax<br><span class="text-[9px] font-medium text-white/80">Terverifikasi</span></p>
-                <p class="text-[11px] font-bold leading-snug">${cab} / 72 Unit<br>Night (${(cab / 72 * 100).toFixed(1)}%)</p>
+                <p class="text-[11px] font-bold leading-snug">${cab} / ${CAB_TOTAL * 6} Unit<br>Night (${(cab / (CAB_TOTAL * 6 || 1) * 100).toFixed(1)}%)</p>
                 <p class="text-right text-[12px] font-bold">${rp(s('tk'))}</p>
                 <p class="text-right text-[12px] font-bold">${rp(s('cb'))}</p>
                 <p class="text-right text-[18px] font-bold leading-tight text-[#F3C98B]">Rp<br>${fmt(s(net))}</p>
@@ -401,7 +390,7 @@
             tween($('[data-pax]'), BASE.pax + live.cls + live.prem, animate ? 1100 : 0);
             tween($('[data-cls]'), BASE.cls + live.cls, animate ? 900 : 0);
             tween($('[data-prem]'), BASE.prem + live.prem, animate ? 900 : 0);
-            tween($('[data-occ]'), 92.5, animate ? 1100 : 0, (v) => v.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }));
+            tween($('[data-occ]'), OCC, animate ? 1100 : 0, (v) => v.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }));
         };
 
         // ---------- Realtime label ----------
@@ -413,7 +402,18 @@
         }, 1000);
 
         // ---------- Aksi ----------
-        const PER = { today: ['20 Sep 2026', '20 Sep 2026'], '7d': ['14 Sep 2026', '20 Sep 2026'], month: ['01 Sep 2026', '20 Sep 2026'], quarter: ['01 Jul 2026', '20 Sep 2026'] };
+        const MMO = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        const dstr = (d) => String(d.getDate()).padStart(2, '0') + ' ' + MMO[d.getMonth()] + ' ' + d.getFullYear();
+        const TODAY = new Date();
+        const dAgo = (n) => { const d = new Date(TODAY); d.setDate(d.getDate() - n); return d; };
+        const dMonthStart = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
+        const dQuarterStart = new Date(TODAY.getFullYear(), Math.floor(TODAY.getMonth() / 3) * 3, 1);
+        const PER = {
+            today: [dstr(TODAY), dstr(TODAY)],
+            '7d': [dstr(dAgo(6)), dstr(TODAY)],
+            month: [dstr(dMonthStart), dstr(TODAY)],
+            quarter: [dstr(dQuarterStart), dstr(TODAY)],
+        };
         $$('[data-quick]').forEach((b) => b.addEventListener('click', () => {
             $$('[data-quick]').forEach((x) => { x.className = 'rounded-full px-4 py-2 text-[11px] font-semibold transition ' + (x === b ? 'bg-[#0B3A22] text-white shadow-sm' : 'bg-[#DDE6FB] text-slate-800 hover:brightness-95'); });
             const [a, z] = PER[b.dataset.quick];
@@ -423,13 +423,13 @@
         }));
 
         const csvRows = () => ['Tanggal,Cls,Prem,Total Pax,Cabin Terisi,Pendapatan Tiket,Pendapatan Cabin,Total Omzet,Status Audit']
-            .concat(DAYS.map((x) => [x.d, x.cls, x.prem, pax(x), x.cab + '/12', x.tk, x.cb, net(x), x.audit === 'ok' ? 'Reconciled' : 'Audit Berjalan'].map((v) => '"' + String(v).replace(/"/g, '""') + '"').join(','))).join('\n');
+            .concat(DAYS.map((x) => [x.d, x.cls, x.prem, pax(x), x.cab + '/' + CAB_TOTAL, x.tk, x.cb, net(x), x.audit === 'ok' ? 'Reconciled' : 'Audit Berjalan'].map((v) => '"' + String(v).replace(/"/g, '""') + '"').join(','))).join('\n');
 
         $('[data-export]').addEventListener('click', () => { download('laporan-keuangan-jiwanta.csv', csvRows(), 'text/csv;charset=utf-8'); toast('Laporan diekspor (format CSV, terbuka di Excel).'); });
         $('[data-print]').addEventListener('click', () => { toast('Menyiapkan dokumen PDF...'); setTimeout(() => window.print(), 600); });
         $('[data-mail]').addEventListener('click', () => { touch(); toast('Laporan terjadwal tiap hari 06:00 WIB ke email admin.'); });
         $('[data-summary]').addEventListener('click', () => {
-            download('executive-summary-jiwanta.txt', 'EXECUTIVE SUMMARY JIWANTA\nTotal omzet: ' + rp(BASE.omzet + live.omzet) + '\nTotal pax: ' + fmt(BASE.pax + live.cls + live.prem) + '\nOkupansi cabin: 92,5%\nRevPAR: Rp 1.480.000/malam', 'text/plain;charset=utf-8');
+            download('executive-summary-jiwanta.txt', 'EXECUTIVE SUMMARY JIWANTA\nTotal omzet: ' + rp(BASE.omzet + live.omzet) + '\nTotal pax: ' + fmt(BASE.pax + live.cls + live.prem) + '\nOkupansi cabin: ' + OCC.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%\nRevPAR: ' + rp(REVPAR) + '/malam', 'text/plain;charset=utf-8');
             toast('Executive Summary diunduh.');
         });
         $$('[data-doc]').forEach((b) => b.addEventListener('click', () => {

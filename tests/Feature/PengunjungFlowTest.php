@@ -9,7 +9,9 @@ use App\Models\Reservasi;
 use App\Models\Tiket;
 use App\Models\Transaksi;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class PengunjungFlowTest extends TestCase
@@ -224,5 +226,40 @@ class PengunjungFlowTest extends TestCase
             ->assertJson(['url' => route('tiket')]);
 
         $this->assertSame('terkirim', session('order.status'));
+    }
+
+    public function test_kirim_stores_bukti_transfer_upload_to_transaksi(): void
+    {
+        Storage::fake('public');
+        $user = $this->pengunjung();
+
+        $trx = Transaksi::create([
+            'pengguna_id' => $user->id,
+            'kode_transaksi' => 'TRX-20261013-501',
+            'total_amount' => 60000,
+            'total_bayar' => 60000,
+            'kembalian' => 0,
+            'metode_pembayaran' => 'Transfer',
+            'status' => 'pending',
+            'tanggal_transaksi' => Carbon::now(),
+        ]);
+
+        $this->actingAs($user)
+            ->withSession(['order' => [
+                'tipe' => 'tiket',
+                'total' => 60000,
+                'kode' => $trx->kode_transaksi,
+                'status' => 'belum',
+                'transaksi_id' => $trx->id,
+            ]])
+            ->post('/transaksi/kirim', [
+                'bukti' => UploadedFile::fake()->image('bukti.png', 120, 240),
+            ])
+            ->assertOk()
+            ->assertJson(['url' => route('tiket')]);
+
+        $trx->refresh();
+        $this->assertNotNull($trx->bukti_transfer);
+        Storage::disk('public')->assertExists($trx->bukti_transfer);
     }
 }

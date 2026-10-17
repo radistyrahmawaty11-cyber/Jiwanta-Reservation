@@ -11,7 +11,10 @@ class CabinController extends Controller
     // Tampilkan daftar semua cabin
     public function index()
     {
-        $cabins = Cabin::orderBy('created_at', 'desc')->get();
+        $cabins = Cabin::with(['reservasis' => function ($q) {
+            $q->where('status', 'confirmed')->with('pengguna');
+        }])->orderBy('created_at', 'desc')->get();
+
         return view('admin.cabin', compact('cabins'));
     }
 
@@ -48,6 +51,7 @@ class CabinController extends Controller
     public function edit($id)
     {
         $cabin = Cabin::findOrFail($id);
+
         return view('admin.cabin-form', compact('cabin'));
     }
 

@@ -286,6 +286,9 @@
         });
 
         const detailLine = (label, val) => `<div class="flex items-start justify-between gap-4 border-b border-slate-100 pb-2.5 last:border-0"><span class="shrink-0 text-[11px] text-slate-500">${label}</span><span class="text-right text-[12px] font-semibold text-slate-900">${val}</span></div>`;
+        const buktiCell = (u) => (u && u !== '-')
+            ? `<a href="${esc(u)}" target="_blank" rel="noopener" class="text-[#0B3A22] underline decoration-dotted underline-offset-2 hover:text-[#124c2f]">Lihat Bukti Transfer</a>`
+            : '-';
         const openDetail = (h) => {
             state.viewing = h.id;
             $('#dt-body').innerHTML =
@@ -298,7 +301,7 @@
                 detailLine('Jumlah Bayar', rp(h.jumlah_bayar)) +
                 detailLine('Kembalian', rp(h.kembalian)) +
                 detailLine('Status', pill(h.status)) +
-                detailLine('Bukti', esc(h.bukti || '-'));
+                detailLine('Bukti', buktiCell(h.bukti));
             openModal('trx-detail');
         };
         const byId = (id) => state.rows.find((r) => String(r.id) === String(id));
@@ -322,6 +325,14 @@
             } catch (e) { /* abaikan gangguan jaringan */ }
         };
         window.addEventListener('jiwanta:realtime', () => refreshFeed());
+
+        const REFRESH_EVERY_MS = 15000;
+        setInterval(() => refreshFeed(), REFRESH_EVERY_MS);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                refreshFeed();
+            }
+        });
 
         render();
     });

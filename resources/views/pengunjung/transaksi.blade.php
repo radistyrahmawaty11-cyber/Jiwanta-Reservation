@@ -40,17 +40,17 @@
             : asset('images/kolam jiwanta.jpg');
         $gambarAlt = $order['tipe'] === 'cabin' ? $judul : 'Kolam Jiwanta';
     } else {
-        $judul = 'Tiket Renang Premier';
-        $badge = 'Tiket Masuk & Kolam';
-        $tamu = '2 Pengunjung Dewasa';
-        $tanggalLong = 'Minggu, 20 September 2026';
-        $hargaLabel = 'Harga Satuan (x2)';
-        $hargaValue = 'Rp 75.000 x 2';
-        $subtotalLabel = 'Subtotal Tiket';
-        $subtotalValue = 'Rp 150.000';
-        $totalFormatted = '150.000';
+        $judul = '-';
+        $badge = '-';
+        $tamu = '-';
+        $tanggalLong = '-';
+        $hargaLabel = '-';
+        $hargaValue = '-';
+        $subtotalLabel = '-';
+        $subtotalValue = 'Rp 0';
+        $totalFormatted = '0';
         $gambar = asset('images/kolam jiwanta.jpg');
-        $gambarAlt = 'Kolam Jiwanta';
+        $gambarAlt = 'Jiwanta';
     }
 
     // Status kiriman bukti (POST /transaksi/kirim) -> tampil konsisten saat halaman dibuka ulang
@@ -63,16 +63,17 @@
 
     $sudahKirim = $order && ($order['status'] ?? '') === 'terkirim';
     $monT = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-    $namaBukti = ($sudahKirim && !empty($order['bukti_nama'])) ? $order['bukti_nama'] : 'bukti_transfer_bca_ahmad.jpg';
+    $namaBukti = ($sudahKirim && !empty($order['bukti_nama'])) ? $order['bukti_nama'] : '-';
     if ($sudahKirim && !empty($order['dikirim_at'])) {
         $t = \Illuminate\Support\Carbon::parse($order['dikirim_at']);
         $metaBukti = 'Terunggah '.$t->day.' '.$monT[$t->month - 1].' '.$t->year.' '.sprintf('%02d:%02d', $t->hour, $t->minute).' WIB';
     } else {
-        $metaBukti = '2.4 MB • 20 Sep 2026 14:30 WIB';
+        $metaBukti = '-';
     }
 @endphp
 
         <main class="space-y-4 px-3.5">
+@if($order)
 
             {{-- ========== STEPPER ========== --}}
             <section class="rounded-2xl bg-white px-4 pt-3.5 pb-3 shadow-[0_4px_24px_-6px_rgba(30,41,90,0.10)]" aria-label="Langkah pemesanan">
@@ -300,7 +301,7 @@
                 {{-- File terunggah --}}
                 <div id="fileRow" class="mt-3 flex items-center gap-3 rounded-xl bg-[#eef0ff] p-2.5">
                     <div class="relative shrink-0">
-                        <img id="fileThumb" src="{{ asset('images/bukti transfer.jpg') }}" alt="Bukti transfer"
+                        <img id="fileThumb" src="{{ $order['bukti_url'] ?? asset('images/bukti transfer.jpg') }}" alt="Bukti transfer"
                              class="h-[46px] w-[46px] rounded-lg bg-gray-300 object-cover">
                         <span class="absolute -right-1 -bottom-1 flex h-4 w-4 items-center justify-center rounded-[5px] bg-white text-[#0b2e22] shadow ring-1 ring-[#eef0ff]">
                             <svg class="h-2.5 w-2.5" fill="none" stroke="currentColor" stroke-width="4" viewBox="0 0 24 24">
@@ -364,6 +365,23 @@
                     Butuh Bantuan? Hubungi WhatsApp Admin
                 </a>
             </div>
+
+@else
+            {{-- ========== EMPTY STATE (belum ada pesanan aktif) ========== --}}
+            <section class="mt-10 rounded-2xl bg-white p-6 text-center shadow-[0_4px_24px_-6px_rgba(30,41,90,0.10)]">
+                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#DFE2F8] text-[#0b2e22]">
+                    <svg class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 3h12v18l-3-2-3 2-3-2-3 2V3zM9 8h6M9 12h6"/>
+                    </svg>
+                </div>
+                <h2 class="mt-4 text-[16px] font-bold text-[#0b2e22]">Belum Ada Pesanan Aktif</h2>
+                <p class="mt-1.5 text-[12px] leading-relaxed text-gray-500">Silakan pilih tiket atau cabin terlebih dahulu untuk melanjutkan proses pembayaran.</p>
+                <a href="{{ route('reservasi') }}"
+                   class="mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-[#0b2e22] px-6 py-3 text-[12.5px] font-bold text-white transition hover:bg-[#124c2f] active:scale-95">
+                    Mulai Reservasi
+                </a>
+            </section>
+@endif
         </main>
 
 @endsection
@@ -529,14 +547,16 @@
         $('submitSpin').classList.remove('hidden');
 
         try {
+            const fd = new FormData();
+            if (uploaded) fd.append('bukti', uploaded, uploaded.name);
+
             const res = await fetch("{{ url('/transaksi/kirim') }}", {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                     'Accept': 'application/json',
-                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ bukti: uploaded ? uploaded.name : null })
+                body: fd
             });
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const data = await res.json();

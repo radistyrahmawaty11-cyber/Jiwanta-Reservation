@@ -12,7 +12,15 @@ class PenggunaController extends Controller
     {
         $penggunas = Pengguna::orderByRaw("FIELD(role, 'admin', 'petugas', 'pengunjung')")->orderBy('id')->get();
 
-        return view('admin.manajemen-pengguna', compact('penggunas'));
+        $stats = [
+            'total' => Pengguna::count(),
+            'admin' => Pengguna::where('role', 'admin')->count(),
+            'petugas' => Pengguna::where('role', 'petugas')->count(),
+            'pengunjung' => Pengguna::where('role', 'pengunjung')->count(),
+            'bulan_ini' => Pengguna::where('created_at', '>=', now()->startOfMonth())->count(),
+        ];
+
+        return view('admin.manajemen-pengguna', compact('penggunas', 'stats'));
     }
 
     public function store(Request $request)

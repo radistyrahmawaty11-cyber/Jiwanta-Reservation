@@ -66,12 +66,6 @@
         'trash'     => 'M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6',
     ];
 
-    $nav = [
-        'Navigasi Utama' => [['Dashboard', 'dashboard', false, null], ['Verifikasi & Transaksi', 'receipt', false, 14]],
-        'Manajemen Resort' => [['Kelola Tiket', 'ticket', false, null], ['Kelola Cabin', 'cabin', true, null]],
-        'Administrasi & Sistem' => [['Manajemen Pengguna', 'users', false, null], ['Laporan & Export', 'chart', false, null], ['Pengaturan Profil', 'gear', false, null]],
-    ];
-
     $mint = 'bg-[#CDEFD5]';
     $peach = 'bg-[#FBD9B0]';
     $lav = 'bg-[#DDE6FB]';
@@ -106,6 +100,19 @@
             'weekend' => round($cabin->harga_per_malam * 1.2),
             'guest' => null,
             'primary' => 'booking',
+            'segs' => $cabin->reservasis->map(function ($r) {
+                $in = \Illuminate\Support\Carbon::parse($r->tanggal_checkin);
+                $out = \Illuminate\Support\Carbon::parse($r->tanggal_checkout);
+
+                return [
+                    'from' => $in->toDateString(),
+                    'to' => $out->toDateString(),
+                    'type' => 'occupied',
+                    'title' => $r->pengguna->nama_pengguna ?? 'Tamu',
+                    'sub' => $in->format('d M').' - '.$out->format('d M'),
+                    'walkin' => false,
+                ];
+            })->values()->all(),
         ];
     })->toArray();
 
@@ -310,7 +317,6 @@ setTimeout(() => {
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const LIVE_DEMO = true;
     const $ = (s, r = document) => r.querySelector(s);
     const $$ = (s, r = document) => [...r.querySelectorAll(s)];
     const fmt = (n) => Math.round(n).toLocaleString('id-ID');
@@ -614,16 +620,6 @@ document.addEventListener('DOMContentLoaded', () => {
             toast('PMS & Smart Lock tersinkron ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }));
         }, steps.length * 700);
     });
-
-    // Live demo
-    if (LIVE_DEMO) {
-        const events = ['Smart Lock Unit 01: pintu terkunci', 'Smart Lock Unit 02: baterai 92%, normal', 'Housekeeping: Unit 01 selesai dibersihkan', 'PMS: data reservasi tersinkron'];
-        let n = 0;
-        setInterval(() => {
-            toast(events[n++ % events.length]); bell();
-            if (n % 3 === 0) { HK.service = HK.service === 1 ? 0 : 1; HK.ready = HK.total - HK.service; updateStats(); }
-        }, 12000);
-    }
 
     // Scroll reveal
     const io = new IntersectionObserver((es) => es.forEach((en) => {

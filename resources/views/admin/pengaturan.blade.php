@@ -62,12 +62,6 @@
         'headset'   => 'M4 14v-2a8 8 0 0116 0v2M4 14h3v5H5a1 1 0 01-1-1v-4zM20 14h-3v5h2a1 1 0 001-1v-4z',
     ];
 
-    $nav = [
-        'Navigasi Utama' => [['Dashboard', 'dashboard', false, null], ['Verifikasi & Transaksi', 'receipt', false, 14]],
-        'Manajemen Resort' => [['Kelola Tiket', 'ticket', false, null], ['Kelola Cabin Suite', 'cabin', false, null]],
-        'Administrasi & Sistem' => [['Manajemen Pengguna', 'users', false, null], ['Laporan & Export', 'chart', false, null], ['Pengaturan Profil', 'gear', true, null]],
-    ];
-
     $mint = 'bg-[#CDEFD5]';
     $peach = 'bg-[#FBD9B0]';
     $lav = 'bg-[#DDE6FB]';
@@ -75,10 +69,23 @@
     $field = 'mt-1.5 w-full rounded-xl bg-[#EEF2FC] px-4 py-3.5 text-[12px] font-medium text-slate-800 placeholder-slate-400 border border-transparent focus:border-[#0B3A22]/40 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0B3A22]/15 transition';
     $lbl = 'block text-[10px] font-semibold text-slate-700';
 
+    $bankCount = $banks->count();
+    $waDigits = preg_replace('/\D/', '', $user->nohp ?? '');
+    $waMask = $user && $user->nohp
+        ? (strlen($waDigits) >= 6 ? '+62 '.substr($waDigits, 2, 3).'-****-'.substr($waDigits, -4) : $user->nohp)
+        : '-';
+
+    $initProfile = [
+        'name' => $user->nama_pengguna ?? '',
+        'email' => $user->email ?? '',
+        'wa' => $user->nohp ?? '',
+        'job' => ucfirst($user->role ?? 'admin').' Jiwanta',
+    ];
+
     $menu = [
         ['info', 'Informasi Pribadi & Kontak', 'idcard', null],
         ['sandi', 'Keamanan & Sandi', 'lock', ['2FA Aktif', 'bg-[#CDEFD5] text-[#0B3A22]']],
-        ['bank', 'Rekening Bank Resort', 'bank', ['2 Bank', 'bg-[#DDE6FB] text-slate-700']],
+        ['bank', 'Rekening Bank Resort', 'bank', [$bankCount.' Bank', 'bg-[#DDE6FB] text-slate-700']],
         ['notif', 'Notifikasi & WhatsApp Gateway', 'bell', 'dot'],
         ['sesi', 'Sesi Login & Riwayat', 'laptop', ['2 Aktif', 'text-slate-600']],
     ];
@@ -96,7 +103,7 @@
                     <div class="max-w-2xl">
                         <h1 class="text-[28px] font-bold leading-tight text-[#0B3A22]">Pengaturan Profil &amp; Keamanan Akun</h1>
                         <p class="mt-1.5 flex flex-wrap items-center gap-2">
-                            <span class="inline-flex items-center gap-1.5 rounded-full {{ $mint }} px-2.5 py-1 text-[9px] font-bold text-[#0B3A22]">{!! $ic($p['checkc'], 'h-3 w-3') !!} Akun Super Admin Terverifikasi (Role Level 1)</span>
+                            <span class="inline-flex items-center gap-1.5 rounded-full {{ $mint }} px-2.5 py-1 text-[9px] font-bold text-[#0B3A22]">{!! $ic($p['checkc'], 'h-3 w-3') !!} Akun {{ ucfirst($user->role ?? 'admin') }} Terverifikasi</span>
                             <span class="flex items-center gap-1.5 text-[9px] font-medium text-slate-500"><span class="h-1.5 w-1.5 rounded-full bg-slate-400"></span><span data-live>Disimpan: 2 Menit Lalu</span></span>
                         </p>
                         <p class="mt-2 text-[12px] leading-relaxed text-slate-600">Kelola informasi identitas akun super admin, preferensi sistem, rekening bank penerima, dan keamanan login resort secara terintegrasi.</p>
@@ -118,14 +125,15 @@
                             <div class="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-[#CDEFD5]/60 blur-2xl"></div>
                             <div class="pointer-events-none absolute -bottom-10 -left-10 h-24 w-24 rounded-full bg-[#FBD9B0]/60 blur-2xl"></div>
                             <div class="relative mx-auto h-[84px] w-[84px]">
-                                <img data-avatar src="{{ asset('images/profil.jpg') }}" alt="Bagas Dananjaya" class="h-full w-full rounded-full bg-[#C9B99A] object-cover border-4 border-white shadow-md">
+                                @php $avatarUrl = $user && $user->foto ? \Illuminate\Support\Facades\Storage::url($user->foto) : asset('images/profil.jpg'); @endphp
+                                <img data-avatar src="{{ $avatarUrl }}" alt="{{ $user->nama_pengguna ?? 'Pengguna' }}" class="h-full w-full rounded-full bg-[#C9B99A] object-cover border-4 border-white shadow-md">
                                 <button type="button" data-cam class="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#0B3A22] text-white transition hover:bg-[#124c2f]" aria-label="Ganti foto">{!! $ic($p['cam'], 'h-3.5 w-3.5') !!}</button>
                                 <input data-file type="file" accept="image/*" class="hidden">
                             </div>
                             <div class="relative mt-3 text-center">
-                                <p data-name-card class="text-[16px] font-bold text-slate-900">Bagas Dananjaya</p>
-                                <p class="mt-0.5 text-[10px] font-medium text-[#8B5E34]">Super Admin Resort &amp; Wisata Jiwanta</p>
-                                <p class="mt-2 text-[9px] font-medium text-slate-600">ID: JW-ADM-001 • Bergabung: Maret 2024</p>
+                                <p data-name-card class="text-[16px] font-bold text-slate-900">{{ $user->nama_pengguna ?? 'Pengguna' }}</p>
+                                <p class="mt-0.5 text-[10px] font-medium text-[#8B5E34]">{{ ucfirst($user->role ?? 'admin') }} Resort &amp; Wisata Jiwanta</p>
+                                <p class="mt-2 text-[9px] font-medium text-slate-600">ID: JW-{{ strtoupper(substr($user->role ?? 'adm', 0, 3)) }}-{{ str_pad($user->id ?? 0, 3, '0', STR_PAD_LEFT) }} Bergabung: {{ optional($user->created_at)->format('M Y') ?? '-' }}</p>
                             </div>
                             <div class="relative mt-3 flex items-center justify-between rounded-xl bg-[#EEF2FC] px-3 py-3">
                                 <span class="flex items-center gap-1.5 text-[9px] font-semibold text-slate-700">{!! $ic($p['shield'], 'h-3.5 w-3.5') !!} Status Akses</span>
@@ -172,15 +180,15 @@
                                 </div>
                             </div>
                             <div class="mt-5 grid grid-cols-2 gap-x-4 gap-y-4">
-                                <label class="{{ $lbl }}">Nama Lengkap<input data-f="name" value="Bagas Dananjaya, S.Par" class="{{ $field }}"></label>
-                                <label class="{{ $lbl }}">Email Resmi Resort<input data-f="email" type="email" value="bagas.dananjaya@jiwanta.com" class="{{ $field }}"></label>
+                                <label class="{{ $lbl }}">Nama Lengkap<input data-f="name" value="{{ $user->nama_pengguna ?? '' }}" class="{{ $field }}"></label>
+                                <label class="{{ $lbl }}">Email Resmi Resort<input data-f="email" type="email" value="{{ $user->email ?? '' }}" class="{{ $field }}"></label>
                                 <label class="{{ $lbl }}">No. WhatsApp Operasional
                                     <span class="relative block">
-                                        <input data-f="wa" value="+62 812-4455-9011" class="{{ $field }} pr-10">
+                                        <input data-f="wa" value="{{ $user->nohp ?? '' }}" class="{{ $field }} pr-10">
                                         <span data-wa-ok class="absolute right-4 top-1/2 -translate-y-1/2 text-[#0B3A22]">{!! $ic($p['checkc'], 'h-4 w-4') !!}</span>
                                     </span>
                                 </label>
-                                <label class="{{ $lbl }}">Posisi / Jabatan<input data-f="job" value="Super Admin & Manajer Operasional Wisata Ciwidey" class="{{ $field }}"></label>
+                                <label class="{{ $lbl }}">Posisi / Jabatan<input data-f="job" value="{{ ucfirst($user->role ?? 'admin') }} Jiwanta" class="{{ $field }}"></label>
                             </div>
                         </section>
 
@@ -209,7 +217,7 @@
                                 </div>
                             </div>
                             <div class="mt-5 grid grid-cols-3 gap-4">
-                                <label class="{{ $lbl }}">Kata Sandi Lama<input data-f="pw0" type="password" value="Jiwanta2026!" class="{{ $field }}"></label>
+                                <label class="{{ $lbl }}">Kata Sandi Lama<input data-f="pw0" type="password" value="" class="{{ $field }}"></label>
                                 <label class="{{ $lbl }}">Kata Sandi Baru<input data-f="pw1" type="password" placeholder="Minimal 8 karakter unik" class="{{ $field }}"></label>
                                 <label class="{{ $lbl }}">Konfirmasi Kata Sandi<input data-f="pw2" type="password" placeholder="Ulangi kata sandi baru" class="{{ $field }}"></label>
                             </div>
@@ -222,7 +230,7 @@
                                     <span class="mt-0.5 text-slate-700">{!! $ic($p['shield'], 'h-4 w-4') !!}</span>
                                     <div>
                                         <p class="flex items-center gap-2 text-[12px] font-bold text-slate-900">Two-Factor Authentication (2FA) <span data-2fa-pill class="rounded-full {{ $mint }} px-2 py-0.5 text-[9px] font-bold text-[#0B3A22]">Aktif</span></p>
-                                        <p class="mt-1 max-w-xs text-[10px] leading-snug text-slate-600">Verifikasi kode OTP melalui WhatsApp Gateway (<span data-wa-mask>+62 812-****-9011</span>) &amp; Google Authenticator.</p>
+                                        <p class="mt-1 max-w-xs text-[10px] leading-snug text-slate-600">Verifikasi kode OTP melalui WhatsApp Gateway (<span data-wa-mask>{{ $waMask ?? '-' }}</span>) &amp; Google Authenticator.</p>
                                     </div>
                                 </div>
                                 <button type="button" data-2fa class="shrink-0 rounded-full {{ $lav }} px-5 py-2.5 text-[11px] font-bold text-slate-800 transition hover:brightness-95">Konfigurasi Ulang 2FA</button>
@@ -281,7 +289,6 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const LIVE_DEMO = true;
         const $ = (s, r = document) => r.querySelector(s);
         const $$ = (s, r = document) => [...r.querySelectorAll(s)];
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -335,7 +342,7 @@
         const mv = (k) => ($(`[data-mf="${k}"]`).value || '').trim();
 
         // ---------- State awal & dirty tracking ----------
-        const INIT = { name: 'Bagas Dananjaya, S.Par', email: 'bagas.dananjaya@jiwanta.com', wa: '+62 812-4455-9011', job: 'Super Admin & Manajer Operasional Wisata Ciwidey' };
+        const INIT = @json($initProfile);
         const F = (k) => $(`[data-f="${k}"]`);
         const dirty = () => Object.keys(INIT).some((k) => F(k).value !== INIT[k]) || F('pw1').value || F('pw2').value || notifDirty() || avatarDirty;
         const syncDirty = () => $('[data-dirty]').classList.toggle('hidden', !dirty());
@@ -387,16 +394,13 @@
 
         // ---------- Rekening bank ----------
         const LOGO = { BCA: 'text-[#0B3A22]', MDR: 'text-[#8B5E34]', BNI: 'text-[#0B3A22]' };
-        const BANKS_INIT = [
-            { id: 1, code: 'BCA', no: '4370-9008-21', an: 'PT Jiwanta Wisata Mandiri', br: 'KCU Kopo Bandung', main: true },
-            { id: 3, code: 'BNI', no: '0891-2334-11', an: 'PT Jiwanta Wisata Mandiri', br: 'KCP Soreang' },
-        ];
-        let BANKS = JSON.parse(JSON.stringify(BANKS_INIT)), bid = 3;
+        const BANKS_INIT = @json($banks);
+        let BANKS = JSON.parse(JSON.stringify(BANKS_INIT)), bid = BANKS.reduce((m, b) => Math.max(m, b.id || 0), 0);
         const bankHTML = (b, i, a) => `<div data-bank="${b.id}" class="flex items-center gap-4 rounded-2xl bg-[#EEF2FC] px-4 py-4 transition" style="${a ? `animation:jw-rise .5s cubic-bezier(.2,.8,.2,1) ${i * 70}ms backwards` : ''}">
             <span class="flex h-12 w-14 shrink-0 items-center justify-center rounded-xl bg-white text-[13px] font-extrabold shadow-sm ${LOGO[b.code] || 'text-slate-800'}">${esc(b.code)}</span>
             <div class="min-w-0 flex-1">
                 <p class="flex items-center gap-2 text-[17px] font-bold leading-tight text-slate-900">${esc(b.no)}<span class="rounded-full ${b.main ? 'bg-[#CDEFD5] text-[#0B3A22]' : 'bg-[#DDE6FB] text-slate-700'} px-2 py-0.5 text-[9px] font-bold">${b.main ? 'Aktif Utama' : 'Aktif'}</span></p>
-                <p class="mt-0.5 text-[10px] text-slate-600">a/n ${esc(b.an)} • ${esc(b.br)}</p>
+                <p class="mt-0.5 text-[10px] text-slate-600">a/n ${esc(b.an)}${b.br ? ' • ' + esc(b.br) : ''}</p>
             </div>
             <button type="button" data-bcopy="${b.id}" class="rounded-lg p-2 text-slate-600 transition hover:bg-white" aria-label="Salin">${ic(P.copy)}</button>
             <button type="button" data-bedit="${b.id}" class="rounded-lg p-2 text-slate-600 transition hover:bg-white" aria-label="Edit">${ic(P.pencil)}</button>
@@ -539,17 +543,6 @@
             b.appendChild(rip);
             setTimeout(() => rip.remove(), 600);
         });
-
-        // ---------- Live demo: peristiwa keamanan masuk real-time ----------
-        if (LIVE_DEMO) {
-            const EV = ['Login baru terdeteksi: Chrome • Android (Soreang)', 'Webhook WhatsApp Gateway terhubung ulang', 'Sensor suhu air belerang: 38°C (normal)', 'Kuota tiket kolam diperbarui: sisa 142 pax'];
-            let n = 0;
-            setInterval(() => {
-                const e = EV[n++ % EV.length];
-                if (n % 4 === 1 && sesi.length < 3) { sesi.push(['Chrome • Android', 'Soreang, ID • Baru saja', false]); syncSesi(); anim($('[data-sesi-badge]'), 'jw-pop'); }
-                bell(); toast(e);
-            }, 14000);
-        }
 
         // ---------- Init ----------
         renderBanks(true);
