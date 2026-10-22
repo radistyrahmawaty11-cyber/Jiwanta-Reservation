@@ -6,6 +6,7 @@ use App\Events\OrderStatusUpdated;
 use App\Models\Bank;
 use App\Models\Transaksi;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 class PetugasController extends Controller
@@ -36,6 +37,7 @@ class PetugasController extends Controller
     public function verify(Transaksi $transaksi)
     {
         $transaksi->status = 'lunas';
+        $transaksi->verified_at ??= now();
         $transaksi->save();
 
         $this->broadcastStatus($transaksi);
@@ -51,6 +53,46 @@ class PetugasController extends Controller
         $this->broadcastStatus($transaksi);
 
         return response()->json(['ok' => true, 'status' => $transaksi->status]);
+    }
+
+    public function checkIn(Transaksi $transaksi)
+    {
+        if ($transaksi->status !== 'lunas') {
+            return response()->json([
+                'ok' => false,
+                'reason' => $transaksi->status === 'gagal' ? 'rejected' : 'pending',
+            ], 422);
+        }
+
+        if ($transaksi->checked_in_at !== null) {
+            return response()->json([
+                'ok' => false,
+                'reason' => 'used',
+                'checked_in_at' => $transaksi->checked_in_at->toIso8601String(),
+            ], 422);
+        }
+
+        $visitDate = $this->visitDate($transaksi);
+
+        if ($visitDate !== null && $visitDate->lt(Carbon::now()->startOfDay())) {
+            return response()->json([
+                'ok' => false,
+                'reason' => 'expired',
+                'visit_date' => $visitDate->toDateString(),
+            ], 422);
+        }
+
+        $transaksi->checked_in_at = now();
+        $transaksi->verified_at ??= now();
+        $transaksi->save();
+
+        $this->broadcastStatus($transaksi);
+
+        return response()->json([
+            'ok' => true,
+            'status' => $transaksi->status,
+            'checked_in_at' => $transaksi->checked_in_at->toIso8601String(),
+        ]);
     }
 
     /**
@@ -113,6 +155,7 @@ class PetugasController extends Controller
                 (int) $transaksi->pengguna_id,
                 (string) $transaksi->kode_transaksi,
                 (string) $transaksi->status,
+                $transaksi->checked_in_at !== null,
             );
         } catch (\Throwable $e) {
             report($e);
@@ -127,6 +170,13 @@ class PetugasController extends Controller
             ->whereRaw('UPPER(kode_transaksi) = ?', [$code])
             ->first();
 
+        // Barcode tiket memuat kode tanpa prefiks "TRX-" (lebih mudah discan).
+        if (! $transaksi && preg_match('/^\d{8}-\d{3}$/', $code)) {
+            $transaksi = Transaksi::with(self::EAGER)
+                ->whereRaw('UPPER(kode_transaksi) = ?', ['TRX-'.$code])
+                ->first();
+        }
+
         if (! $transaksi) {
             return response()->json(['ok' => false, 'reason' => 'not_found']);
         }
@@ -136,7 +186,9 @@ class PetugasController extends Controller
         $reason = match ($transaksi->status) {
             'pending' => 'pending',
             'gagal' => 'rejected',
-            default => null,
+            default => $transaksi->checked_in_at !== null
+                ? 'used'
+                : ($this->isExpired($transaksi) ? 'expired' : null),
         };
 
         return response()->json([
@@ -144,6 +196,24 @@ class PetugasController extends Controller
             'reason' => $reason,
             'transaksi' => $tiket,
         ]);
+    }
+
+    /**
+     * Tanggal kunjungan: reservasi (check-in) bila ada, else tanggal transaksi.
+     */
+    private function visitDate(Transaksi $t): ?Carbon
+    {
+        $detail = $t->detailtransaksis->first();
+        $raw = $detail?->reservasi?->tanggal_checkin ?? $t->tanggal_transaksi?->toDateString();
+
+        return $raw ? Carbon::parse($raw)->startOfDay() : null;
+    }
+
+    private function isExpired(Transaksi $t): bool
+    {
+        $visit = $this->visitDate($t);
+
+        return $visit !== null && $visit->lt(Carbon::now()->startOfDay());
     }
 
     /**
@@ -175,9 +245,12 @@ class PetugasController extends Controller
             'bank' => $t->metode_pembayaran,
             'rek' => $this->rekening($t->metode_pembayaran),
             'uploaded' => $t->tanggal_transaksi?->getTimestampMs() ?? now()->getTimestampMs(),
-            'date' => $t->tanggal_transaksi?->translatedFormat('l, d M Y') ?? '-',
+            'date' => $this->visitDate($t)?->translatedFormat('l, d M Y') ?? '-',
+            'visit_date' => $this->visitDate($t)?->toDateString(),
             'file' => 'bukti_'.$t->kode_transaksi.'.jpg',
             'status' => $t->status,
+            'verified' => ! is_null($t->verified_at),
+            'checked_in_at' => $t->checked_in_at?->toIso8601String(),
         ];
     }
 

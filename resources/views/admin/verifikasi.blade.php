@@ -475,7 +475,20 @@
             if (it.problem) return toast('Struk buram perlu audit visual sebelum diterima.');
             state.busy = true;
             if (id === state.active) setApproveBusy(true);
-            await sleep(quick ? 700 : 1400);
+
+            try {
+                const url = VERIFY_URL.replace(':id', id);
+                await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+            } catch (e) { /* abaikan error - akan sinkron via feed */ }
+
+            await sleep(quick ? 400 : 800);
 
             removeItem(id);
             setCount('pending', Math.max(0, state.c.pending - 1));
@@ -488,7 +501,7 @@
 
         let rejectTimer, rejectArmed = false;
         const resetReject = () => { rejectArmed = false; clearTimeout(rejectTimer); $('#reject-label').innerHTML = 'Tolak<br>Pembayaran'; };
-        const reject = () => {
+        const reject = async () => {
             const it = current();
             if (!it || state.busy) return;
             if (!rejectArmed) {
@@ -498,9 +511,22 @@
                 return;
             }
             resetReject();
+            state.busy = true;
+            try {
+                const url = REJECT_URL.replace(':id', it.id);
+                await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+            } catch (e) { /* abaikan */ }
             removeItem(it.id);
             setCount('pending', Math.max(0, state.c.pending - 1));
             setCount('rejected', state.c.rejected + 1);
+            state.busy = false;
             toast(`Pembayaran ${it.name} ditolak. Pemesan diberi tahu via WhatsApp.`);
         };
 
@@ -550,6 +576,8 @@
         // ---------- Realtime: struk/pesanan nyata dari feed ----------
         const FEED_URL = @json(route('admin.feed'));
         const PROOF = @json($proof);
+        const VERIFY_URL = @json(route('admin.transaksi.verify', ['transaksi' => ':id']));
+        const REJECT_URL = @json(route('admin.transaksi.reject', ['transaksi' => ':id']));
         const mapRow = (t) => {
             const hasProof = t.bukti && t.bukti !== '-';
             return {
@@ -565,7 +593,18 @@
         };
         const applyFeed = (data) => {
             const rows = data.pending_rows || [];
-            let added = false;
+            let added = false, removed = false;
+
+            if (Array.isArray(rows)) {
+                const kodes = new Set(rows.map((t) => t.kode));
+                const before = state.queue.length;
+                state.queue = state.queue.filter((i) => kodes.has(i.id));
+                if (state.queue.length !== before) removed = true;
+                if (!state.queue.some((i) => i.id === state.active)) {
+                    state.active = state.queue[0] ? state.queue[0].id : null;
+                }
+            }
+
             rows.forEach((t) => {
                 if (state.queue.some((i) => i.id === t.kode)) return;
                 if (state.queue.length >= MAX_QUEUE) return;
@@ -573,7 +612,8 @@
                 added = true;
             });
             if (!state.active && state.queue[0]) state.active = state.queue[0].id;
-            if (added) { renderQueue(); showMain(false); toast(`${rows.length} pembayaran menunggu verifikasi.`); }
+            if (added || removed) { renderQueue(); showMain(false); }
+            if (added && !removed) toast(`${rows.length} pembayaran menunggu verifikasi.`);
             if (data.stats) {
                 if (typeof data.stats.pending === 'number') setCount('pending', data.stats.pending);
                 if (typeof data.stats.verified === 'number') setCount('verified', data.stats.verified);

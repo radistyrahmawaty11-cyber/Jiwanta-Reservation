@@ -70,6 +70,26 @@
     } else {
         $metaBukti = '-';
     }
+
+    // Pembayaran online via Midtrans (BCA VA, Mandiri Bill, QRIS).
+    $transaksi = $transaksi ?? null;
+    $midtrans = $midtrans ?? ['enabled' => false, 'client_key' => '', 'sandbox' => true, 'charge_url' => ''];
+    $isPaid = ($transaksi?->status ?? '') === 'lunas';
+    $paidVia = $transaksi?->payment_type ? strtoupper(str_replace('_', ' ', $transaksi->payment_type)) : '';
+
+    $paymentStatus = $transaksi?->status ?? 'pending';
+    $paymentFailed = $paymentStatus === 'gagal';
+    $buktiAda = ($transaksi?->bukti_transfer) || !empty($order['bukti_url']);
+    $waitingVerify = $order && ! $isPaid && ! $paymentFailed && ($sudahKirim || $buktiAda);
+
+    $selectedMetode = strtolower((string) ($order['metode'] ?? $transaksi?->metode_pembayaran ?? ''));
+    $selectedMetode = match (true) {
+        str_contains($selectedMetode, 'bca') => 'bca',
+        str_contains($selectedMetode, 'mandiri') => 'mandiri',
+        str_contains($selectedMetode, 'qris') => 'qris',
+        str_contains($selectedMetode, 'midtrans') => 'qris',
+        default => '',
+    };
 @endphp
 
         <main class="space-y-4 px-3.5">
@@ -229,134 +249,178 @@
                 </div>
             </section>
 
-            {{-- ========== TRANSFER BANK MANUAL ========== --}}
+            @if($order && ! $isPaid)
+            {{-- ========== METODE PEMBAYARAN ========== --}}
             <section class="rounded-2xl bg-white p-4 shadow-[0_4px_24px_-6px_rgba(30,41,90,0.10)]">
-                <h3 class="flex items-center gap-2 text-[16.5px] font-extrabold text-[#0b2e22]">
-                    <svg class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9.5L12 4l9 5.5M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20.5h18"/>
-                    </svg>
-                    Transfer Bank Manual
-                </h3>
-                <p class="mt-1 text-[11.5px] text-[#0b2e22]/75">Pilih salah satu rekening resmi Jiwanta di bawah ini:</p>
+                <div class="flex items-start justify-between gap-2">
+                    <h3 class="flex items-center gap-2 text-[16.5px] font-extrabold text-[#0b2e22]">
+                        <svg class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                            <rect x="2.5" y="5.5" width="19" height="13" rx="2.5"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.5 10h19"/>
+                        </svg>
+                        Metode Pembayaran
+                    </h3>
 
-                <div class="mt-3 space-y-4">
-                    @forelse ($banks as $bank)
-                        @php
-                            $namaBank = \Illuminate\Support\Str::lower($bank->nama_bank);
-                            $isBca = \Illuminate\Support\Str::contains($namaBank, 'bca');
-                            $brand = match (true) {
-                                $isBca => 'BCA',
-                                \Illuminate\Support\Str::contains($namaBank, 'mandiri') => 'MANDIRI',
-                                default => \Illuminate\Support\Str::upper(\Illuminate\Support\Str::words($bank->nama_bank, 1, '')),
-                            };
-                        @endphp
-                        <div class="rounded-2xl bg-[#eef0ff] p-3">
-                            <div class="flex items-center justify-between">
-                                <span class="rounded-md px-3 py-1 text-[17px] font-extrabold tracking-wide {{ $isBca ? 'bg-[#dbe4ff] text-[#0b2e5a]' : 'bg-[#e3e5f7] text-[#7a5a2e]' }}">{{ $brand }}</span>
-                                <span class="text-[10.5px] text-gray-400">{{ $bank->nama_bank }}</span>
-                            </div>
-                            <div class="mt-2.5 flex items-center justify-between rounded-xl bg-white px-3.5 py-2.5 shadow-sm">
-                                <div>
-                                    <p class="text-[10px] font-semibold text-gray-500">Nomor Rekening</p>
-                                    <p class="text-[19px] font-extrabold tabular-nums tracking-[0.12em] text-[#0b2e22]">{{ $bank->nomor_rekening }}</p>
-                                </div>
-                                <button type="button" data-copy="{{ $bank->nomor_rekening }}"
-                                        class="copy-btn flex items-center gap-1.5 rounded-full bg-[#0b2e22] px-3 py-2 text-[11px] font-bold text-white transition hover:bg-[#12442f] active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0b2e22] focus-visible:ring-offset-2">
+                    @if($waitingVerify)
+                        <span class="flex shrink-0 items-center gap-1.5 rounded-2xl bg-[#ffd7a8] px-3 py-1.5 text-[10.5px] font-bold leading-tight text-[#7a4a1a]">
+                            <span class="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-[#7a4a1a]"></span>
+                            Menunggu Verifikasi
+                        </span>
+                    @elseif($paymentFailed)
+                        <span class="shrink-0 rounded-2xl bg-[#f7c9c9] px-3 py-1.5 text-[10.5px] font-bold text-[#8b1f1f]">Pembayaran Gagal</span>
+                    @else
+                        <span id="payStatus" class="shrink-0 rounded-2xl bg-[#ffd7a8] px-3 py-1.5 text-[10.5px] font-bold text-[#7a4a1a]">Belum Dibayar</span>
+                    @endif
+                </div>
+
+                @if($waitingVerify)
+                    <div class="mt-3 rounded-2xl bg-[#eef0ff] p-4 text-center">
+                        <div class="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-[#cdeedb] text-[#0b4a35]">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+                        <p class="mt-2 text-[13px] font-extrabold text-[#0b2e22]">Bukti pembayaran terkirim</p>
+                        <p class="mt-1 text-[11.5px] leading-relaxed text-slate-600">
+                            Pembayaran via <span class="font-bold">{{ strtoupper($selectedMetode) }}</span> sedang diverifikasi admin.
+                            QR gate dibuat otomatis setelah pembayaran lunas.
+                        </p>
+                        <a href="{{ route('tiket') }}"
+                           class="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#0b2e22] px-6 py-[14px] text-[13px] font-bold text-white transition hover:bg-[#12442f] active:scale-[0.98]">
+                            Cek Status Tiket
+                        </a>
+                    </div>
+                @else
+                    @if($paymentFailed)
+                        <p class="mt-2 rounded-xl bg-[#fde7e7] px-3 py-2 text-[11.5px] font-semibold text-[#8b1f1f]">
+                            Pembayaran sebelumnya ditolak. Silakan pilih metode lagi.
+                        </p>
+                    @endif
+
+                    <p class="mt-1 text-[11.5px] text-[#0b2e22]/75">Pilih metode di bawah ini, lalu selesaikan pembayaran.</p>
+
+                    @if($midtrans['enabled'])
+                    <div class="mt-3 grid grid-cols-2 gap-2" id="methodList">
+                        <button type="button"
+                                class="method-btn flex flex-col items-start gap-1 rounded-xl border-2 px-3 py-2.5 text-left transition active:scale-[0.98] {{ $selectedMetode === 'bca' ? 'border-[#0b2e22] bg-[#eef0ff]' : 'border-transparent bg-[#eef0ff] hover:border-[#c9d2ee]' }}"
+                                data-method="bca"
+                                aria-pressed="{{ $selectedMetode === 'bca' ? 'true' : 'false' }}">
+                            <span class="rounded-md bg-[#dbe4ff] px-2 py-0.5 text-[12px] font-extrabold tracking-wide text-[#0b2e5a]">BCA</span>
+                            <span class="text-[10px] font-semibold text-slate-500">Virtual Account</span>
+                        </button>
+
+                        <button type="button"
+                                class="method-btn flex flex-col items-start gap-1 rounded-xl border-2 px-3 py-2.5 text-left transition active:scale-[0.98] {{ $selectedMetode === 'mandiri' ? 'border-[#0b2e22] bg-[#eef0ff]' : 'border-transparent bg-[#eef0ff] hover:border-[#c9d2ee]' }}"
+                                data-method="mandiri"
+                                aria-pressed="{{ $selectedMetode === 'mandiri' ? 'true' : 'false' }}">
+                            <span class="rounded-md bg-[#e3e5f7] px-2 py-0.5 text-[12px] font-extrabold tracking-wide text-[#7a5a2e]">MANDIRI</span>
+                            <span class="text-[10px] font-semibold text-slate-500">Bill Payment</span>
+                        </button>
+
+                        <button type="button"
+                                class="method-btn col-span-2 flex flex-col items-start gap-1 rounded-xl border-2 px-3 py-2.5 text-left transition active:scale-[0.98] {{ $selectedMetode === 'qris' ? 'border-[#0b2e22] bg-[#eef0ff]' : 'border-transparent bg-[#eef0ff] hover:border-[#c9d2ee]' }}"
+                                data-method="qris"
+                                aria-pressed="{{ $selectedMetode === 'qris' ? 'true' : 'false' }}">
+                            <span class="rounded-md bg-[#0b2e22] px-2 py-0.5 text-[11px] font-extrabold tracking-wide text-white">QRIS</span>
+                            <span class="text-[10px] font-semibold text-slate-500">QR Code</span>
+                        </button>
+                    </div>
+
+                    {{-- BCA Virtual Account --}}
+                    <div data-panel="bca" class="method-panel {{ $selectedMetode === 'bca' ? '' : 'hidden' }} mt-3 rounded-2xl bg-[#eef0ff] p-3">
+                        <div class="flex items-center justify-between">
+                            <span class="rounded-md bg-[#dbe4ff] px-3 py-1 text-[15px] font-extrabold tracking-wide text-[#0b2e5a]">BCA</span>
+                            <span class="text-[10.5px] text-gray-400">Virtual Account</span>
+                        </div>
+                        <div id="bcaBox" class="mt-2.5 hidden rounded-xl bg-white px-3.5 py-3 shadow-sm">
+                            <p class="text-[10px] font-semibold text-gray-500">Nomor Virtual Account</p>
+                            <div class="mt-0.5 flex flex-wrap items-center justify-between gap-2">
+                                <p id="bcaVa" class="min-w-0 flex-1 break-all text-[17px] font-extrabold leading-tight tabular-nums tracking-[0.06em] text-[#0b2e22]">-</p>
+                                <button type="button" id="bcaCopy" data-copy=""
+                                        class="copy-btn flex max-w-full shrink-0 items-center gap-1.5 rounded-full bg-[#0b2e22] px-3 py-2 text-[11px] font-bold text-white transition hover:bg-[#12442f] active:scale-95">
                                     <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                                     </svg>
                                     <span class="copy-label">Salin</span>
                                 </button>
                             </div>
-                            <p class="mt-2 text-[11.5px] text-[#0b2e22]/80">a.n <span class="font-semibold">{{ $bank->atas_nama }}</span></p>
+                            <p id="bcaExpiry" class="mt-1 text-[10px] text-slate-500"></p>
                         </div>
-                    @empty
-                        <p class="rounded-xl bg-[#eef0ff] px-3 py-3 text-center text-[11.5px] text-[#0b2e22]/70">Belum ada rekening transfer yang aktif.</p>
-                    @endforelse
-                </div>
-            </section>
-
-            {{-- ========== BUKTI PEMBAYARAN ========== --}}
-            <section class="rounded-2xl bg-white p-4 shadow-[0_4px_24px_-6px_rgba(30,41,90,0.10)]">
-                <div class="flex items-start justify-between gap-2">
-                    <h3 class="flex items-start gap-2 text-[16.5px] font-extrabold leading-tight text-[#0b2e22]">
-                        <svg class="mt-0.5 h-[18px] w-[18px] shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/>
-                        </svg>
-                        <span>Bukti<br>Pembayaran</span>
-                    </h3>
-
-                    {{-- Status: menunggu --}}
-                    <span id="statusWaiting" class="{{ $sudahKirim ? 'hidden' : 'flex' }} items-center gap-1.5 rounded-2xl bg-[#ffd7a8] px-3 py-1.5 text-[10.5px] font-bold leading-tight text-[#7a4a1a]">
-                        <span class="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-[#7a4a1a]"></span>
-                        <span>Menunggu Verifikasi<br>Admin</span>
-                    </span>
-                    {{-- Status: sedang diverifikasi (muncul setelah kirim) --}}
-                    <span id="statusVerifying" class="{{ $sudahKirim ? 'flex' : 'hidden' }} items-center gap-1.5 rounded-2xl bg-[#cdeedb] px-3 py-1.5 text-[10.5px] font-bold leading-tight text-[#0b4a35]">
-                        <span class="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-[#0b4a35]"></span>
-                        <span>Sedang Diverifikasi<br>Admin</span>
-                    </span>
-                </div>
-
-                {{-- File terunggah --}}
-                <div id="fileRow" class="mt-3 flex items-center gap-3 rounded-xl bg-[#eef0ff] p-2.5">
-                    <div class="relative shrink-0">
-                        <img id="fileThumb" src="{{ $order['bukti_url'] ?? asset('images/bukti transfer.jpg') }}" alt="Bukti transfer"
-                             class="h-[46px] w-[46px] rounded-lg bg-gray-300 object-cover">
-                        <span class="absolute -right-1 -bottom-1 flex h-4 w-4 items-center justify-center rounded-[5px] bg-white text-[#0b2e22] shadow ring-1 ring-[#eef0ff]">
-                            <svg class="h-2.5 w-2.5" fill="none" stroke="currentColor" stroke-width="4" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                            </svg>
-                        </span>
-                    </div>
-                    <div class="min-w-0 flex-1">
-                        <p id="fileName" class="truncate text-[12.5px] font-extrabold text-[#0b2e22]">{{ $namaBukti }}</p>
-                        <p id="fileMeta" class="mt-0.5 text-[10.5px] text-gray-500">{{ $metaBukti }}</p>
-                        <p class="mt-0.5 flex items-center gap-1 text-[10.5px] font-bold text-[#0b2e22]">
-                            <svg class="h-3.5 w-3.5 text-[#0b2e22]" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 2l2.4 1.7 2.9-.1 1 2.7 2.4 1.7-.9 2.8.9 2.8-2.4 1.7-1 2.7-2.9-.1L12 22l-2.4-1.7-2.9.1-1-2.7L3.3 16l.9-2.8-.9-2.8 2.4-1.7 1-2.7 2.9.1z"/>
-                                <path d="M8.5 12.2l2.4 2.4 4.6-4.8" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            Struk Berhasil Diunggah
+                        <p id="state-bca" class="mt-2 flex items-center gap-1.5 text-[11px] font-bold text-[#7a4a1a]">
+                            <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-current"></span>
+                            Pilih BCA untuk menampilkan nomor Virtual Account.
                         </p>
+                        <p class="mt-1.5 text-[10.5px] leading-snug text-slate-500">Bayar lewat m-BCA, ATM, atau internet banking dengan nomor VA di atas.</p>
                     </div>
-                    <button type="button" id="editFileBtn" aria-label="Ganti file"
-                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#dbe0fa] text-[#0b2e22] transition hover:bg-[#cdd4f6] active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0b2e22]">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16zM13.5 6.5l4 4"/>
-                        </svg>
-                    </button>
-                </div>
 
-                {{-- Area upload --}}
-                <label for="fileInput" id="dropZone"
-                       class="mt-3 flex cursor-pointer flex-col items-center rounded-xl bg-[#eef0ff] px-4 py-5 text-center transition hover:bg-[#e5e8fb]">
-                    <input type="file" id="fileInput" accept="image/png,image/jpeg" class="hidden">
-                    <div class="mb-2.5 flex h-11 w-11 items-center justify-center rounded-full bg-[#cdeedb] text-[#0b2e22]">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 8.5A2.5 2.5 0 016.5 6h1.3l1.2-1.8A1.5 1.5 0 0110.2 3.5h3.6a1.5 1.5 0 011.2.7L16.2 6h1.3A2.5 2.5 0 0120 8.5v9A2.5 2.5 0 0117.5 20h-11A2.5 2.5 0 014 17.5z"/>
-                            <circle cx="12" cy="12.7" r="3.3"/>
-                        </svg>
+                    {{-- Mandiri Bill Payment --}}
+                    <div data-panel="mandiri" class="method-panel {{ $selectedMetode === 'mandiri' ? '' : 'hidden' }} mt-3 rounded-2xl bg-[#eef0ff] p-3">
+                        <div class="flex items-center justify-between">
+                            <span class="rounded-md bg-[#e3e5f7] px-3 py-1 text-[15px] font-extrabold tracking-wide text-[#7a5a2e]">MANDIRI</span>
+                            <span class="text-[10.5px] text-gray-400">Bill Payment</span>
+                        </div>
+                        <div id="mandiriBox" class="mt-2.5 hidden rounded-xl bg-white px-3.5 py-3 shadow-sm">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-[10px] font-semibold text-gray-500">Biller Code</p>
+                                    <p id="mandiriBiller" class="break-all text-[16px] font-extrabold tabular-nums text-[#0b2e22]">-</p>
+                                </div>
+                                <div class="min-w-0 flex-1 text-right">
+                                    <p class="text-[10px] font-semibold text-gray-500">Bill Key</p>
+                                    <p id="mandiriKey" class="break-all text-[16px] font-extrabold tabular-nums text-[#0b2e22]">-</p>
+                                </div>
+                            </div>
+                            <div class="mt-2 flex flex-wrap justify-end">
+                                <button type="button" id="mandiriCopy" data-copy=""
+                                        class="copy-btn flex max-w-full shrink-0 items-center gap-1.5 rounded-full bg-[#0b2e22] px-3 py-2 text-[11px] font-bold text-white transition hover:bg-[#12442f] active:scale-95">
+                                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                    </svg>
+                                    <span class="copy-label">Salin Bill Key</span>
+                                </button>
+                            </div>
+                            <p id="mandiriExpiry" class="mt-1 text-[10px] text-slate-500"></p>
+                        </div>
+                        <p id="state-mandiri" class="mt-2 flex items-center gap-1.5 text-[11px] font-bold text-[#7a4a1a]">
+                            <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-current"></span>
+                            Pilih Mandiri untuk menampilkan Biller Code dan Bill Key.
+                        </p>
+                        <p class="mt-1.5 text-[10.5px] leading-snug text-slate-500">Bayar lewat ATM Mandiri atau Mandiri Online dengan Biller Code dan Bill Key di atas.</p>
                     </div>
-                    <p class="text-[12.5px] font-extrabold text-[#0b2e22]">Upload Foto Struk / Screenshot Bukti Transfer</p>
-                    <p class="mt-1 text-[10px] font-medium text-gray-500">Format JPG, PNG (Maksimal 5MB)</p>
-                </label>
-                <p id="uploadError" class="mt-2 hidden text-center text-[11px] font-semibold text-red-600" role="alert"></p>
+
+                    {{-- QRIS --}}
+                    <div data-panel="qris" class="method-panel {{ $selectedMetode === 'qris' ? '' : 'hidden' }} mt-3 rounded-2xl bg-[#eef0ff] p-3">
+                        <div class="flex items-center justify-between">
+                            <span class="rounded-md bg-[#0b2e22] px-3 py-1 text-[13px] font-extrabold tracking-wide text-white">QRIS</span>
+                            <span class="text-[10.5px] text-gray-400">QR Code</span>
+                        </div>
+                        <div id="qrisBox" class="mt-2.5 hidden rounded-2xl bg-white p-3 text-center shadow-sm">
+                            <p class="text-[10.5px] font-bold text-slate-600">Scan QRIS dengan aplikasi bank / e-wallet</p>
+                            <div class="mt-2 flex justify-center">
+                                <img id="qrisImage" alt="Kode QRIS pembayaran" class="h-[190px] w-[190px] rounded-lg bg-white object-contain">
+                            </div>
+                            <p id="qrisExpiry" class="mt-1 text-[10px] text-slate-500"></p>
+                        </div>
+                        <p id="state-qris" class="mt-2 flex items-center gap-1.5 text-[11px] font-bold text-[#7a4a1a]">
+                            <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-current"></span>
+                            Pilih QRIS untuk menampilkan kode QR.
+                        </p>
+                        <p class="mt-1.5 text-[10.5px] leading-snug text-slate-500">Pembayaran diverifikasi otomatis. Tiket dan QR gate terbit setelah lunas.</p>
+                    </div>
+                    @else
+                    <p class="mt-3 rounded-xl bg-[#eef0ff] px-3 py-3 text-center text-[11.5px] text-[#0b2e22]/70">Pembayaran online belum aktif.</p>
+                    @endif
+
+                    <div class="mt-3 flex items-center justify-between rounded-xl bg-[#f6f7ff] px-3.5 py-2.5">
+                        <p class="text-[10px] font-semibold text-gray-500">Total Pembayaran</p>
+                        <p class="text-[19px] font-extrabold tabular-nums tracking-[0.04em] text-[#0b2e22]">Rp {{ $totalFormatted }}</p>
+                    </div>
+                @endif
             </section>
+            @endif
 
-            {{-- ========== TOMBOL KIRIM ========== --}}
+            @if($order && ! $isPaid)
             <div class="pt-1">
-                <button type="button" id="submitBtn"
-                        class="flex w-full items-center justify-center gap-2 rounded-full bg-[#0b2e22] py-[17px] text-[14px] font-bold text-white shadow-[0_10px_24px_-8px_rgba(11,46,34,0.55)] transition hover:bg-[#12442f] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0b2e22] focus-visible:ring-offset-2">
-                    <span id="submitLabel">Kirim &amp; Cek Status Tiket</span>
-                    <svg id="submitArrow" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/>
-                    </svg>
-                    <svg id="submitSpin" class="hidden h-4 w-4 animate-spin" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" d="M12 3a9 9 0 019 9"/>
-                    </svg>
-                </button>
-
                 <a href="https://wa.me/6281234567890" target="_blank" rel="noopener"
                    class="mt-3.5 flex items-center justify-center gap-1.5 text-[12px] font-semibold text-[#7a4a1a] hover:underline">
                     <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -365,6 +429,19 @@
                     Butuh Bantuan? Hubungi WhatsApp Admin
                 </a>
             </div>
+            @endif
+
+            {{-- ========== SUDAH LUNAS (MIDTRANS) ========== --}}
+            @if($order && $isPaid)
+            <section class="rounded-2xl bg-white p-4 text-center shadow-[0_4px_24px_-6px_rgba(30,41,90,0.10)]">
+                <p class="text-[12.5px] font-extrabold text-[#0b2e22]">Pembayaran {{ $paidVia !== '' ? $paidVia : 'Online' }} Lunas</p>
+                <p class="mt-1 text-[11.5px] leading-relaxed text-gray-500">Bukti transfer manual tidak diperlukan lagi. Buka Tiket Saya untuk melihat QR code masuk Anda.</p>
+                <a href="{{ route('tiket') }}"
+                   class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#0b2e22] px-6 py-[15px] text-[13.5px] font-bold text-white transition hover:bg-[#12442f] active:scale-[0.98]">
+                    Buka Tiket Saya
+                </a>
+            </section>
+            @endif
 
 @else
             {{-- ========== EMPTY STATE (belum ada pesanan aktif) ========== --}}
@@ -446,7 +523,8 @@
         if (left === 0 && !expired) {
             expired = true;
             $('countdownLabel').textContent = 'Waktu Pembayaran Habis';
-            $('submitBtn').disabled = true;
+            const submitBtn = $('submitBtn');
+            if (submitBtn) submitBtn.disabled = true;
             toast('Waktu pembayaran habis. Silakan buat reservasi baru.');
         }
     }
@@ -471,7 +549,7 @@
             const label = btn.querySelector('.copy-label');
             label.textContent = 'Tersalin!';
             btn.classList.replace('bg-[#0b2e22]', 'bg-[#0b7a4a]');
-            toast(`Nomor rekening ${btn.dataset.copy} disalin`);
+            toast(`${btn.dataset.copy} disalin`);
             setTimeout(() => {
                 label.textContent = 'Salin';
                 btn.classList.replace('bg-[#0b7a4a]', 'bg-[#0b2e22]');
@@ -479,113 +557,165 @@
         });
     });
 
-    /* ---------- Upload bukti transfer ---------- */
-    const input  = $('fileInput');
-    const zone   = $('dropZone');
-    const MAX    = 5 * 1024 * 1024;
-    const BULAN  = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-    let uploaded = null;
-
-    const showError = (msg) => {
-        const el = $('uploadError');
-        el.textContent = msg || '';
-        el.classList.toggle('hidden', !msg);
-    };
-    const fmtSize = (b) => b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
-    const fmtWIB  = (d) => {
-        const w = new Date(d.getTime() + (7 * 60 + d.getTimezoneOffset()) * 60000);
-        return `${pad(w.getDate())} ${BULAN[w.getMonth()]} ${w.getFullYear()} ${pad(w.getHours())}:${pad(w.getMinutes())} WIB`;
-    };
-
-    function handleFile(file) {
-        showError('');
-        if (!file) return;
-        if (!['image/jpeg', 'image/png'].includes(file.type)) return showError('Format file harus JPG atau PNG.');
-        if (file.size > MAX) return showError('Ukuran file maksimal 5MB.');
-
-        uploaded = file;
-        $('fileName').textContent = file.name;
-        $('fileMeta').textContent = `${fmtSize(file.size)} • ${fmtWIB(new Date())}`;
-
-        const url = URL.createObjectURL(file);
-        const img = $('fileThumb');
-        img.onload = () => URL.revokeObjectURL(url);
-        img.src = url;
-
-        showStatus('waiting');
-        toast('Bukti transfer berhasil diunggah');
-    }
-
-    $('editFileBtn').addEventListener('click', () => input.click());
-    input.addEventListener('change', (e) => { handleFile(e.target.files[0]); input.value = ''; });
-
-    ['dragenter', 'dragover'].forEach((ev) => zone.addEventListener(ev, (e) => {
-        e.preventDefault(); zone.classList.add('ring-2', 'ring-[#0b2e22]');
-    }));
-    ['dragleave', 'drop'].forEach((ev) => zone.addEventListener(ev, (e) => {
-        e.preventDefault(); zone.classList.remove('ring-2', 'ring-[#0b2e22]');
-    }));
-    zone.addEventListener('drop', (e) => handleFile(e.dataTransfer.files[0]));
-
-    /* ---------- Status verifikasi ---------- */
-    function showStatus(state) {
-        const waiting = $('statusWaiting'), verifying = $('statusVerifying');
-        const v = state === 'verifying';
-        waiting.classList.toggle('hidden', v);
-        waiting.classList.toggle('flex', !v);
-        verifying.classList.toggle('hidden', !v);
-        verifying.classList.toggle('flex', v);
-    }
-
-    /* ---------- Kirim bukti -> tandai session -> buka Tiket Saya ---------- */
-    $('submitBtn').addEventListener('click', async function () {
-        if (expired) return;
-        const btn = this;
-        btn.disabled = true;
-        $('submitLabel').textContent = 'Mengirim...';
-        $('submitArrow').classList.add('hidden');
-        $('submitSpin').classList.remove('hidden');
-
-        try {
-            const fd = new FormData();
-            if (uploaded) fd.append('bukti', uploaded, uploaded.name);
-
-            const res = await fetch("{{ url('/transaksi/kirim') }}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept': 'application/json',
-                },
-                body: fd
-            });
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            const data = await res.json();
-            showStatus('verifying');
-            toast('Bukti terkirim. Membuka Tiket Saya...');
-            window.location.href = data.url;
-        } catch (err) {
-            toast('Gagal mengirim bukti. Silakan coba lagi.');
-            $('submitLabel').textContent = 'Kirim & Cek Status Tiket';
-            $('submitArrow').classList.remove('hidden');
-            $('submitSpin').classList.add('hidden');
-            btn.disabled = false;
-        }
-    });
-
-    /* ---------- Realtime: status pembayaran dari petugas ---------- */
-    const ORDER_KODE = @json($order['kode'] ?? null);
-    const STATUS_LABEL = { lunas: 'Pembayaran Lunas', gagal: 'Pembayaran Gagal', pending: 'Menunggu Verifikasi Admin' };
-    if (window.JiwantaRealtime && window.JiwantaRealtime.userChannel) {
-        window.JiwantaRealtime.onData((detail) => {
-            if (!detail || detail.type !== 'order.status') return;
-            const data = detail.data || {};
-            if (ORDER_KODE && data.kode && data.kode !== ORDER_KODE) return;
-            const label = STATUS_LABEL[data.status] || 'Status diperbarui';
-            const badge = $('statusVerifying');
-            if (badge) { badge.querySelector('span:last-child').innerHTML = label + '<br>Admin'; showStatus('verifying'); }
-            toast(label + (data.kode ? ' • ' + data.kode : ''));
-        });
-    }
 })();
 </script>
 @endpush
+
+@push('scripts')
+@if($order && !empty($midtrans['enabled']) && ! $isPaid)
+<script>
+(function () {
+    const $ = (id) => document.getElementById(id);
+    const CHARGE_URL = @json($midtrans['charge_url'] ?? '');
+    const STATUS_URL = @json($midtrans['status_url'] ?? '');
+    const TIKET_URL = @json(route('tiket', absolute: false));
+    const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+    const LABEL = { bca: 'BCA Virtual Account', mandiri: 'Mandiri Bill', qris: 'QRIS' };
+    const busy = {};
+    let pollTimer = null;
+
+    let toastTimer;
+    function toast(msg) {
+        const el = $('toast');
+        if (!el) return;
+        el.textContent = msg;
+        el.classList.remove('opacity-0', '-translate-y-3');
+        el.classList.add('opacity-100', 'translate-y-0');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+            el.classList.add('opacity-0', '-translate-y-3');
+            el.classList.remove('opacity-100', 'translate-y-0');
+        }, 2600);
+    }
+
+    function setActive(method) {
+        document.querySelectorAll('.method-btn').forEach((b) => {
+            const on = b.dataset.method === method;
+            b.classList.toggle('border-[#0b2e22]', on);
+            b.classList.toggle('border-transparent', !on);
+            b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        document.querySelectorAll('.method-panel').forEach((p) => {
+            p.classList.toggle('hidden', p.dataset.panel !== method);
+        });
+    }
+
+    function setState(method, text, tone) {
+        const el = $('state-' + method);
+        if (!el) return;
+        const color = tone === 'error'
+            ? 'text-[#8b1f1f]'
+            : (tone === 'success' ? 'text-[#0b5a3a]' : 'text-[#7a4a1a]');
+        el.className = 'mt-2 flex items-center gap-1.5 text-[11px] font-bold ' + color;
+        el.innerHTML = '<span class="h-1.5 w-1.5 animate-pulse rounded-full bg-current"></span>' + text;
+    }
+
+    function expiryText(value) {
+        if (!value) return '';
+        const parsed = new Date(String(value).replace(' ', 'T'));
+        if (isNaN(parsed.getTime())) return 'Berlaku sampai ' + value;
+
+        return 'Berlaku sampai ' + parsed.toLocaleString('id-ID', {
+            day: '2-digit',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    }
+
+    function render(method, data) {
+        if (method === 'qris') {
+            $('qrisImage').src = data.qr_url;
+            $('qrisBox').classList.remove('hidden');
+            $('qrisExpiry').textContent = expiryText(data.expiry_time);
+        } else if (method === 'bca') {
+            $('bcaVa').textContent = data.va_number;
+            $('bcaCopy').dataset.copy = data.va_number;
+            $('bcaBox').classList.remove('hidden');
+            $('bcaExpiry').textContent = expiryText(data.expiry_time);
+        } else if (method === 'mandiri') {
+            $('mandiriBiller').textContent = data.biller_code;
+            $('mandiriKey').textContent = data.bill_key;
+            $('mandiriCopy').dataset.copy = data.bill_key;
+            $('mandiriBox').classList.remove('hidden');
+            $('mandiriExpiry').textContent = expiryText(data.expiry_time);
+        }
+
+        setState(method, 'Menunggu pembayaran...', 'waiting');
+        startPolling();
+    }
+
+    async function charge(method) {
+        if (!CHARGE_URL || busy[method]) return;
+
+        busy[method] = true;
+        setState(method, 'Menyiapkan ' + LABEL[method] + '...', 'waiting');
+
+        try {
+            const res = await fetch(CHARGE_URL, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': CSRF,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ metode: method }),
+            });
+            const data = await res.json().catch(function () { return null; });
+
+            if (!res.ok || !data || !data.ok) {
+                const message = (data && data.message) || 'Gagal membuat pembayaran.';
+                setState(method, message, 'error');
+                toast(message);
+                return;
+            }
+
+            render(method, data);
+        } catch (e) {
+            setState(method, 'Gagal menghubungi Midtrans. Coba lagi.', 'error');
+            toast('Gagal menghubungi Midtrans.');
+        } finally {
+            busy[method] = false;
+        }
+    }
+
+    document.querySelectorAll('.method-btn').forEach((btn) => {
+        btn.addEventListener('click', function () {
+            const method = btn.dataset.method;
+            setActive(method);
+            charge(method);
+        });
+    });
+
+    function startPolling() {
+        if (pollTimer || !STATUS_URL) return;
+
+        pollTimer = setInterval(async function () {
+            try {
+                const res = await fetch(STATUS_URL + '?sync=1', { headers: { 'Accept': 'application/json' } });
+                const data = await res.json();
+
+                if (data.status === 'lunas') {
+                    clearInterval(pollTimer);
+                    pollTimer = null;
+                    toast('Pembayaran berhasil. Membuka Tiket Saya...');
+                    setTimeout(function () { window.location.href = TIKET_URL; }, 800);
+                } else if (data.status === 'gagal') {
+                    clearInterval(pollTimer);
+                    pollTimer = null;
+                    toast('Pembayaran gagal atau kedaluwarsa. Silakan pilih metode lagi.');
+                }
+            } catch (e) { /* coba lagi pada interval berikutnya */ }
+        }, 4000);
+    }
+
+    const initial = @json($selectedMetode);
+    if (initial) {
+        setActive(initial);
+        charge(initial);
+    }
+})();
+</script>
+@endif
+@endpush
+

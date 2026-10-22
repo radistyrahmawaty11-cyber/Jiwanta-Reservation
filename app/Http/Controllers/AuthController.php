@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -70,14 +71,16 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'nama_pengguna' => 'required|string|max:100',
+            'nama_pengguna' => ['required', 'string', 'max:100', 'regex:/^[\pL\pM\s\.\'-]+$/u'],
             'email' => 'required|email|max:50|unique:penggunas,email',
-            'nohp' => 'required|string|max:15',
+            'nohp' => ['required', 'regex:/^[0-9+\-\s()]+$/'],
             'password' => 'required|string|min:6|confirmed',
         ], [
             'nama_pengguna.required' => 'Nama lengkap wajib diisi.',
+            'nama_pengguna.regex' => 'Nama hanya boleh berisi huruf, spasi, titik, apostrof, dan tanda hubung.',
             'email.unique' => 'Email tersebut sudah terdaftar.',
             'nohp.required' => 'Nomor WhatsApp wajib diisi.',
+            'nohp.regex' => 'Nomor WhatsApp hanya boleh berisi angka dan karakter yang valid.',
             'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
             'password.min' => 'Kata sandi minimal 6 karakter.',
         ]);
@@ -87,10 +90,10 @@ class AuthController extends Controller
         }
 
         $pengguna = Pengguna::create([
-            'nama_pengguna' => $request->nama_pengguna,
-            'email' => $request->email,
+            'nama_pengguna' => strip_tags(trim((string) $request->nama_pengguna)),
+            'email' => trim((string) $request->email),
             'password' => $request->password,
-            'nohp' => $request->nohp,
+            'nohp' => trim((string) $request->nohp),
             'role' => 'pengunjung', // Default role
         ]);
 
@@ -109,7 +112,16 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/login');
+        $response = redirect('/login');
+
+        // Buang cache browser agar halaman dashboard lama tidak bisa muncul
+        // lagi lewat tombol "kembali" atau refresh setelah logout.
+        $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        $response->headers->set('Pragma', 'no-cache');
+        $response->headers->set('Expires', '0');
+        $response->headers->set('Clear-Site-Data', '"cache"');
+
+        return $response;
     }
 
     // Tampilkan halaman lupa sandi
@@ -274,25 +286,140 @@ class AuthController extends Controller
         ]);
     }
 
-    // Login cepat dengan Google (mode demo tanpa kredensial OAuth)
-    public function google(Request $request)
+    // Login cepat dengan Google: arahkan ke halaman pilih akun Google.
+    public function googleRedirect(Request $request)
     {
-        $user = Pengguna::firstOrCreate(
-            ['email' => 'google@jiwanta.com'],
-            [
-                'nama_pengguna' => 'Pengguna Google',
-                'nohp' => '0800000000',
+        $clientId = config('services.google.client_id');
+
+        if (! $clientId || ! config('services.google.client_secret')) {
+            return redirect()
+                ->route('login')
+                ->withErrors([
+                    'whatsapp' => 'Login dengan Google sedang dalam tahap pengembangan. '
+                        .'Fitur ini belum tersedia saat ini. Silakan login menggunakan email/nomor HP atau kode OTP.',
+                ]);
+        }
+
+        $state = Str::random(40);
+        $redirectUri = $this->googleRedirectUri($request);
+
+        $request->session()->put('google_oauth_state', $state);
+        $request->session()->put('google_redirect_uri', $redirectUri);
+        $request->session()->put('google_intended', $request->query('intended', '/dashboard'));
+
+        $params = [
+            'client_id' => $clientId,
+            'redirect_uri' => $redirectUri,
+            'response_type' => 'code',
+            'scope' => 'openid email profile',
+            'state' => $state,
+            'prompt' => 'select_account',
+            'access_type' => 'online',
+        ];
+
+        return redirect()->away('https://accounts.google.com/o/oauth2/v2/auth?'.http_build_query($params));
+    }
+
+    // Callback Google: tukar kode dengan token, lalu masuk memakai akun asli.
+    public function googleCallback(Request $request)
+    {
+        $expected = $request->session()->pull('google_oauth_state');
+        $redirectUri = $request->session()->pull('google_redirect_uri') ?: $this->googleRedirectUri($request);
+
+        if (! $expected || ! hash_equals($expected, (string) $request->query('state'))) {
+            return redirect()
+                ->route('login')
+                ->withErrors(['whatsapp' => 'Sesi login Google tidak valid atau kedaluwarsa. Silakan coba lagi.']);
+        }
+
+        if ($request->filled('error')) {
+            return redirect()
+                ->route('login')
+                ->withErrors(['whatsapp' => 'Login Google dibatalkan.']);
+        }
+
+        try {
+            $token = Http::asForm()->post('https://oauth2.googleapis.com/token', [
+                'code' => (string) $request->query('code'),
+                'client_id' => config('services.google.client_id'),
+                'client_secret' => config('services.google.client_secret'),
+                'redirect_uri' => $redirectUri,
+                'grant_type' => 'authorization_code',
+            ])->throw()->json();
+
+            $profile = Http::withToken((string) ($token['access_token'] ?? ''))
+                ->get('https://www.googleapis.com/oauth2/v3/userinfo')
+                ->throw()->json();
+        } catch (\Throwable $e) {
+            return redirect()
+                ->route('login')
+                ->withErrors(['whatsapp' => 'Gagal terhubung dengan Google: '.$e->getMessage()]);
+        }
+
+        $email = trim((string) ($profile['email'] ?? ''));
+        $verified = (bool) ($profile['email_verified'] ?? false);
+
+        if ($email === '' || ! $verified) {
+            return redirect()
+                ->route('login')
+                ->withErrors(['whatsapp' => 'Email Google belum terverifikasi, login dibatalkan.']);
+        }
+
+        $nama = strip_tags(trim((string) ($profile['name'] ?? ''))) ?: Str::before($email, '@');
+        $foto = trim((string) ($profile['picture'] ?? ''));
+
+        $user = Pengguna::where('email', $email)->first();
+
+        if ($user) {
+            $user->forceFill(array_filter([
+                'nama_pengguna' => $nama !== '' ? $nama : null,
+                'foto' => $foto !== '' ? $foto : null,
+            ]))->save();
+        } else {
+            $user = Pengguna::create([
+                'nama_pengguna' => $nama,
+                'email' => $email,
+                'nohp' => $this->generateUniqueNohp(),
+                'foto' => $foto !== '' ? $foto : null,
                 'role' => 'pengunjung',
-                'password' => Str::random(16),
-            ]
-        );
+                'password' => Str::random(32),
+            ]);
+        }
 
         Auth::login($user, true);
         $request->session()->regenerate();
 
+        $intended = $request->session()->pull('google_intended');
+
         return redirect()
-            ->intended($this->homeUrlFor($user))
-            ->with('status', 'Berhasil masuk dengan akun Google (mode demo).');
+            ->intended($intended ?: $this->homeUrlFor($user))
+            ->with('success', 'Berhasil masuk dengan akun Google '.$email.'.');
+    }
+
+    /**
+     * Redirect URI OAuth. Kalau GOOGLE_REDIRECT_URI kosong di .env, otomatis
+     * mengikuti alamat yang sedang dipakai (localhost / domain / tunnel).
+     */
+    private function googleRedirectUri(?Request $request = null): string
+    {
+        if ($configured = config('services.google.redirect_uri')) {
+            return $configured;
+        }
+
+        if ($request) {
+            return rtrim($request->getSchemeAndHttpHost(), '/').'/auth/google/callback';
+        }
+
+        return rtrim((string) config('app.url'), '/').'/auth/google/callback';
+    }
+
+    private function generateUniqueNohp(): string
+    {
+        do {
+            $nohp = '08'.random_int(100000000, 999999999);
+        } while (Pengguna::where('nohp', $nohp)->exists());
+
+        return $nohp;
     }
 
     // Cari pengguna berdasarkan email atau nomor HP

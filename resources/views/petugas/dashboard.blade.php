@@ -49,7 +49,7 @@
             <section class="jw-rise flex flex-wrap items-end justify-between gap-4">
                 <div>
                     <h1 class="text-[26px] font-bold leading-tight">Dashboard Petugas Gate</h1>
-                    <p class="mt-1 max-w-xl text-[13px] leading-relaxed text-slate-600">Scan QR e-ticket pengunjung dan verifikasi bukti pembayaran transfer.</p>
+                    <p class="mt-1 max-w-xl text-[13px] leading-relaxed text-slate-600">Scan barcode e-ticket pengunjung (Code 128 / QR) dan verifikasi bukti pembayaran transfer.</p>
                 </div>
                 <span class="flex items-center gap-2 rounded-full {{ $mint }} px-4 py-2 text-[11px] font-semibold">
                     {!! $ic($p['cloud'], 'h-4 w-4') !!} <span data-realtime-text>Realtime • Sinkron <span data-sync>2</span> dtk lalu</span>
@@ -86,8 +86,8 @@
                             <div class="flex items-center gap-3">
                                 <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-[#0B3A22] text-white">{!! $ic($p['scan'], 'h-5 w-5') !!}</span>
                                 <div>
-                                    <h2 class="text-[18px] font-bold leading-tight">Scan QR E-Ticket</h2>
-                                    <p class="text-[11px] text-slate-600">Arahkan kamera ke QR tiket pengunjung</p>
+                                    <h2 class="text-[18px] font-bold leading-tight">Scan Barcode E-Ticket</h2>
+                                    <p class="text-[11px] text-slate-600">Arahkan kamera ke barcode tiket pengunjung</p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
@@ -229,8 +229,9 @@
         // ---------- Data dari server ----------
         const DATA = window.__PETUGAS__ || {};
         const SCAN_URL = DATA.scanUrl || '/petugas/scan';
-        const ACTION_URL = DATA.actionUrl || '/petugas/transaksi';
-        const CSRF = ($('meta[name="csrf-token"]') || {}).content || '';
+        const ACTION_URL = (DATA.actionUrl || '/petugas/transaksi').replace(/\/$/, '');
+        const CHECKIN_URL = ACTION_URL + '/:id/check-in';
+        const CSRF = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
         const B = {};
         (DATA.pending || []).forEach((t) => { B[t.code] = { ...t, status: 'pending' }; });
         const S = {
@@ -392,7 +393,7 @@
         const setResult = (html) => { $('#result').innerHTML = html; };
         const idleHTML = () => `<div class="flex items-center gap-4 rounded-2xl border-2 border-dashed border-[#D5DBF3] bg-white/60 px-6 py-6">
             <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EEF1FD] text-slate-500">${ic(P.scan, 'h-6 w-6')}</span>
-            <div><p class="text-[14px] font-bold">Menunggu scan tiket</p><p class="mt-0.5 text-[12px] text-slate-600">Hasil validasi QR pengunjung akan muncul di sini.</p></div></div>`;
+            <div><p class="text-[14px] font-bold">Menunggu scan tiket</p><p class="mt-0.5 text-[12px] text-slate-600">Hasil validasi barcode pengunjung akan muncul di sini.</p></div></div>`;
         const info = (b) => `<div class="mt-4 grid gap-3 rounded-2xl bg-[#EEF1FD] p-4 text-[11px] sm:grid-cols-3">
             <div><p class="text-slate-600">Paket</p><p class="mt-0.5 font-bold">${esc(b.pkg)}</p></div>
             <div><p class="text-slate-600">Pengunjung</p><p class="mt-0.5 font-bold">${b.pax} Dewasa</p></div>
@@ -440,6 +441,7 @@
             setResult(`<div class="${shell} border-t-[5px] border-[#0B3A22]"><div class="flex items-center gap-4">
                 <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#0B3A22] text-white">${ic(P.checkc, 'h-6 w-6')}</span>
                 <div><p class="text-[18px] font-bold leading-tight">Check-in berhasil</p><p class="mt-0.5 text-[12px] text-slate-700">${esc(b.name)} • ${b.pax} pax masuk pukul ${clockStr()} WIB</p></div></div></div>`);
+            idleTimer = setTimeout(reset, 4000);
         };
         const reset = () => { cur = null; clearTimeout(idleTimer); setResult(idleHTML()); };
 
@@ -463,24 +465,47 @@
             } catch (err) {
                 return reject(null, 'Gagal terhubung', 'Tidak dapat memvalidasi tiket saat ini. Coba lagi.');
             }
-            const t = res && res.transaksi;
+            const t = (res && res.transaksi) || null;
+            const infoOf = (x) => ({ code: x.code, id: x.id, name: x.name, pax: x.pax, pkg: x.pkg, visit_date: x.visit_date });
             if (!res || !res.ok) {
-                if (res && res.reason === 'pending') return reject({ code: t.code, id: t.id, name: t.name, pax: t.pax, pkg: t.pkg }, 'Pembayaran belum terverifikasi', 'Verifikasi bukti transfer pengunjung terlebih dahulu.', true);
-                if (res && res.reason === 'rejected') return reject({ code: t.code, id: t.id, name: t.name, pax: t.pax, pkg: t.pkg }, 'Pembayaran ditolak', 'Pengunjung perlu mengunggah ulang bukti transfer.');
-                return reject(null, 'Kode tidak ditemukan', 'Pastikan QR e-ticket asli atau ketik ulang kode booking.');
+                if (res && res.reason === 'pending') return reject(infoOf(t), 'Pembayaran belum terverifikasi', 'Verifikasi bukti transfer pengunjung terlebih dahulu.', true);
+                if (res && res.reason === 'rejected') return reject(infoOf(t), 'Pembayaran ditolak', 'Pengunjung perlu mengunggah ulang bukti transfer.');
+                if (res && res.reason === 'used') return reject(infoOf(t), 'Tiket sudah dipakai', 'Tiket ini sudah dipakai untuk check-in di gerbang. Tolak pengunjung ini.');
+                if (res && res.reason === 'expired') return reject(infoOf(t), 'Tiket kedaluwarsa', 'Tanggal kunjungan tiket ini sudah lewat' + (t && t.visit_date ? ' (' + t.visit_date + ')' : '') + '. Tolak pengunjung ini.');
+                return reject(null, 'Kode tidak ditemukan', 'Pastikan barcode e-ticket asli atau ketik ulang kode booking.');
             }
-            const b = { ...t, status: 'paid' };
+            const b = { ...t, status: t.checked_in_at ? 'used' : 'paid' };
             B[b.code] = b;
             showValid(b); beep(true); touch();
         }
-        function allow(code) {
+        async function allow(code) {
             const b = B[code];
             if (!b || b.status !== 'paid') return;
-            b.status = 'used'; b.usedAt = new Date();
+            if (b.checked_in_at) {
+                toast('Tiket ini sudah digunakan untuk check-in.');
+                done(b); return;
+            }
+            try {
+                const r = await fetch(CHECKIN_URL.replace(':id', b.id), {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
+                    body: JSON.stringify({}),
+                });
+                const resp = await r.json();
+                if (!r.ok || !resp.ok) {
+                    if (resp && resp.reason === 'used') { b.checked_in_at = resp.checked_in_at || new Date().toISOString(); b.status = 'used'; renderStats(); done(b); return; }
+                    if (resp && resp.reason === 'expired') { reject(b, 'Tiket kedaluwarsa', 'Tanggal kunjungan tiket ini sudah lewat' + (resp.visit_date ? ' (' + resp.visit_date + ')' : '') + '. Tolak pengunjung ini.'); return; }
+                    if (resp && resp.reason === 'pending') { reject(b, 'Pembayaran belum terverifikasi', 'Verifikasi bukti transfer atau tunggu konfirmasi.', true); return; }
+                    if (resp && resp.reason === 'rejected') { reject(b, 'Pembayaran ditolak', 'Pengunjung perlu mengunggah ulang bukti transfer.'); return; }
+                    return toast('Gagal melakukan check-in. Coba lagi.');
+                }
+            } catch (err) {
+                return toast('Gagal terhubung saat check-in.');
+            }
+            b.status = 'used'; b.usedAt = new Date(); b.checked_in_at = b.checked_in_at || new Date().toISOString();
             S.gate = Math.min(S.cap, S.gate + b.pax);
             hist.unshift({ t: clockStr(), name: b.name, sub: b.pax + ' Dewasa • ' + b.pkg, ok: true });
             renderHist(); renderStats(); done(b); beep(true); touch();
-            idleTimer = setTimeout(reset, 4000);
         }
         $('#result').addEventListener('click', (e) => {
             const a = e.target.closest('[data-act]'); if (!a) return;
@@ -509,9 +534,10 @@
             input.value = b.code; handleScan(b.code);
         });
 
-        // ---------- Kamera & pembaca QR ----------
+        // ---------- Kamera & pembaca barcode (Code 128 + QR) ----------
         const video = $('#cam');
-        const detector = 'BarcodeDetector' in window ? new BarcodeDetector({ formats: ['qr_code'] }) : null;
+        const WANTED_FORMATS = ['code_128', 'qr_code'];
+        let detector = null, zxingReader = null, zxingCanvas = null, zxingCtx = null;
         let stream = null, loopTimer = null, lastRaw = '', lastAt = 0;
         const camMsg = (t) => { const m = $('#cam-msg'); m.textContent = t || ''; m.classList.toggle('hidden', !t); };
         const camUI = (on) => {
@@ -523,15 +549,65 @@
             pill.textContent = on ? 'Siap Scan' : 'Kamera Mati';
             pill.className = 'rounded-full px-3 py-1.5 text-[10px] font-bold ' + (on ? 'bg-[#CDEFD5] text-[#0B3A22]' : 'bg-[#DDE6FB]');
         };
-        const loop = async () => {
-            if (!stream || !detector) return;
+
+        // BarcodeDetector native (Android/ChromeOS) hanya dipakai bila mendukung code_128.
+        const initDetector = async () => {
+            if (!('BarcodeDetector' in window)) return null;
+            let supported = [];
+            try { supported = await BarcodeDetector.getSupportedFormats(); } catch (e) { supported = []; }
+            if (!supported.includes('code_128')) return null;
+            const formats = WANTED_FORMATS.filter((f) => supported.includes(f));
+            try { return new BarcodeDetector({ formats }); } catch (e) { return null; }
+        };
+
+        // Fallback ZXing (bundel lokal) untuk browser tanpa BarcodeDetector.
+        const loadZxing = () => new Promise((resolve, reject) => {
+            if (window.ZXing) return resolve(window.ZXing);
+            const s = document.createElement('script');
+            s.src = '{{ asset('js/zxing.min.js') }}';
+            s.onload = () => window.ZXing ? resolve(window.ZXing) : reject(new Error('zxing gagal dimuat'));
+            s.onerror = () => reject(new Error('zxing gagal dimuat'));
+            document.head.appendChild(s);
+        });
+
+        const initZxing = async () => {
+            const ZX = await loadZxing();
+            const hints = new Map();
+            hints.set(ZX.DecodeHintType.POSSIBLE_FORMATS, [ZX.BarcodeFormat.CODE_128, ZX.BarcodeFormat.QR_CODE]);
+            const reader = new ZX.MultiFormatReader();
+            reader.setHints(hints);
+            zxingReader = reader;
+            zxingCanvas = document.createElement('canvas');
+            zxingCtx = zxingCanvas.getContext('2d', { willReadFrequently: true });
+        };
+
+        const zxingRead = () => {
+            if (!zxingReader || !video.videoWidth) return '';
             try {
-                const codes = await detector.detect(video);
-                if (codes.length) {
-                    const raw = codes[0].rawValue, now = Date.now();
-                    if (raw !== lastRaw || now - lastAt > 3000) { lastRaw = raw; lastAt = now; handleScan(raw); }
+                zxingCanvas.width = video.videoWidth;
+                zxingCanvas.height = video.videoHeight;
+                zxingCtx.drawImage(video, 0, 0);
+                const source = new window.ZXing.HTMLCanvasElementLuminanceSource(zxingCanvas);
+                const bitmap = new window.ZXing.BinaryBitmap(new window.ZXing.HybridBinarizer(source));
+                return zxingReader.decodeWithState(bitmap).getText();
+            } catch (e) { return ''; }
+        };
+
+        const loop = async () => {
+            if (!stream) return;
+            let raw = '';
+            try {
+                if (detector) {
+                    const codes = await detector.detect(video);
+                    if (codes.length) raw = codes[0].rawValue;
+                } else if (zxingReader) {
+                    raw = zxingRead();
                 }
             } catch (e) {}
+            if (raw) {
+                const now = Date.now();
+                if (raw !== lastRaw || now - lastAt > 3000) { lastRaw = raw; lastAt = now; handleScan(raw); }
+            }
             loopTimer = setTimeout(loop, 250);
         };
         async function startCam() {
@@ -542,7 +618,14 @@
                 stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
                 video.srcObject = stream; await video.play();
                 camUI(true); camMsg('');
-                if (detector) loop(); else camMsg('Browser belum mendukung pembacaan QR otomatis. Gunakan input kode booking.');
+
+                detector = await initDetector();
+                if (!detector) {
+                    try { await initZxing(); } catch (e) { zxingReader = null; }
+                }
+
+                if (detector || zxingReader) loop();
+                else camMsg('Browser ini tidak mendukung pemindaian barcode otomatis. Gunakan input kode booking.');
             } catch (e) {
                 camUI(false); toast('Kamera tidak dapat diakses. Periksa izin kamera di browser.');
             }
@@ -550,7 +633,7 @@
         function stopCam() {
             clearTimeout(loopTimer);
             if (stream) stream.getTracks().forEach((t) => t.stop());
-            stream = null; video.srcObject = null; camUI(false); camMsg('');
+            stream = null; video.srcObject = null; lastRaw = ''; camUI(false); camMsg('');
         }
         $('#cam-on').addEventListener('click', startCam);
         $('#cam-stop').addEventListener('click', stopCam);

@@ -15,6 +15,7 @@ class OrderStatusUpdated implements ShouldBroadcastNow
         public int $penggunaId,
         public string $kode,
         public string $status,
+        public bool $checkedIn = false,
     ) {}
 
     /**
@@ -38,6 +39,7 @@ class OrderStatusUpdated implements ShouldBroadcastNow
         return [
             'kode' => $this->kode,
             'status' => $this->status,
+            'checked_in' => $this->checkedIn,
         ];
     }
 }

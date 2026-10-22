@@ -137,11 +137,20 @@ class AuthRecoveryTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_google_login_creates_and_authenticates_demo_account(): void
+    public function test_google_login_menampilkan_pesan_saat_belum_dikonfigurasi(): void
     {
-        $this->post('/auth/google')->assertRedirect();
+        config([
+            'services.google.client_id' => null,
+            'services.google.client_secret' => null,
+        ]);
 
-        $this->assertAuthenticated();
-        $this->assertDatabaseHas('penggunas', ['email' => 'google@jiwanta.com']);
+        $this->get('/auth/google')
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors('whatsapp');
+
+        $response = $this->get('/login');
+
+        $response->assertOk();
+        $this->assertStringContainsString('dalam tahap pengembangan', $response->getContent());
     }
 }

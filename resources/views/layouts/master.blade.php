@@ -52,5 +52,14 @@
 
     @stack('scripts')
 
+    <script>
+        // Halaman yang dipulihkan dari back/forward cache browser (tombol
+        // "kembali" / refresh) selalu dicek ulang ke server, sehingga sesi yang
+        // sudah diakhiri lewat logout tidak lagi menampilkan dashboard.
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) window.location.reload();
+        });
+    </script>
+
 </body>
 </html>

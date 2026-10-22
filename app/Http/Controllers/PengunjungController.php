@@ -69,7 +69,35 @@ class PengunjungController extends Controller
             'expiredAt' => $order ? now()->addHours(2) : null,
             'user' => $request->user(),
             'banks' => Bank::where('status', true)->orderBy('nama_bank')->get(),
+            'transaksi' => $order ? $this->orderTransaksi($order) : null,
+            'midtrans' => [
+                'enabled' => config('services.midtrans.client_key') && config('services.midtrans.server_key'),
+                'client_key' => (string) config('services.midtrans.client_key', ''),
+                'sandbox' => (bool) config('services.midtrans.sandbox', true),
+                'pay_url' => route('transaksi.midtrans.pay', absolute: false),
+                'qris_url' => route('transaksi.midtrans.qris', absolute: false),
+                'charge_url' => route('transaksi.midtrans.charge', absolute: false),
+                'status_url' => route('transaksi.midtrans.status', absolute: false),
+            ],
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $order
+     */
+    private function orderTransaksi(array $order): ?Transaksi
+    {
+        $query = Transaksi::query();
+
+        if (! empty($order['transaksi_id'])) {
+            $query->where('id', $order['transaksi_id']);
+        } elseif (! empty($order['kode'])) {
+            $query->where('kode_transaksi', $order['kode']);
+        } else {
+            return null;
+        }
+
+        return $query->first();
     }
 
     public function tiket(Request $request)
@@ -85,9 +113,24 @@ class PengunjungController extends Controller
             ->orderByDesc('tanggal_transaksi')
             ->get();
 
+        $selected = null;
+
+        if ($request->filled('trx')) {
+            $key = (string) $request->query('trx');
+            $selected = $transaksis->first(
+                fn ($t) => (string) $t->id === $key || (string) $t->kode_transaksi === $key
+            );
+
+            // Detail riwayat yang dipilih menggantikan pesanan di session.
+            if ($selected) {
+                $order = null;
+            }
+        }
+
         return view('pengunjung.tiket', [
             'order' => $order,
             'transaksis' => $transaksis,
+            'selected' => $selected,
         ]);
     }
 
@@ -344,6 +387,63 @@ class PengunjungController extends Controller
         $request->session()->put('order', $order);
 
         return redirect()->route('transaksi');
+    }
+
+    /**
+     * Simpan pilihan metode pembayaran (nama bank atau "online") ke transaksi & session.
+     */
+    public function metode(Request $request)
+    {
+        $data = $request->validate([
+            'metode' => ['required', 'string', 'max:50'],
+        ]);
+
+        $metode = $data['metode'];
+
+        if ($metode !== 'online') {
+            $bank = Bank::where('status', true)
+                ->whereRaw('LOWER(nama_bank) = ?', [mb_strtolower($metode)])
+                ->first();
+
+            if (! $bank) {
+                return response()->json(['ok' => false, 'message' => 'Metode pembayaran tidak tersedia.'], 422);
+            }
+
+            $nama = mb_strtolower($bank->nama_bank);
+
+            $metode = match (true) {
+                str_contains($nama, 'bca') => 'BCA',
+                str_contains($nama, 'mandiri') => 'Mandiri',
+                default => $bank->nama_bank,
+            };
+        }
+
+        $order = $request->session()->get('order');
+
+        if (! $order) {
+            return response()->json(['ok' => false, 'message' => 'Pesanan tidak ditemukan.'], 404);
+        }
+
+        $transaksi = $this->orderTransaksi($order);
+
+        if ($transaksi) {
+            if ($transaksi->status === 'lunas') {
+                return response()->json(['ok' => false, 'message' => 'Pesanan ini sudah lunas.'], 409);
+            }
+
+            $transaksi->metode_pembayaran = $metode === 'online' ? 'midtrans' : $metode;
+
+            if ($transaksi->status === 'gagal') {
+                $transaksi->status = 'pending';
+            }
+
+            $transaksi->save();
+        }
+
+        $order['metode'] = $metode;
+        $request->session()->put('order', $order);
+
+        return response()->json(['ok' => true, 'metode' => $metode]);
     }
 
     public function kirim(Request $request)

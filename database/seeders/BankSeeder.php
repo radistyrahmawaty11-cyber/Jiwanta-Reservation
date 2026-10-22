@@ -11,7 +11,7 @@ class BankSeeder extends Seeder
     {
         $rows = [
             ['nama_bank' => 'Bank Central Asia (BCA)', 'nomor_rekening' => '4370-9008-21', 'atas_nama' => 'PT Jiwanta Resort', 'status' => true],
-            ['nama_bank' => 'Bank Mandiri', 'nomor_rekening' => '1300-1234-5678', 'atas_nama' => 'PT Jiwanta Resort', 'status' => false],
+            ['nama_bank' => 'Bank Mandiri', 'nomor_rekening' => '1300-1234-5678', 'atas_nama' => 'PT Jiwanta Resort', 'status' => true],
         ];
 
         foreach ($rows as $row) {

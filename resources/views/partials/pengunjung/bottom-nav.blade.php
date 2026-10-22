@@ -1,4 +1,4 @@
-<nav class="fixed bottom-0 left-1/2 z-30 w-full max-w-[390px] -translate-x-1/2 bg-white pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-4px_16px_rgba(11,46,34,0.06)]" aria-label="Navigasi utama">
+<nav class="fixed bottom-0 left-1/2 z-30 w-full max-w-none -translate-x-1/2 bg-white pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-4px_16px_rgba(11,46,34,0.06)] sm:max-w-[390px]" aria-label="Navigasi utama">
     <div class="flex items-center justify-around px-2 pt-3 pb-3.5">
         <a href="{{ route('dashboard') }}" @if(request()->routeIs('dashboard')) aria-current="page" @endif class="flex flex-1 flex-col items-center gap-1 text-[#0b2e22]">
             <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">

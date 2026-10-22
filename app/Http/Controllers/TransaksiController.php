@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\OrderStatusUpdated;
 use App\Models\Cabin;
 use App\Models\Transaksi;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class TransaksiController extends Controller
@@ -89,6 +91,44 @@ class TransaksiController extends Controller
                 'pending_rows' => $rows->where('status', 'pending')->values(),
             ],
         ]);
+    }
+
+    public function verify(Request $request, Transaksi $transaksi)
+    {
+        $transaksi->status = 'lunas';
+        $transaksi->verified_at ??= now();
+        $transaksi->save();
+
+        $this->broadcastStatus($transaksi);
+
+        return response()->json(['ok' => true, 'status' => $transaksi->status]);
+    }
+
+    public function reject(Request $request, Transaksi $transaksi)
+    {
+        $transaksi->status = 'gagal';
+        $transaksi->save();
+
+        $this->broadcastStatus($transaksi);
+
+        return response()->json(['ok' => true, 'status' => $transaksi->status]);
+    }
+
+    private function broadcastStatus(Transaksi $transaksi): void
+    {
+        if (! $transaksi->pengguna_id) {
+            return;
+        }
+
+        try {
+            OrderStatusUpdated::dispatch(
+                (int) $transaksi->pengguna_id,
+                (string) $transaksi->kode_transaksi,
+                (string) $transaksi->status,
+            );
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     public function export()

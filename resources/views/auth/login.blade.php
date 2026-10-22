@@ -94,8 +94,8 @@
         Kirim kode OTP WhatsApp
     </button>
 
-    {{-- Tombol Google --}}
-    <button type="submit" form="googleForm" class="w-full text-gray-700 font-medium py-3 rounded-full flex items-center justify-center gap-2 hover:bg-gray-100 transition duration-200 text-sm mb-4"
+    {{-- Tombol Google (OAuth: membuka halaman pilih akun Google) --}}
+    <a href="{{ route('auth.google') }}" class="w-full text-gray-700 font-medium py-3 rounded-full flex items-center justify-center gap-2 hover:bg-gray-100 transition duration-200 text-sm mb-4"
             style="background-color: #dce8ed;">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 48 48">
             <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
@@ -104,11 +104,7 @@
             <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 01-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
         </svg>
         Lanjutkan dengan Google
-    </button>
-
-    <form id="googleForm" action="{{ route('auth.google') }}" method="POST" class="hidden">
-        @csrf
-    </form>
+    </a>
 
     {{-- Panel OTP WhatsApp (muncul setelah kode dikirim) --}}
     <div id="otp-panel" class="hidden mb-4 rounded-2xl border border-green-200 bg-green-50 p-4">
@@ -150,7 +146,7 @@
             eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />';
         } else {
             passwordInput.type = 'password';
-            eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />';
+            eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />';
         }
     }
 

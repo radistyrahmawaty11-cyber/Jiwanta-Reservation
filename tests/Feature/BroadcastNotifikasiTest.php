@@ -115,12 +115,17 @@ class BroadcastNotifikasiTest extends TestCase
     public function test_order_status_event_broadcasts_on_user_channel(): void
     {
         $event = new OrderStatusUpdated(42, 'TRX-20261013-001', 'lunas');
+        $checked = new OrderStatusUpdated(42, 'TRX-20261013-001', 'lunas', true);
 
         $channel = $event->broadcastOn()[0];
 
         $this->assertInstanceOf(Channel::class, $channel);
         $this->assertSame('user.42', $channel->name);
         $this->assertSame('order.status', $event->broadcastAs());
-        $this->assertSame(['kode' => 'TRX-20261013-001', 'status' => 'lunas'], $event->broadcastWith());
+        $this->assertSame(
+            ['kode' => 'TRX-20261013-001', 'status' => 'lunas', 'checked_in' => false],
+            $event->broadcastWith()
+        );
+        $this->assertTrue($checked->broadcastWith()['checked_in']);
     }
 }

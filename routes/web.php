@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CabinController;
+use App\Http\Controllers\MidtransController;
 use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\PengunjungController;
 use App\Http\Controllers\PetugasController;
@@ -23,7 +24,7 @@ use Illuminate\Support\Facades\Storage;
 // ==========================================
 // 1. ROUTES TAMU (GUEST) - Belum Login
 // ==========================================
-Route::middleware('guest')->group(function () {
+Route::middleware(['guest', 'no-store'])->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.process');
 
@@ -39,13 +40,14 @@ Route::middleware('guest')->group(function () {
     // Login cepat: OTP WhatsApp & Google
     Route::post('/otp/send', [AuthController::class, 'sendOtp'])->name('otp.send');
     Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('otp.verify');
-    Route::post('/auth/google', [AuthController::class, 'google'])->name('auth.google');
+    Route::match(['get', 'post'], '/auth/google', [AuthController::class, 'googleRedirect'])->name('auth.google');
+    Route::get('/auth/google/callback', [AuthController::class, 'googleCallback'])->name('auth.google.callback');
 });
 
 // ==========================================
 // 2. ROUTES UMUM (Sudah Login)
 // ==========================================
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'no-store'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::get('/', function () {
@@ -60,7 +62,7 @@ Route::middleware('auth')->group(function () {
 // ==========================================
 // 3. ROUTES KHUSUS ADMIN
 // ==========================================
-Route::middleware(['auth', 'role:admin'])->group(function () {
+Route::middleware(['auth', 'role:admin', 'no-store'])->group(function () {
 
     // Dashboard
     Route::get('/admin/dashboard', function () {
@@ -220,10 +222,12 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/tiket/buka-semua', [TiketController::class, 'openAll'])->name('admin.tiket.buka-semua');
 
     // ==========================================
-    // ROUTES TRANSAKSI (READ-ONLY: laporan dari pemesanan pengunjung)
+    // ROUTES TRANSAKSI (laporan + verifikasi pembayaran)
     // ==========================================
     Route::get('/admin/transaksi', [TransaksiController::class, 'index'])->name('admin.transaksi');
     Route::get('/admin/transaksi/export', [TransaksiController::class, 'export'])->name('admin.transaksi.export');
+    Route::post('/admin/transaksi/{transaksi}/verify', [TransaksiController::class, 'verify'])->name('admin.transaksi.verify');
+    Route::post('/admin/transaksi/{transaksi}/reject', [TransaksiController::class, 'reject'])->name('admin.transaksi.reject');
     Route::get('/admin/feed', [TransaksiController::class, 'feed'])->name('admin.feed');
 
     // ==========================================
@@ -374,18 +378,19 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 // ==========================================
 // 4. ROUTES KHUSUS PETUGAS
 // ==========================================
-Route::middleware(['auth', 'role:petugas'])->group(function () {
+Route::middleware(['auth', 'role:petugas', 'no-store'])->group(function () {
     Route::get('/petugas/dashboard', [PetugasController::class, 'index'])->name('petugas.dashboard');
     Route::get('/petugas/feed', [PetugasController::class, 'feed'])->name('petugas.feed');
     Route::post('/petugas/scan', [PetugasController::class, 'scan'])->name('petugas.scan');
     Route::post('/petugas/transaksi/{transaksi}/verify', [PetugasController::class, 'verify'])->name('petugas.transaksi.verify');
     Route::post('/petugas/transaksi/{transaksi}/reject', [PetugasController::class, 'reject'])->name('petugas.transaksi.reject');
+    Route::post('/petugas/transaksi/{transaksi}/check-in', [PetugasController::class, 'checkIn'])->name('petugas.transaksi.checkin');
 });
 
 // ==========================================
 // 5. ROUTES KHUSUS PENGUNJUNG
 // ==========================================
-Route::middleware(['auth', 'role:pengunjung'])->group(function () {
+Route::middleware(['auth', 'role:pengunjung', 'no-store'])->group(function () {
     Route::get('/dashboard', [PengunjungController::class, 'dashboard'])->name('dashboard');
     Route::get('/dashboard/feed', [PengunjungController::class, 'feed'])->name('dashboard.feed');
     Route::get('/tiket', [PengunjungController::class, 'tiket'])->name('tiket');
@@ -396,8 +401,19 @@ Route::middleware(['auth', 'role:pengunjung'])->group(function () {
     // Simpan pesanan dari form reservasi ke session + database, lalu arahkan ke checkout
     Route::post('/reservasi/checkout', [PengunjungController::class, 'checkout'])->name('reservasi.checkout');
 
+    // Pilih metode pembayaran (BCA / Mandiri / online) untuk pesanan aktif
+    Route::post('/transaksi/metode', [PengunjungController::class, 'metode'])->name('transaksi.metode');
+
     // Tandai bukti transfer terkirim lalu arahkan ke halaman Tiket Saya
     Route::post('/transaksi/kirim', [PengunjungController::class, 'kirim'])->name('transaksi.kirim');
+
+    // Pembayaran online Midtrans (Snap): buat token & pantau status
+    Route::post('/transaksi/midtrans/pay', [MidtransController::class, 'pay'])->name('transaksi.midtrans.pay');
+    // QRIS via Core API: QR ditampilkan langsung di card pembayaran
+    Route::post('/transaksi/midtrans/qris', [MidtransController::class, 'qris'])->name('transaksi.midtrans.qris');
+    // BCA VA / Mandiri Bill / QRIS via Core API
+    Route::post('/transaksi/midtrans/charge', [MidtransController::class, 'charge'])->name('transaksi.midtrans.charge');
+    Route::get('/transaksi/midtrans/status', [MidtransController::class, 'status'])->name('transaksi.midtrans.status');
 
     // Pengaturan profil: lihat & ubah data akun
     Route::get('/profil', function (Request $request) {
@@ -443,3 +459,8 @@ Route::middleware(['auth', 'role:pengunjung'])->group(function () {
         return redirect()->route('profil')->with('status', 'Profil berhasil diperbarui.');
     })->name('profil.update');
 });
+
+// ==========================================
+// 6. NOTIFIKASI MIDTRANS (server-to-server, tanpa login; diverifikasi signature)
+// ==========================================
+Route::post('/midtrans/callback', [MidtransController::class, 'callback'])->name('midtrans.callback');
