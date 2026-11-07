@@ -146,7 +146,8 @@ class PembayaranMetodeTest extends TestCase
             ->get('/tiket')
             ->assertOk()
             ->assertSee('Daftar Booking')
-            ->assertSee('Menunggu Pembayaran')
+            ->assertSee('MENUNGGU PEMBAYARAN')
+            ->assertDontSee('Gate Siap Masuk')
             ->assertDontSee('Secure Token Authenticated');
 
         $trx->update(['status' => 'lunas']);

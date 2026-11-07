@@ -114,27 +114,43 @@
                 </div>
 
                 @foreach ($tikets as $tiket)
-                    <article data-reveal class="{{ $reveal }} mb-4 rounded-2xl bg-white p-4 {{ $shadow }}">
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <span class="inline-block rounded-md bg-[#E6E8FB] px-2 py-0.5 text-[10px] font-semibold uppercase text-[#3B4A8C]">{{ $tiket->kategori }}</span>
-                                <h3 class="mt-2 text-xl font-bold text-[#0B3A22]">{{ $tiket->nama_tiket }}</h3>
+                    @php $tiketFeatures = collect(explode(',', (string) $tiket->fasilitas))->map(fn ($f) => trim($f))->filter(); @endphp
+                    <article data-reveal class="{{ $reveal }} mb-4 overflow-hidden rounded-2xl bg-white {{ $shadow }}">
+                        @if ($tiket->gambar)
+                            <div class="relative h-44 overflow-hidden bg-slate-200">
+                                <img src="{{ asset('storage/'.$tiket->gambar) }}" alt="{{ $tiket->nama_tiket }}" loading="lazy" class="h-full w-full object-cover">
+                                <span class="absolute left-3 top-3 inline-block rounded-md bg-white/95 px-2 py-0.5 text-[10px] font-semibold uppercase text-[#3B4A8C]">{{ $tiket->kategori }}</span>
                             </div>
-                            <div class="text-right">
-                                <p class="text-[11px] text-slate-600">Mulai</p>
-                                <p data-count="{{ (int) $tiket->harga }}" data-prefix="IDR " class="text-xl font-bold leading-tight text-[#0B3A22]">IDR {{ number_format($tiket->harga, 0, ',', '.') }}</p>
-                                <p class="text-[11px] text-slate-600">/ Tiket</p>
-                            </div>
-                        </div>
-
-                        @if ($tiket->deskripsi)
-                            <p class="mt-3 text-[13px] leading-snug text-slate-700">{{ $tiket->deskripsi }}</p>
                         @endif
+                        <div class="p-4">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    @unless ($tiket->gambar)
+                                        <span class="inline-block rounded-md bg-[#E6E8FB] px-2 py-0.5 text-[10px] font-semibold uppercase text-[#3B4A8C]">{{ $tiket->kategori }}</span>
+                                    @endunless
+                                    <h3 class="mt-2 text-xl font-bold text-[#0B3A22]">{{ $tiket->nama_tiket }}</h3>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-[11px] text-slate-600">Mulai</p>
+                                    <p data-count="{{ (int) $tiket->harga }}" data-prefix="IDR " class="text-xl font-bold leading-tight text-[#0B3A22]">IDR {{ number_format($tiket->harga, 0, ',', '.') }}</p>
+                                    <p class="text-[11px] text-slate-600">/ Tiket</p>
+                                </div>
+                            </div>
 
-                        <p data-tiket-stock="{{ $tiket->id }}" class="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold {{ $tiket->stok > 0 ? 'text-[#0B3A22]' : 'text-red-600' }}">
-                            <span data-stock-dot class="h-1.5 w-1.5 rounded-full {{ $tiket->stok > 0 ? 'bg-[#0B3A22]' : 'bg-red-600' }}"></span>
-                            <span data-stock-text>{{ $tiket->stok > 0 ? 'Tersedia '.$tiket->stok.' tiket' : 'Stok habis' }}</span>
-                        </p>
+                            @if ($tiketFeatures->isNotEmpty())
+                                <div class="mt-3 flex flex-wrap gap-2">
+                                    @foreach ($tiketFeatures as $feature)
+                                        <span class="inline-flex items-center gap-1.5 rounded-lg bg-[#EEF0FB] px-2.5 py-1.5 text-[10px] font-semibold text-slate-700">
+                                            <span class="text-[#8B5E34]">{!! $ic($p['check'], 'h-3 w-3', '2') !!}</span> {{ $feature }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            @if ($tiket->deskripsi)
+                                <p class="mt-3 text-[13px] leading-snug text-slate-700">{{ $tiket->deskripsi }}</p>
+                            @endif
+                        </div>
                     </article>
                 @endforeach
             </section>
@@ -289,23 +305,8 @@
         // 5. Scroll halus untuk kartu hero
         document.documentElement.style.scrollBehavior = reduce ? 'auto' : 'smooth';
 
-        // 6. Ketersediaan real-time (stok tiket & status cabin)
+        // 6. Ketersediaan real-time (status cabin)
         const FEED = @json(route('dashboard.feed'));
-
-        const paintStok = (id, stok) => {
-            const el = document.querySelector(`[data-tiket-stock="${id}"]`);
-            if (!el) return;
-            const ada = stok > 0;
-            el.classList.toggle('text-[#0B3A22]', ada);
-            el.classList.toggle('text-red-600', !ada);
-            const dot = el.querySelector('[data-stock-dot]');
-            if (dot) {
-                dot.classList.toggle('bg-[#0B3A22]', ada);
-                dot.classList.toggle('bg-red-600', !ada);
-            }
-            const text = el.querySelector('[data-stock-text]');
-            if (text) text.textContent = ada ? `Tersedia ${stok} tiket` : 'Stok habis';
-        };
 
         const paintCabin = (id, status) => {
             const el = document.querySelector(`[data-cabin-badge="${id}"]`);
@@ -329,7 +330,6 @@
                 const res = await fetch(FEED, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
                 const json = await res.json();
                 if (!json.ok) return;
-                (json.data.tikets || []).forEach((t) => paintStok(t.id, t.stok));
                 (json.data.cabins || []).forEach((c) => paintCabin(c.id, c.status));
             } catch (e) { /* diamkan, indikator status sudah menangani koneksi */ }
         };

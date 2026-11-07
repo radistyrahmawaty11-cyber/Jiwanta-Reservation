@@ -87,7 +87,7 @@ class PengunjungFlowTest extends TestCase
     public function test_checkout_cabin_creates_reservasi(): void
     {
         $user = $this->pengunjung();
-        $cabin = Cabin::where('status', 'tersedia')->orderBy('id')->first();
+        $cabin = Cabin::where('status', 'tersedia')->where('kapasitas', '>', 0)->orderBy('id')->first();
         $checkin = now()->toDateString();
 
         $this->actingAs($user)
@@ -121,7 +121,7 @@ class PengunjungFlowTest extends TestCase
     {
         $user = $this->pengunjung();
         $tiket = Tiket::orderBy('id')->first();
-        $cabin = Cabin::where('status', 'tersedia')->orderBy('id')->first();
+        $cabin = Cabin::where('status', 'tersedia')->where('kapasitas', '>', 0)->orderBy('id')->first();
         $checkin = now()->toDateString();
         $expected = (int) ($tiket->harga * 2) + (int) ($cabin->harga_per_malam * 3);
 

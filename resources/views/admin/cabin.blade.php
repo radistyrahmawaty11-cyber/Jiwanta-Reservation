@@ -99,6 +99,7 @@
             'normal' => $cabin->harga_per_malam,
             'weekend' => round($cabin->harga_per_malam * 1.2),
             'guest' => null,
+            'status' => $cabin->status,
             'primary' => 'booking',
             'segs' => $cabin->reservasis->map(function ($r) {
                 $in = \Illuminate\Support\Carbon::parse($r->tanggal_checkin);
@@ -111,6 +112,22 @@
                     'title' => $r->pengguna->nama_pengguna ?? 'Tamu',
                     'sub' => $in->format('d M').' - '.$out->format('d M'),
                     'walkin' => false,
+                ];
+            })->values()->all(),
+            'bookings' => $cabin->reservasis->map(function ($r) {
+                $trx = $r->detailtransaksis->first()?->transaksi;
+
+                return [
+                    'kode' => $trx->kode_transaksi ?? '-',
+                    'nama' => $r->pengguna->nama_pengguna ?? 'Tamu',
+                    'nohp' => $r->pengguna->nohp ?? '-',
+                    'email' => $r->pengguna->email ?? '-',
+                    'in' => \Illuminate\Support\Carbon::parse($r->tanggal_checkin)->format('d M Y'),
+                    'out' => \Illuminate\Support\Carbon::parse($r->tanggal_checkout)->format('d M Y'),
+                    'tamu' => (int) $r->jumlah_tamu,
+                    'total' => (int) $r->total_harga,
+                    'status' => $r->status,
+                    'bayar' => $trx->status ?? 'pending',
                 ];
             })->values()->all(),
         ];
@@ -205,7 +222,7 @@ setTimeout(() => {
                             <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0B3A22] text-white">{!! $ic($p['calendar'], 'h-5 w-5') !!}</span>
                             <div>
                                 <h2 class="text-[16px] font-bold leading-tight text-slate-900">Interactive Visual Timeline<br>Kalender</h2>
-                                <p class="relative mt-1 text-[10px] leading-snug text-slate-600">Periode aktif mingguan: <button type="button" data-range-btn title="Klik untuk pilih tanggal" class="inline-flex items-center gap-1 rounded font-semibold text-[#0B3A22] underline decoration-dotted underline-offset-2 transition hover:text-[#7A5230]"><span data-range>20 Sep 2026 - 26 Sep 2026</span>{!! $ic($p['calendar'], 'h-3 w-3') !!}</button><input type="date" data-date-pick tabindex="-1" aria-label="Pilih tanggal awal" class="pointer-events-none absolute left-0 top-full h-0 w-0 opacity-0"></p>
+                                <p class="relative mt-1 text-[10px] leading-snug text-slate-600">Periode aktif mingguan: <button type="button" data-range-btn title="Klik untuk pilih tanggal" class="inline-flex items-center gap-1 rounded font-semibold text-[#0B3A22] underline decoration-dotted underline-offset-2 transition hover:text-[#7A5230]"><span data-range>{{ now()->format('d M Y') }} - {{ now()->copy()->addDays(6)->format('d M Y') }}</span>{!! $ic($p['calendar'], 'h-3 w-3') !!}</button><input type="date" data-date-pick tabindex="-1" aria-label="Pilih tanggal awal" class="pointer-events-none absolute left-0 top-full h-0 w-0 opacity-0"></p>
                             </div>
                         </div>
                         <div class="flex items-center gap-5 text-[10px] text-slate-700">
@@ -377,7 +394,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
     const utc = (y, m, d) => new Date(Date.UTC(y, m, d));
     const iso = (d) => d.toISOString().slice(0, 10);
-    const TODAY = utc(2026, 8, 20);
+    const parseIso = (s) => { const [y, m, d] = s.split('-').map(Number); return utc(y, m - 1, d); };
+    const TODAY = parseIso(@json(now()->toDateString()));
     const addDays = (d, n) => new Date(d.getTime() + n * 864e5);
     let WS = TODAY;
 
@@ -386,9 +404,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const weekStart = () => WS;
 
     const bar = (seg, span, startCol, ukey) => {
-        const col = `style="grid-column:${startCol} / span ${span}${seg.walkin ? ';cursor:pointer' : ''}"` + (seg.walkin ? ` data-cancel="${seg.from}" data-ukey="${ukey}" title="Klik untuk batalkan"` : '') + (seg.type === 'checkin' ? ' title="Check-in 14:00 WIB"' : '');
+        const col = `style="grid-column:${startCol} / span ${span}${seg.walkin ? ';cursor:pointer' : ''}"` + (seg.walkin ? ` data-cancel="${seg.from}" data-ukey="${ukey}" title="Klik untuk batalkan"` : '') + (seg.type === 'occupied' ? ` data-booking="${ukey}"` : '') + (seg.type === 'checkin' ? ' title="Check-in 14:00 WIB"' : '');
         if (seg.type === 'occupied')
-            return `<div ${col} class="flex h-12 items-center gap-2 rounded-xl bg-[#0B3A22] px-3 text-white shadow-sm">
+            return `<div ${col} class="flex h-12 cursor-pointer items-center gap-2 rounded-xl bg-[#0B3A22] px-3 text-white shadow-sm transition hover:brightness-110" title="Klik untuk lihat detail booking">
                 <span class="shrink-0">${ICON(LOCK, 'h-3.5 w-3.5')}</span>
                 <div class="min-w-0 flex-1"><p class="truncate text-[10px] font-bold">${esc(seg.title)}</p><p class="truncate text-[9px] text-white/80">${esc(seg.sub)}</p></div>
                 <span class="relative flex h-2 w-2 shrink-0"><span class="absolute h-full w-full animate-ping rounded-full bg-[#B5F0BE] opacity-70"></span><span class="relative h-2 w-2 rounded-full bg-[#B5F0BE]"></span></span></div>`;
@@ -446,7 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return `<div class="grid grid-cols-[190px_repeat(7,minmax(0,1fr))_110px] items-center gap-2 rounded-xl bg-[#E8EEFC] p-3">
                 <div class="flex items-center gap-3" style="grid-column:1;grid-row:1">
                     <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#0B3A22] text-[13px] font-bold text-white">${u.id}</span>
-                    <div><p class="text-[13px] font-bold text-slate-900">${esc(u.title)}</p><p class="text-[10px] text-slate-600">${esc(u.cap)}</p></div></div>
+                    <div><p class="text-[13px] font-bold text-slate-900">${esc(u.title)}</p><p class="text-[10px] text-slate-600">${esc(u.cap)} • <span class="font-bold ${u.status === 'terisi' ? 'text-[#7A5230]' : 'text-[#0B3A22]'}">${u.status === 'terisi' ? 'Terisi' : 'Tersedia'}</span></p></div></div>
                 <div class="contents [&>*]:row-start-1">${cells}</div>
                 <button type="button" data-tl-action="${u.primary}" data-unit-id="${u.key}" style="grid-column:9;grid-row:1" class="rounded-lg ${u.primary === 'tarif' ? 'bg-[#FBD9B0] text-[#6B4520]' : 'bg-[#DDE6FB] text-slate-800'} px-3 py-2 text-[10px] font-bold transition hover:brightness-95">${u.primary === 'tarif' ? 'Atur Tarif' : 'Detail Booking'}</button></div>`;
         }).join('');
@@ -470,6 +488,21 @@ document.addEventListener('DOMContentLoaded', () => {
         WS = v === 0 ? TODAY : addDays(WS, v * 7);
         renderTimeline();
     }));
+
+    document.addEventListener('click', (e) => {
+        const bk = e.target.closest('[data-booking]');
+        if (bk) {
+            openDetailBooking(bk.dataset.booking);
+            return;
+        }
+
+        const act = e.target.closest('[data-tl-action]');
+        if (!act) return;
+
+        const u = UNITS.find((x) => x.key === act.dataset.unitId);
+        if (act.dataset.tlAction === 'tarif' && u) openTarifModal(u.key, u.title, u.normal, u.weekend);
+        else openDetailBooking(act.dataset.unitId);
+    });
 
     const picker = $('[data-date-pick]');
     const openPicker = () => {
@@ -513,6 +546,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let current = null;
 
+    // ========== DETAIL BOOKING ==========
+    window.openDetailBooking = function(unitKey) {
+        const u = UNITS.find((x) => x.key === unitKey);
+        if (!u) return;
+
+        const titleEl = document.querySelector('[data-m-title]');
+        const subEl = document.querySelector('[data-m-sub]');
+        const bodyEl = document.querySelector('[data-m-body]');
+
+        titleEl.textContent = 'Detail Booking';
+        subEl.textContent = u.title + ' • ' + u.cap;
+        btnSaveModal.dataset.mode = 'booking';
+        btnSaveModal.classList.add('hidden');
+
+        const unitPill = `<div class="flex items-center justify-between rounded-lg bg-slate-100 px-3 py-2">
+            <span class="text-[10px] font-bold uppercase text-slate-600">Status Unit</span>
+            <span class="inline-flex items-center gap-1.5 rounded-full ${u.status === 'terisi' ? 'bg-[#FBD9B0] text-[#6B4520]' : 'bg-[#CDEFD5] text-[#0B3A22]'} px-2.5 py-1 text-[9px] font-bold">
+                <span class="h-1.5 w-1.5 rounded-full ${u.status === 'terisi' ? 'bg-[#7A5230]' : 'bg-[#0B3A22]'}"></span>${u.status === 'terisi' ? 'Sedang Terisi' : 'Tersedia'}
+            </span>
+        </div>`;
+
+        const pill = (b) => {
+            const paid = b.bayar === 'lunas' || b.status === 'confirmed';
+            const label = paid ? 'Terkonfirmasi' : 'Menunggu Pembayaran';
+            return `<span class="shrink-0 rounded-full ${paid ? 'bg-[#CDEFD5] text-[#0B3A22]' : 'bg-[#FBD9B0] text-[#6B4520]'} px-2 py-0.5 text-[9px] font-bold">${label}</span>`;
+        };
+
+        const rows = (u.bookings || []).map((b) => `
+            <div class="rounded-xl border border-slate-200 bg-white p-3">
+                <div class="flex items-start justify-between gap-2">
+                    <div class="min-w-0">
+                        <p class="truncate text-[12px] font-bold text-slate-900">${esc(b.nama)}</p>
+                        <p class="truncate text-[10px] text-slate-500">${esc(b.nohp)}${b.email && b.email !== '-' ? ' • ' + esc(b.email) : ''}</p>
+                    </div>
+                    ${pill(b)}
+                </div>
+                <div class="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[10px] text-slate-600">
+                    <p>Check-in: <b class="text-slate-900">${esc(b.in)}</b></p>
+                    <p>Check-out: <b class="text-slate-900">${esc(b.out)}</b></p>
+                    <p>Tamu: <b class="text-slate-900">${b.tamu} orang</b></p>
+                    <p>Total: <b class="text-slate-900">${rp(b.total)}</b></p>
+                </div>
+                <p class="mt-2 text-[9px] font-medium text-slate-500">Kode: ${esc(b.kode)}</p>
+            </div>`).join('');
+
+        bodyEl.innerHTML = `<div class="space-y-2">${unitPill}${rows || '<div class="rounded-xl bg-slate-100 p-4 text-center text-[11px] text-slate-500">Belum ada booking aktif untuk unit ini.</div>'}</div>`;
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    };
+
     // ========== FUNGSI OPEN/CLOSE MODAL ==========
     window.openTarifModal = function(unitKey, unitName, normalRate, weekendRate) {
         const titleEl = document.querySelector('[data-m-title]');
@@ -522,6 +606,7 @@ document.addEventListener('DOMContentLoaded', () => {
         titleEl.textContent = 'Atur Tarif';
         subEl.textContent = unitName;
         btnSaveModal.textContent = 'Simpan Tarif';
+        btnSaveModal.classList.remove('hidden');
 
         bodyEl.innerHTML = `
             <div class="space-y-4">

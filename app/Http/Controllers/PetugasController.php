@@ -4,10 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Events\OrderStatusUpdated;
 use App\Models\Bank;
+use App\Models\Cabin;
+use App\Models\Detailtransaksi;
+use App\Models\Pengguna;
+use App\Models\Reservasi;
+use App\Models\Tiket;
 use App\Models\Transaksi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class PetugasController extends Controller
 {
@@ -47,6 +54,10 @@ class PetugasController extends Controller
 
     public function reject(Transaksi $transaksi)
     {
+        if ($transaksi->status !== 'gagal') {
+            $transaksi->releaseQuota();
+        }
+
         $transaksi->status = 'gagal';
         $transaksi->save();
 
@@ -95,6 +106,125 @@ class PetugasController extends Controller
         ]);
     }
 
+    public function walkIn(Request $request)
+    {
+        $data = $request->validate([
+            'nama' => ['required', 'string', 'min:3', 'max:100'],
+            'nohp' => ['required', 'string', 'max:20', 'regex:/^\+?[0-9][0-9\s-]{7,18}$/'],
+            'layanan' => ['required', 'string', 'regex:/^(tiket|cabin):\d+$/'],
+            'tanggal' => ['nullable', 'date'],
+            'jumlah' => ['nullable', 'integer', 'min:1', 'max:30'],
+            'malam' => ['nullable', 'integer', 'min:1', 'max:14'],
+        ]);
+
+        [$type, $id] = explode(':', $data['layanan']);
+        $id = (int) $id;
+
+        if ($type === 'tiket') {
+            $tiket = Tiket::find($id);
+            $jumlah = (int) ($data['jumlah'] ?? 0);
+
+            if (! $tiket) {
+                return response()->json(['ok' => false, 'message' => 'Layanan tiket tidak ditemukan.'], 422);
+            }
+            if ($jumlah < 1) {
+                return response()->json(['ok' => false, 'message' => 'Jumlah pengunjung wajib diisi (1 - 30).'], 422);
+            }
+            if ((int) $tiket->stok < $jumlah) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => "Kuota {$tiket->nama_tiket} tidak mencukupi (sisa ".max(0, (int) $tiket->stok).' tiket).',
+                ], 422);
+            }
+
+            $subtotal = (int) $tiket->harga * $jumlah;
+            $detail = [
+                'tiket_id' => $tiket->id,
+                'jumlah' => $jumlah,
+                'harga_satuan' => (int) $tiket->harga,
+                'subtotal' => $subtotal,
+            ];
+            $reservasiData = null;
+        } else {
+            $cabin = Cabin::find($id);
+            $malam = (int) ($data['malam'] ?? 0);
+
+            if (! $cabin) {
+                return response()->json(['ok' => false, 'message' => 'Cabin tidak ditemukan.'], 422);
+            }
+            if ($malam < 1) {
+                return response()->json(['ok' => false, 'message' => 'Jumlah malam wajib diisi (1 - 14).'], 422);
+            }
+            if ((int) $cabin->kapasitas <= 0 || $cabin->status === 'terisi') {
+                return response()->json([
+                    'ok' => false,
+                    'message' => "Cabin {$cabin->nama_cabin} sedang tidak tersedia.",
+                ], 422);
+            }
+
+            $checkin = Carbon::parse($data['tanggal'] ?? today())->startOfDay();
+            $subtotal = (int) $cabin->harga_per_malam * $malam;
+            $detail = [
+                'jumlah' => $malam,
+                'harga_satuan' => (int) $cabin->harga_per_malam,
+                'subtotal' => $subtotal,
+            ];
+            $reservasiData = [
+                'cabin_id' => $cabin->id,
+                'renang_id' => null,
+                'tanggal_checkin' => $checkin->toDateString(),
+                'tanggal_checkout' => $checkin->copy()->addDays($malam)->toDateString(),
+                'jumlah_tamu' => (int) $cabin->kapasitas,
+                'total_harga' => $subtotal,
+                'status' => 'confirmed',
+            ];
+        }
+
+        $transaksi = DB::transaction(function () use ($data, $detail, $reservasiData, $subtotal) {
+            $pengguna = Pengguna::create([
+                'nama_pengguna' => $data['nama'],
+                'email' => 'walkin-'.Str::lower(Str::random(12)).'@jiwanta.local',
+                'nohp' => $data['nohp'],
+                'password' => Str::random(24),
+                'role' => 'pengunjung',
+            ]);
+
+            $transaksi = Transaksi::create([
+                'pengguna_id' => $pengguna->id,
+                'kode_transaksi' => $this->kodeTransaksi(),
+                'tanggal_transaksi' => now(),
+                'total_amount' => $subtotal,
+                'total_bayar' => $subtotal,
+                'kembalian' => 0,
+                'metode_pembayaran' => 'Tunai',
+                'status' => 'lunas',
+                'paid_at' => now(),
+                'verified_at' => now(),
+                'checked_in_at' => now(),
+            ]);
+
+            $reservasi = null;
+            if ($reservasiData !== null) {
+                $reservasi = Reservasi::create($reservasiData + ['pengguna_id' => $pengguna->id]);
+            }
+
+            Detailtransaksi::create($detail + [
+                'transaksi_id' => $transaksi->id,
+                'reservasi_id' => $reservasi?->id,
+            ]);
+
+            $transaksi->consumeQuota();
+
+            return $transaksi;
+        });
+
+        return response()->json([
+            'ok' => true,
+            'transaksi' => $this->present($transaksi->fresh(self::EAGER)),
+            'stats' => $this->stats(),
+        ]);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -120,28 +250,75 @@ class PetugasController extends Controller
             ])
             ->values();
 
+        return [
+            'stats' => $this->stats(),
+            'pending' => $pending,
+            'history' => $history,
+            'layanan' => $this->layanan(),
+            'scanUrl' => route('petugas.scan'),
+            'walkinUrl' => route('petugas.walkin'),
+            'actionUrl' => url('petugas/transaksi'),
+            'feedUrl' => route('petugas.feed'),
+        ];
+    }
+
+    /**
+     * @return array{gate: int, cap: int, verified: int}
+     */
+    private function stats(): array
+    {
         $verifiedToday = Transaksi::where('status', 'lunas')
             ->whereDate('tanggal_transaksi', today())
             ->count();
 
-        $gateToday = (int) Transaksi::with('detailtransaksis')
+        $gateToday = (int) Transaksi::with('detailtransaksis.reservasi')
             ->where('status', 'lunas')
             ->whereDate('tanggal_transaksi', today())
             ->get()
             ->sum(fn (Transaksi $t) => $this->pax($t));
 
         return [
-            'stats' => [
-                'gate' => $gateToday,
-                'cap' => self::PAX_CAP,
-                'verified' => $verifiedToday,
-            ],
-            'pending' => $pending,
-            'history' => $history,
-            'scanUrl' => route('petugas.scan'),
-            'actionUrl' => url('petugas/transaksi'),
-            'feedUrl' => route('petugas.feed'),
+            'gate' => $gateToday,
+            'cap' => self::PAX_CAP,
+            'verified' => $verifiedToday,
         ];
+    }
+
+    /**
+     * @return array{tiket: Collection<int, array<string, mixed>>, cabin: Collection<int, array<string, mixed>>}
+     */
+    private function layanan(): array
+    {
+        return [
+            'tiket' => Tiket::orderBy('nama_tiket')
+                ->get(['id', 'nama_tiket', 'harga', 'stok'])
+                ->map(fn (Tiket $t) => [
+                    'id' => $t->id,
+                    'nama' => $t->nama_tiket,
+                    'harga' => (int) $t->harga,
+                    'stok' => (int) $t->stok,
+                ])
+                ->values(),
+            'cabin' => Cabin::orderBy('nama_cabin')
+                ->get(['id', 'nama_cabin', 'harga_per_malam', 'kapasitas', 'status'])
+                ->map(fn (Cabin $c) => [
+                    'id' => $c->id,
+                    'nama' => 'Cabin '.$c->nama_cabin,
+                    'harga' => (int) $c->harga_per_malam,
+                    'kapasitas' => (int) $c->kapasitas,
+                    'status' => $c->status,
+                ])
+                ->values(),
+        ];
+    }
+
+    private function kodeTransaksi(): string
+    {
+        do {
+            $kode = 'TRX-'.now()->format('Ymd').'-'.str_pad((string) random_int(1, 999), 3, '0', STR_PAD_LEFT);
+        } while (Transaksi::where('kode_transaksi', $kode)->exists());
+
+        return $kode;
     }
 
     private function broadcastStatus(Transaksi $transaksi): void
@@ -256,6 +433,14 @@ class PetugasController extends Controller
 
     private function pax(Transaksi $t): int
     {
+        $t->loadMissing('detailtransaksis.reservasi');
+
+        $detail = $t->detailtransaksis->first();
+
+        if ($detail?->reservasi) {
+            return max(1, (int) $detail->reservasi->jumlah_tamu);
+        }
+
         return max(1, (int) $t->detailtransaksis->sum('jumlah'));
     }
 

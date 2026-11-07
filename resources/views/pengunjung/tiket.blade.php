@@ -191,23 +191,12 @@
         default => 'MENUNGGU PEMBAYARAN',
     };
     $statusKey = $ticket['status'] ?? 'pending';
-    $gatePill = match (true) {
-        $statusKey === 'lunas' && $isCheckedIn => 'Sudah Check-in',
-        $statusKey === 'lunas' && ! empty($ticket['verified']) => 'Terkonfirmasi',
-        $statusKey === 'lunas' => 'Menunggu Konfirmasi Petugas',
-        $statusKey === 'terkirim' => 'Menunggu Verifikasi',
-        $statusKey === 'gagal' => 'Pembayaran Gagal',
-        default => 'Menunggu Pembayaran',
-    };
     $statusColor = match ($statusKey) {
         'lunas' => 'text-[#B5F0BE]',
         'gagal' => 'text-[#F7B0B0]',
         default => 'text-[#FDD9B0]',
     };
     $statusIcon = $statusKey === 'lunas' ? $p['check'] : $p['clock'];
-    $gateOpen = $ticket['open_at'] ?? '';
-    $gateClose = $ticket['close_at'] ?? '';
-    $gateForce = $statusKey === 'lunas';
 
     // QR & barcode gate hanya diterbitkan setelah pembayaran lunas/terverifikasi.
     $qrReady = $statusKey === 'lunas';
@@ -225,15 +214,14 @@
         @if ($ticket)
 
             {{-- ========== STATUS RESERVASI ========== --}}
-            <section data-reveal class="{{ $reveal }} flex items-center justify-between rounded-2xl bg-[#0B3A22] px-4 py-3.5 text-white">
-                <div class="flex items-center gap-3">
+            <section data-reveal class="{{ $reveal }} flex items-center rounded-2xl bg-[#0B3A22] px-4 py-3.5 text-white">
+                <div class="flex min-w-0 flex-1 items-center gap-3">
                     <span id="status-icon" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 {!! $statusColor !!}">{!! $ic($statusIcon, 'h-6 w-6', '2') !!}</span>
-                    <div>
+                    <div class="min-w-0 flex-1">
                         <p class="text-[9px] font-semibold uppercase tracking-wider text-white/70">Status Reservasi</p>
                         <p id="status-label" class="text-[17px] font-bold leading-tight">{{ $statusLabel }}</p>
                     </div>
                 </div>
-                <span id="gate-pill" class="ml-2 shrink-0 whitespace-nowrap rounded-full bg-white/15 px-2.5 py-1.5 text-[10px] font-semibold text-white transition-colors duration-500">{{ $gatePill }}</span>
             </section>
 
             {{-- ========== KARTU TIKET ========== --}}
@@ -501,47 +489,11 @@
             header.classList.toggle('shadow-[0_4px_16px_rgba(15,69,39,0.08)]', window.scrollY > 10);
         }, { passive: true });
 
-        // 5. Status gate real-time (dihitung ulang tiap detik)
-        const pill = document.getElementById('gate-pill');
-        const openAt  = new Date(@json($gateOpen)).getTime();
-        const closeAt = new Date(@json($gateClose)).getTime();
+        // 5. Status pembayaran tiket
         const QR_READY = {{ $qrReady ? 'true' : 'false' }};
         const TICKET_STATUS = @json($statusKey);
         let VERIFIED = {{ ! empty($ticket['verified']) ? 'true' : 'false' }};
         let CHECKED_IN = {{ $isCheckedIn ? 'true' : 'false' }};
-        let FORCE_ACTIVE = {{ $gateForce ? 'true' : 'false' }}; // tiket lunas -> selalu "Gate Siap Masuk"; pesanan session -> ikut jam buka
-        const pad = (n) => String(n).padStart(2, '0');
-
-        const updateGate = () => {
-            const now = Date.now();
-            let text = 'Gate Siap Masuk', warn = false;
-
-            // Barcode baru terbit setelah lunas: pill mengikuti status pembayaran.
-            if (!QR_READY) {
-                text = TICKET_STATUS === 'terkirim'
-                    ? 'Menunggu Verifikasi'
-                    : (TICKET_STATUS === 'gagal' ? 'Pembayaran Gagal' : 'Menunggu Pembayaran');
-                warn = TICKET_STATUS === 'gagal';
-            } else if (!VERIFIED) {
-                text = 'Menunggu Konfirmasi Petugas';
-            } else if (!FORCE_ACTIVE) {
-                if (now < openAt) {
-                    const diff = openAt - now, d = Math.floor(diff / 864e5);
-                    if (d >= 1) text = 'H-' + d;
-                    else {
-                        const h = Math.floor(diff / 36e5), m = Math.floor(diff % 36e5 / 6e4), s = Math.floor(diff % 6e4 / 1e3);
-                        text = 'Buka ' + pad(h) + ':' + pad(m) + ':' + pad(s);
-                    }
-                } else if (now > closeAt) {
-                    text = 'Kedaluwarsa'; warn = true;
-                }
-            }
-            pill.textContent = text;
-            pill.classList.toggle('bg-white/15', !warn);
-            pill.classList.toggle('bg-red-400/40', warn);
-        };
-        updateGate();
-        setInterval(updateGate, 1000);
 
         // 5b. Status realtime (Reverb) — update tanpa refresh
         const IC_CHECK = `{!! $ic($p['check'], 'h-6 w-6', '2') !!}`;
@@ -579,8 +531,6 @@
             if (status === 'lunas') {
                 // Muat ulang agar QR/barcode dan status konfirmasi petugas ikut terbarui.
                 if (!QR_READY || !VERIFIED) { window.location.reload(); return; }
-                FORCE_ACTIVE = true;
-                updateGate();
             }
         };
         if (window.JiwantaRealtime && window.JiwantaRealtime.userChannel) {

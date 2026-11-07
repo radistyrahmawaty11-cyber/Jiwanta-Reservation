@@ -25,9 +25,7 @@ class AdminPagesTest extends TestCase
             '/admin/transaksi',
             '/admin/tiket-renang',
             '/admin/cabin',
-            '/admin/verifikasi',
             '/admin/manajemen-pengguna',
-            '/admin/laporan',
             '/admin/pengaturan',
         ];
 

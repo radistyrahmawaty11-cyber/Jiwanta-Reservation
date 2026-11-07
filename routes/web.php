@@ -12,7 +12,6 @@ use App\Models\Bank;
 use App\Models\Cabin;
 use App\Models\Detailtransaksi;
 use App\Models\Pengguna;
-use App\Models\Reservasi;
 use App\Models\Tiket;
 use App\Models\Transaksi;
 use Illuminate\Http\Request;
@@ -84,13 +83,20 @@ Route::middleware(['auth', 'role:admin', 'no-store'])->group(function () {
             ? round((($pendapatanHariIni - $pendapatanKemarin) / $pendapatanKemarin) * 100, 1)
             : ($pendapatanHariIni > 0 ? 100.0 : 0.0);
 
-        // Kuota tiket (data asli dari tabel tikets + detail_tikets)
-        $tiketKuota = Tiket::withCount(['detail_tikets as terjual' => function ($q) {
-            $q->select(DB::raw('COALESCE(SUM(jumlah), 0)'));
-        }])->get()->map(fn ($t) => [
+        // Kuota tiket: stok = sisa kuota (berkurang otomatis saat pengunjung memesan)
+        $tiketKuota = Tiket::orderBy('id')->get()->map(fn ($t) => [
+            'id' => (int) $t->id,
             'nama' => $t->nama_tiket,
             'kapasitas' => (int) $t->stok,
-            'terjual' => (int) $t->terjual,
+            'terjual' => (int) Detailtransaksi::where('tiket_id', $t->id)
+                ->whereHas('transaksi', fn ($q) => $q->where('status', '!=', 'gagal'))
+                ->sum('jumlah'),
+        ])->values();
+
+        $cabinQuota = Cabin::orderBy('id')->get(['id', 'nama_cabin', 'kapasitas'])->map(fn ($c) => [
+            'id' => (int) $c->id,
+            'nama' => $c->nama_cabin,
+            'kapasitas' => (int) $c->kapasitas,
         ])->values();
 
         $avBgs = ['bg-[#CDEFD5]', 'bg-[#FBD9B0]', 'bg-[#DDE6FB]'];
@@ -195,7 +201,7 @@ Route::middleware(['auth', 'role:admin', 'no-store'])->group(function () {
         return view('admin.dashboard', compact(
             'totalCabin', 'totalCabinTerisi', 'totalPengguna',
             'totalPendapatan', 'tiketTerjual', 'perluVerifikasi', 'tiketKuota',
-            'growthPct', 'queue', 'reservations', 'cabins', 'staff', 'totalTransaksi', 'todayLabel'
+            'growthPct', 'queue', 'reservations', 'cabins', 'staff', 'totalTransaksi', 'todayLabel', 'cabinQuota'
         ));
     })->name('admin.dashboard');
 
@@ -208,6 +214,7 @@ Route::middleware(['auth', 'role:admin', 'no-store'])->group(function () {
     Route::post('/admin/cabin', [CabinController::class, 'store'])->name('admin.cabin.store');
     Route::get('/admin/cabin/{id}/edit', [CabinController::class, 'edit'])->name('admin.cabin.edit');
     Route::put('/admin/cabin/{id}', [CabinController::class, 'update'])->name('admin.cabin.update');
+    Route::put('/admin/cabin/{id}/kapasitas', [CabinController::class, 'updateKapasitas'])->name('admin.cabin.kapasitas');
     Route::delete('/admin/cabin/{id}', [CabinController::class, 'destroy'])->name('admin.cabin.destroy');
 
     // ==========================================
@@ -231,123 +238,12 @@ Route::middleware(['auth', 'role:admin', 'no-store'])->group(function () {
     Route::get('/admin/feed', [TransaksiController::class, 'feed'])->name('admin.feed');
 
     // ==========================================
-    // ROUTES LAINNYA (Fallback agar sidebar tidak error)
-    // ==========================================
-    Route::get('/admin/verifikasi', function () {
-        return view('admin.verifikasi');
-    })->name('verifikasi');
-    Route::get('/verifikasi', function () {
-        return view('admin.verifikasi');
-    })->name('admin.verifikasi');
-
-    // ==========================================
     // ROUTES MANAJEMEN PENGGUNA (data asli dari DB)
     // ==========================================
     Route::get('/admin/manajemen-pengguna', [PenggunaController::class, 'index'])->name('manajemen-pengguna');
     Route::post('/admin/pengguna', [PenggunaController::class, 'store'])->name('admin.pengguna.store');
     Route::put('/admin/pengguna/{pengguna}', [PenggunaController::class, 'update'])->name('admin.pengguna.update');
     Route::delete('/admin/pengguna/{pengguna}', [PenggunaController::class, 'destroy'])->name('admin.pengguna.destroy');
-    Route::get('/admin/laporan', function () {
-        $namaHari = [
-            'Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa',
-            'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu',
-        ];
-        $namaBulan = ['Jan' => 'Jan', 'Feb' => 'Feb', 'Mar' => 'Mar', 'Apr' => 'Apr', 'May' => 'Mei', 'Jun' => 'Jun', 'Jul' => 'Jul', 'Aug' => 'Agu', 'Sep' => 'Sep', 'Oct' => 'Okt', 'Nov' => 'Nov', 'Dec' => 'Des'];
-
-        $totalCabins = Cabin::count();
-        $end = now()->startOfDay();
-
-        $hariNama = fn ($d) => $namaHari[$d->format('l')].', '.$d->format('d').' '.$namaBulan[$d->format('M')].' '.$d->format('Y');
-        $hariSingkat = fn ($d) => substr($namaHari[$d->format('l')], 0, 3).' ('.$d->format('d').')';
-
-        $days = [];
-        for ($i = 5; $i >= 0; $i--) {
-            $date = $end->copy()->subDays($i);
-            $dateStr = $date->toDateString();
-
-            $agg = Detailtransaksi::query()
-                ->join('transaksis', 'transaksis.id', '=', 'detailtransaksis.transaksi_id')
-                ->leftJoin('tikets', 'tikets.id', '=', 'detailtransaksis.tiket_id')
-                ->leftJoin('reservasis', 'reservasis.id', '=', 'detailtransaksis.reservasi_id')
-                ->whereDate('transaksis.tanggal_transaksi', $dateStr)
-                ->where('transaksis.status', 'lunas')
-                ->selectRaw('COALESCE(SUM(CASE WHEN tikets.id IS NOT NULL THEN detailtransaksis.jumlah ELSE 0 END), 0) as tiket_qty')
-                ->selectRaw("COALESCE(SUM(CASE WHEN tikets.nama_tiket LIKE '%Premier%' THEN detailtransaksis.jumlah ELSE 0 END), 0) as prem")
-                ->selectRaw('COALESCE(SUM(CASE WHEN detailtransaksis.tiket_id IS NOT NULL THEN detailtransaksis.subtotal ELSE 0 END), 0) as tk')
-                ->selectRaw('COALESCE(SUM(CASE WHEN reservasis.cabin_id IS NOT NULL THEN detailtransaksis.subtotal ELSE 0 END), 0) as cb')
-                ->first();
-
-            $prem = (int) $agg->prem;
-            $cls = max(0, (int) $agg->tiket_qty - $prem);
-
-            $cab = Reservasi::where('status', 'confirmed')
-                ->whereNotNull('cabin_id')
-                ->whereDate('tanggal_checkin', '<=', $dateStr)
-                ->whereDate('tanggal_checkout', '>=', $dateStr)
-                ->distinct()->count('cabin_id');
-
-            $days[] = [
-                'd' => $hariNama($date),
-                's' => $hariSingkat($date),
-                'cls' => $cls,
-                'prem' => $prem,
-                'cab' => $cab,
-                'tk' => (int) $agg->tk,
-                'cb' => (int) $agg->cb,
-                'peak' => false,
-                'audit' => 'ok',
-            ];
-        }
-
-        // Tandai hari puncak (omzet bersih tertinggi)
-        $peakIdx = null;
-        $peakNet = 0;
-        foreach ($days as $idx => $d) {
-            $n = $d['tk'] + $d['cb'];
-            if ($n > $peakNet) {
-                $peakNet = $n;
-                $peakIdx = $idx;
-            }
-        }
-        if ($peakIdx !== null && $peakNet > 0) {
-            $days[$peakIdx]['peak'] = true;
-        }
-        $peakDay = $peakIdx !== null && $peakNet > 0 ? $days[$peakIdx] : null;
-        $peakOmzet = $peakDay ? $peakDay['tk'] + $peakDay['cb'] : 0;
-        $peakTiket = $peakDay ? $peakDay['cls'] + $peakDay['prem'] : 0;
-
-        $sum = fn (string $k) => array_sum(array_column($days, $k));
-        $cabNights = $sum('cab');
-        $capacity = max(1, $totalCabins * 6);
-        $occupancy = round($cabNights / $capacity * 100, 1);
-        $revpar = (int) round($sum('cb') / $capacity);
-
-        $base = [
-            'omzet' => $sum('tk') + $sum('cb'),
-            'pax' => $sum('cls') + $sum('prem'),
-            'cls' => $sum('cls'),
-            'prem' => $sum('prem'),
-        ];
-
-        // Sparkline: omzet bersih 12 hari terakhir (dalam juta rupiah)
-        $spark = [];
-        for ($i = 11; $i >= 0; $i--) {
-            $dateStr = $end->copy()->subDays($i)->toDateString();
-            $val = Transaksi::where('status', 'lunas')->whereDate('tanggal_transaksi', $dateStr)->sum('total_bayar');
-            $spark[] = round($val / 1e6, 2);
-        }
-
-        $periodStart = $end->copy()->subDays(5);
-        $periodLabel = $periodStart->format('d M Y').' – '.$end->format('d M Y');
-        $monthLabel = $namaBulan[$end->format('M')].' '.$end->format('Y');
-        $totalCabinsLabel = $totalCabins.' Unit';
-
-        return view('admin.laporan', compact(
-            'days', 'base', 'spark', 'occupancy', 'revpar', 'cabNights',
-            'totalCabins', 'totalCabinsLabel', 'periodLabel', 'monthLabel',
-            'peakDay', 'peakOmzet', 'peakTiket'
-        ));
-    })->name('laporan');
     Route::get('/admin/pengaturan', function () {
         $user = auth()->user();
 
@@ -382,6 +278,7 @@ Route::middleware(['auth', 'role:petugas', 'no-store'])->group(function () {
     Route::get('/petugas/dashboard', [PetugasController::class, 'index'])->name('petugas.dashboard');
     Route::get('/petugas/feed', [PetugasController::class, 'feed'])->name('petugas.feed');
     Route::post('/petugas/scan', [PetugasController::class, 'scan'])->name('petugas.scan');
+    Route::post('/petugas/walkin', [PetugasController::class, 'walkIn'])->name('petugas.walkin');
     Route::post('/petugas/transaksi/{transaksi}/verify', [PetugasController::class, 'verify'])->name('petugas.transaksi.verify');
     Route::post('/petugas/transaksi/{transaksi}/reject', [PetugasController::class, 'reject'])->name('petugas.transaksi.reject');
     Route::post('/petugas/transaksi/{transaksi}/check-in', [PetugasController::class, 'checkIn'])->name('petugas.transaksi.checkin');

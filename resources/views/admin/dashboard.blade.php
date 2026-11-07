@@ -74,9 +74,6 @@
                         <button type="button" data-open="report" class="flex items-center gap-2 rounded-lg bg-slate-100 px-4 py-2 text-[11px] font-medium transition hover:bg-slate-200">
                             {!! $ic($p['download'], 'h-4 w-4') !!} Unduh Laporan Ringkas
                         </button>
-                        <button type="button" data-open="walkin" class="flex items-center gap-2 rounded-lg bg-[#0B3A22] px-5 py-2 text-[11px] font-bold text-white transition hover:bg-[#124c2f] shadow-sm">
-                            {!! $ic($p['plus'], 'h-4 w-4') !!} Reservasi Walk-in
-                        </button>
                     </div>
                 </div>
 
@@ -133,54 +130,6 @@
                     {{-- Left Column --}}
                     <div class="space-y-6">
 
-                        {{-- Queue Section --}}
-                        <section class="{{ $card }}">
-                            <div class="p-5 border-b border-slate-100">
-                                <div class="flex items-start justify-between">
-                                    <div class="flex items-start gap-3">
-                                        <span class="mt-1 h-5 w-1.5 shrink-0 rounded-full bg-[#7A5230]"></span>
-                                        <div>
-                                            <h2 class="text-[16px] font-bold text-slate-900">Antrean Verifikasi Cepat</h2>
-                                            <p class="mt-1 text-[11px] leading-relaxed text-slate-600">Struk transfer manual masuk yang membutuhkan validasi admin</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-4">
-                                        <span class="rounded-lg {{ $peach }} px-3 py-1.5 text-center text-[10px] font-bold text-[#6B4520]"><span data-batch>{{ $perluVerifikasi ?? 0 }}</span> Menunggu</span>
-                                        <a href="#" class="text-[11px] font-semibold text-slate-700 hover:text-[#0B3A22]">Lihat Semua (<span data-total>{{ $totalTransaksi ?? 0 }}</span>)</a>
-                                        <a href="#" aria-label="Lihat semua" class="text-slate-400 hover:text-slate-600">{!! $ic($p['arrow'], 'h-4 w-4') !!}</a>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="queue" class="p-5 space-y-3">
-                                @forelse ($queue ?? [] as [$ini, $avBg, $name, $code, $codeBg, $method, $item, $amount, $tix])
-                                    <div data-queue-row data-amount="{{ $amount }}" data-tickets="{{ $tix }}" class="flex items-center gap-4 rounded-xl bg-slate-50 p-4 transition-all hover:bg-slate-100">
-                                        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg {{ $avBg }} text-[14px] font-bold">{{ $ini }}</span>
-                                        <div class="min-w-0 flex-1">
-                                            <p class="flex items-center gap-2 text-[13px] font-bold">
-                                                {{ $name }}
-                                                <span class="rounded-md {{ $codeBg }} px-2 py-0.5 text-[9px] font-bold">{{ $code }}</span>
-                                            </p>
-                                            <p class="mt-1 flex items-center gap-3 text-[11px] text-slate-600">
-                                                <span>{!! $br($method) !!}</span>
-                                                <span class="h-1 w-1 shrink-0 rounded-full bg-slate-400"></span>
-                                                <span>{!! $br($item) !!}</span>
-                                                <span class="h-1 w-1 shrink-0 rounded-full bg-slate-400"></span>
-                                                <b class="text-slate-900">Rp {{ number_format($amount, 0, ',', '.') }}</b>
-                                            </p>
-                                        </div>
-                                        <button type="button" data-action="reject" class="rounded-lg bg-slate-200 px-4 py-2 text-[11px] font-semibold transition hover:bg-slate-300">Tolak</button>
-                                        <button type="button" data-action="verify" class="flex items-center gap-2 rounded-lg bg-[#0B3A22] px-4 py-2 text-[11px] font-bold text-white transition hover:bg-[#124c2f]">
-                                            {!! $ic($p['check'], 'h-4 w-4') !!} Verifikasi
-                                        </button>
-                                    </div>
-                                @empty
-                                    <p class="p-4 text-center text-[11px] text-slate-500">Tidak ada struk transfer yang menunggu verifikasi.</p>
-                                @endforelse
-                            </div>
-                            <p id="queue-empty" class="hidden p-8 text-center text-[12px] font-medium text-slate-500">Semua struk transfer sudah diproses.</p>
-                        </section>
-
                         {{-- Reservations Table --}}
                         <section class="{{ $card }}">
                             <div class="p-5 border-b border-slate-100">
@@ -222,6 +171,56 @@
                                 @endforelse
                             </div>
                         </section>
+
+                        {{-- Cabin Availability & Staff --}}
+                        <div class="grid grid-cols-2 gap-6">
+
+                            {{-- Cabin Availability --}}
+                            <section class="{{ $card }} p-5">
+                                <div class="mb-4 flex items-start justify-between">
+                                    <h2 class="flex items-start gap-2 text-[15px] font-bold text-slate-900"><span class="mt-0.5">{!! $ic($p['cabin'], 'h-5 w-5') !!}</span> <span>Ketersediaan Kabin</span></h2>
+                                    <span class="rounded-lg {{ $mint }} px-3 py-1.5 text-center text-[10px] font-bold">{{ $totalCabin ?? 0 }} Total Unit</span>
+                                </div>
+                                <div class="space-y-2">
+                                    @forelse ($cabins ?? [] as [$n, $sub, $st, $busy, $icon])
+                                        <div class="flex items-center gap-3 rounded-lg bg-slate-50 p-3">
+                                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg {{ $busy ? $lav : $mint }}">{!! $ic($p[$icon], 'h-4 w-4') !!}</span>
+                                            <div class="min-w-0 flex-1">
+                                                <p class="text-[11px] font-bold text-slate-900">{{ $n }}</p>
+                                                <p class="text-[10px] text-slate-600">{{ $sub }}</p>
+                                            </div>
+                                            <span class="shrink-0 rounded-full {{ $busy ? $peach : $mint }} px-2.5 py-1 text-[9px] font-bold">{{ $st }}</span>
+                                        </div>
+                                    @empty
+                                        <p class="py-4 text-center text-[11px] text-slate-500">Belum ada data cabin.</p>
+                                    @endforelse
+                                </div>
+                            </section>
+
+                            {{-- Staff Section --}}
+                            <section class="{{ $card }} p-5">
+                                <div class="mb-4 flex items-center justify-between">
+                                    <h2 class="flex items-center gap-2 text-[15px] font-bold text-slate-900">{!! $ic($p['idcard'], 'h-5 w-5') !!} Petugas Lapangan</h2>
+                                    <span class="relative flex h-2 w-2"><span class="absolute h-full w-full animate-ping rounded-full bg-[#0B3A22] opacity-60"></span><span class="relative h-2 w-2 rounded-full bg-[#0B3A22]"></span></span>
+                                </div>
+                                <div class="space-y-3">
+                                    @forelse ($staff ?? [] as [$ini, $bg, $n, $sub])
+                                        <div class="flex items-center gap-3">
+                                            <span class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full {{ $bg }} text-[11px] font-bold">
+                                                {{ $ini }}<span class="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#0B3A22]"></span>
+                                            </span>
+                                            <div class="min-w-0 flex-1">
+                                                <p class="text-[11px] font-bold text-slate-900">{{ $n }}</p>
+                                                <p class="text-[10px] text-slate-600">{!! $br($sub) !!}</p>
+                                            </div>
+                                            <span class="rounded-full {{ $mint }} px-2.5 py-1 text-[9px] font-bold">Online</span>
+                                        </div>
+                                    @empty
+                                        <p class="py-4 text-center text-[11px] text-slate-500">Belum ada petugas terdaftar.</p>
+                                    @endforelse
+                                </div>
+                            </section>
+                        </div>
                     </div>
 
                     {{-- Right Column --}}
@@ -239,15 +238,16 @@
                             <div class="space-y-4">
                                 @forelse ($tiketKuota ?? [] as $t)
                                     @php
-                                        $cap = max(1, $t['kapasitas']);
+                                        $cap = max(0, $t['kapasitas']);
                                         $used = $t['terjual'];
-                                        $sisa = max(0, $t['kapasitas'] - $used);
-                                        $pct = min(100, (int) round(($used / $cap) * 100));
+                                        $total = $cap + $used;
+                                        $sisa = $cap;
+                                        $pct = $total > 0 ? min(100, (int) round(($used / $total) * 100)) : 0;
                                     @endphp
-                                    <div data-quota-item data-used="{{ $used }}" data-cap="{{ $t['kapasitas'] }}">
-                                        <div class="flex justify-between text-[11px] mb-1"><span class="font-semibold text-slate-700">{{ $t['nama'] }}</span><b class="text-[11px]"><span data-q-used>{{ $used }}</span> / <span data-q-cap>{{ $t['kapasitas'] }}</span></b></div>
+                                    <div data-quota-item data-quota-id="{{ $t['id'] }}" data-used="{{ $used }}" data-cap="{{ $cap }}">
+                                        <div class="flex justify-between text-[11px] mb-1"><span class="font-semibold text-slate-700">{{ $t['nama'] }}</span><b class="text-[11px]"><span data-q-used>{{ $used }}</span> terjual</b></div>
                                         <div class="h-2 overflow-hidden rounded-full bg-slate-100"><div data-q-bar style="width: {{ $pct }}%" class="h-full rounded-full bg-[#0B3A22] transition-all duration-1000"></div></div>
-                                        <p data-q-text class="mt-1.5 text-right text-[10px] text-slate-600">Sisa {{ $sisa }} tiket ({{ $pct }}%)</p>
+                                        <p data-q-text class="mt-1.5 text-right text-[10px] text-slate-600">Sisa {{ $sisa }} tiket ({{ $pct }}% terpakai)</p>
                                     </div>
                                 @empty
                                     <p class="py-4 text-center text-[11px] text-slate-500">Belum ada data tiket.</p>
@@ -259,133 +259,12 @@
                             </div>
                         </section>
 
-                        {{-- Cabin Availability --}}
-                        <section class="{{ $card }} p-5">
-                            <div class="mb-4 flex items-start justify-between">
-                                <h2 class="flex items-start gap-2 text-[15px] font-bold text-slate-900"><span class="mt-0.5">{!! $ic($p['cabin'], 'h-5 w-5') !!}</span> <span>Ketersediaan Kabin</span></h2>
-                                <span class="rounded-lg {{ $mint }} px-3 py-1.5 text-center text-[10px] font-bold">{{ $totalCabin ?? 0 }} Total Unit</span>
-                            </div>
-                            <div class="space-y-2">
-                                @forelse ($cabins ?? [] as [$n, $sub, $st, $busy, $icon])
-                                    <div class="flex items-center gap-3 rounded-lg bg-slate-50 p-3">
-                                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg {{ $busy ? $lav : $mint }}">{!! $ic($p[$icon], 'h-4 w-4') !!}</span>
-                                        <div class="min-w-0 flex-1">
-                                            <p class="text-[11px] font-bold text-slate-900">{{ $n }}</p>
-                                            <p class="text-[10px] text-slate-600">{{ $sub }}</p>
-                                        </div>
-                                        <span class="shrink-0 rounded-full {{ $busy ? $peach : $mint }} px-2.5 py-1 text-[9px] font-bold">{{ $st }}</span>
-                                    </div>
-                                @empty
-                                    <p class="py-4 text-center text-[11px] text-slate-500">Belum ada data cabin.</p>
-                                @endforelse
-                            </div>
-                        </section>
-
-                        {{-- Staff Section --}}
-                        <section class="{{ $card }} p-5">
-                            <div class="mb-4 flex items-center justify-between">
-                                <h2 class="flex items-center gap-2 text-[15px] font-bold text-slate-900">{!! $ic($p['idcard'], 'h-5 w-5') !!} Petugas Lapangan</h2>
-                                <span class="relative flex h-2 w-2"><span class="absolute h-full w-full animate-ping rounded-full bg-[#0B3A22] opacity-60"></span><span class="relative h-2 w-2 rounded-full bg-[#0B3A22]"></span></span>
-                            </div>
-                            <div class="space-y-3">
-                                @forelse ($staff ?? [] as [$ini, $bg, $n, $sub])
-                                    <div class="flex items-center gap-3">
-                                        <span class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full {{ $bg }} text-[11px] font-bold">
-                                            {{ $ini }}<span class="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#0B3A22]"></span>
-                                        </span>
-                                        <div class="min-w-0 flex-1">
-                                            <p class="text-[11px] font-bold text-slate-900">{{ $n }}</p>
-                                            <p class="text-[10px] text-slate-600">{!! $br($sub) !!}</p>
-                                        </div>
-                                        <span class="rounded-full {{ $mint }} px-2.5 py-1 text-[9px] font-bold">Online</span>
-                                    </div>
-                                @empty
-                                    <p class="py-4 text-center text-[11px] text-slate-500">Belum ada petugas terdaftar.</p>
-                                @endforelse
-                            </div>
-                        </section>
                     </div>
                 </div>
 @endsection
 
 @section('overlays')
-{{-- (Bagian Modal Overlay tetap sama persis seperti kode aslimu, tidak diubah agar fungsi JS tetap jalan) --}}
-<div data-modal="walkin" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="wk-title">
-    <div data-close class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
-    <form id="walkin-form" novalidate data-panel class="relative w-full max-w-lg scale-95 overflow-hidden rounded-2xl bg-white opacity-0 shadow-xl transition duration-200">
-        <div class="flex items-start justify-between border-b border-slate-100 px-6 py-4">
-            <div>
-                <h3 id="wk-title" class="text-[16px] font-bold text-slate-900">Reservasi Walk-in</h3>
-                <p class="mt-0.5 text-[11px] text-slate-500">Catat tamu yang datang langsung ke loket.</p>
-            </div>
-            <button type="button" data-close class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Tutup">{!! $ic($p['x'], 'h-5 w-5') !!}</button>
-        </div>
-        <div class="grid grid-cols-2 gap-4 px-6 py-5">
-            <div class="col-span-2">
-                <label class="{{ $lbl }}" for="wk-guest">Nama Tamu</label>
-                <input id="wk-guest" name="guest" type="text" maxlength="60" placeholder="Contoh: Budi Santoso" class="{{ $inp }}">
-                <p data-err="guest" class="{{ $err }}"></p>
-            </div>
-            <div class="col-span-2">
-                <label class="{{ $lbl }}" for="wk-phone">No. WhatsApp</label>
-                <input id="wk-phone" name="phone" type="tel" inputmode="tel" placeholder="+62 812-0000-000" class="{{ $inp }}">
-                <p data-err="phone" class="{{ $err }}"></p>
-            </div>
-            <div class="col-span-2">
-                <label class="{{ $lbl }}" for="wk-service">Layanan</label>
-                <select id="wk-service" name="service" class="{{ $inp }}">
-                    <optgroup label="Tiket Kolam">
-                        <option value="classic">Kolam Air Panas Classic — Rp 45.000/orang</option>
-                        <option value="premier">Belerang Premier VIP — Rp 85.000/orang</option>
-                    </optgroup>
-                    <optgroup label="Cabin Suite">
-                        <option value="pinus">Pinus Cabin Suite — Rp 1.040.000/malam</option>
-                        <option value="magnolia">Magnolia Cabin Suite — Rp 1.040.000/malam</option>
-                        <option value="eukaliptus">Eukaliptus Cabin Suite — Rp 1.040.000/malam</option>
-                    </optgroup>
-                </select>
-            </div>
-            <div>
-                <label class="{{ $lbl }}" for="wk-date">Tanggal</label>
-                <input id="wk-date" name="date" type="date" class="{{ $inp }}">
-                <p data-err="date" class="{{ $err }}"></p>
-            </div>
-            <div data-field="tiket">
-                <label class="{{ $lbl }}" for="wk-time">Jam Kunjungan</label>
-                <input id="wk-time" name="time" type="time" class="{{ $inp }}">
-                <p data-err="time" class="{{ $err }}"></p>
-            </div>
-            <div data-field="cabin" class="hidden">
-                <label class="{{ $lbl }}" for="wk-nights">Jumlah Malam</label>
-                <input id="wk-nights" name="nights" type="number" min="1" max="14" value="1" class="{{ $inp }}">
-                <p data-err="nights" class="{{ $err }}"></p>
-            </div>
-            <div data-field="tiket">
-                <label class="{{ $lbl }}" for="wk-qty">Jumlah Pengunjung</label>
-                <input id="wk-qty" name="qty" type="number" min="1" max="30" value="1" class="{{ $inp }}">
-                <p data-err="qty" class="{{ $err }}"></p>
-            </div>
-            <div>
-                <label class="{{ $lbl }}" for="wk-status">Status</label>
-                <select id="wk-status" name="status" class="{{ $inp }}">
-                    @foreach (array_keys($status) as $st)
-                        <option value="{{ $st }}" {{ $st === 'Lunas' ? 'selected' : '' }}>{{ $st }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-span-2 flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
-                <span class="text-[11px] font-medium text-slate-600">Total Tagihan</span>
-                <b data-wk-total class="text-[18px] text-[#0B3A22]">Rp 0</b>
-            </div>
-            <p data-wk-error class="col-span-2 hidden rounded-lg bg-red-50 px-3 py-2 text-[11px] font-medium text-red-700"></p>
-        </div>
-        <div class="flex justify-end gap-2 border-t border-slate-100 bg-slate-50 px-6 py-4">
-            <button type="button" data-close class="{{ $btnG }}">Batal</button>
-            <button type="submit" class="{{ $btnP }}">{!! $ic($p['check'], 'h-4 w-4') !!} Simpan Reservasi</button>
-        </div>
-    </form>
-</div>
-
+{{-- Modal laporan --}}
 <div data-modal="report" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="rp-title">
     <div data-close class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
     <form id="report-form" data-panel class="relative w-full max-w-md scale-95 overflow-hidden rounded-2xl bg-white opacity-0 shadow-xl transition duration-200">
@@ -431,30 +310,70 @@
 
 <div data-modal="quota" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="quota-title">
     <div data-close class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
-    <div data-panel class="relative w-full max-w-md scale-95 rounded-2xl bg-white p-6 opacity-0 shadow-xl transition duration-200">
-        <div class="mb-4 flex items-start justify-between">
+    <div data-panel class="relative flex max-h-[90vh] w-full max-w-md scale-95 flex-col overflow-hidden rounded-2xl bg-white opacity-0 shadow-xl transition duration-200">
+        <div class="mb-4 flex items-start justify-between border-b border-slate-100 px-6 py-4">
             <div>
-                <h3 id="quota-title" class="text-[16px] font-bold text-slate-900">Atur Kuota Tiket</h3>
-                <p class="mt-1 text-[11px] leading-relaxed text-slate-600">Sesuaikan kapasitas harian tiket renang Classic dan Premier.</p>
+                <h3 id="quota-title" class="text-[16px] font-bold text-slate-900">Atur Kuota</h3>
+                <p class="mt-1 text-[11px] leading-relaxed text-slate-600">Sesuaikan kuota harian tiket renang dan kapasitas tiap kabin. Isi <b>0</b> untuk menutup penjualan/pemesanan.</p>
             </div>
             <button type="button" data-close class="text-slate-400 transition hover:text-slate-600" aria-label="Tutup">
                 {!! $ic($p['x'], 'h-5 w-5') !!}
             </button>
         </div>
-        <div class="space-y-4">
-            <div>
-                <label for="quota-classic" class="{{ $lbl }}">Tiket Renang Classic (kapasitas)</label>
-                <input id="quota-classic" type="number" min="0" max="100000" value="200" class="{{ $inp }}">
+        <div class="flex-1 overflow-y-auto px-6 py-5">
+            <div class="space-y-5">
+                <div>
+                    <p class="{{ $lbl }}">Kuota Tiket Renang</p>
+                    <div class="space-y-2">
+                        @forelse ($tiketKuota ?? [] as $t)
+                            <div class="flex items-center gap-3">
+                                <div class="min-w-0 flex-1">
+                                    <p class="truncate text-[11px] font-semibold text-slate-800">{{ $t['nama'] }}</p>
+                                    <p class="text-[10px] text-slate-500">Terjual {{ $t['terjual'] }} tiket</p>
+                                </div>
+                                <div class="w-24 shrink-0">
+                                    <input type="number" min="0" max="100000" step="1" value="{{ $t['kapasitas'] }}"
+                                           data-quota-id="{{ $t['id'] }}"
+                                           data-quota-url="/admin/tiket/{{ $t['id'] }}/kuota"
+                                           data-quota-nama="{{ $t['nama'] }}"
+                                           data-quota-terjual="{{ $t['terjual'] }}"
+                                           data-current="{{ $t['kapasitas'] }}"
+                                           aria-label="Kuota {{ $t['nama'] }}" class="{{ $inp }} text-right">
+                                </div>
+                            </div>
+                        @empty
+                            <p class="py-2 text-center text-[11px] text-slate-500">Belum ada data tiket.</p>
+                        @endforelse
+                    </div>
+                </div>
+
+                <div>
+                    <p class="{{ $lbl }}">Kapasitas Kabin</p>
+                    <div class="space-y-2">
+                        @forelse ($cabinQuota ?? [] as $c)
+                            <div class="flex items-center gap-3">
+                                <p class="min-w-0 flex-1 truncate text-[11px] font-semibold text-slate-800">{{ $c['nama'] }}</p>
+                                <div class="w-24 shrink-0">
+                                    <input type="number" min="0" max="100" step="1" value="{{ $c['kapasitas'] }}"
+                                           data-cabin-id="{{ $c['id'] }}"
+                                           data-cabin-url="/admin/cabin/{{ $c['id'] }}/kapasitas"
+                                           data-cabin-nama="{{ $c['nama'] }}"
+                                           data-current="{{ $c['kapasitas'] }}"
+                                           aria-label="Kapasitas {{ $c['nama'] }}" class="{{ $inp }} text-right">
+                                </div>
+                            </div>
+                        @empty
+                            <p class="py-2 text-center text-[11px] text-slate-500">Belum ada data kabin.</p>
+                        @endforelse
+                    </div>
+                </div>
+
+                <p id="quota-error" class="{{ $err }}"></p>
             </div>
-            <div>
-                <label for="quota-premier" class="{{ $lbl }}">Tiket Renang Premier (kapasitas)</label>
-                <input id="quota-premier" type="number" min="0" max="100000" value="100" class="{{ $inp }}">
-            </div>
-            <p id="quota-error" class="{{ $err }}"></p>
-            <div class="flex justify-end gap-2 pt-1">
-                <button type="button" data-close class="{{ $btnG }}">Batal</button>
-                <button type="button" id="quota-save" class="{{ $btnP }}">Simpan Kuota</button>
-            </div>
+        </div>
+        <div class="flex justify-end gap-2 border-t border-slate-100 px-6 py-4">
+            <button type="button" data-close class="{{ $btnG }}">Batal</button>
+            <button type="button" id="quota-save" class="{{ $btnP }}">Simpan Kuota</button>
         </div>
     </div>
 </div>
@@ -492,8 +411,8 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const $ = (s) => document.querySelector(s);
-        const $$ = (s) => document.querySelectorAll(s);
+        const $ = (s, root = document) => root.querySelector(s);
+        const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
         const fmt = (n) => Math.round(n).toLocaleString('id-ID');
 
         const animate = (el, to, dur = 900) => {
@@ -515,16 +434,24 @@
             revenue: {{ $totalPendapatan ?? 0 }},
             sold: {{ $tiketTerjual ?? 0 }},
         };
-        const CAP = {{ \App\Models\Tiket::sum('stok') ?: 1 }};
+        const QUOTA = @json($tiketKuota);
+        let CAP = {{ \App\Models\Tiket::sum('stok') ?: 1 }};
+        const quotaRow = (re) => QUOTA.find((t) => re.test(t.nama || ''));
+        let Q1_CAP = quotaRow(/classic/i)?.kapasitas ?? CAP;
+        let Q2_CAP = quotaRow(/premier/i)?.kapasitas ?? CAP;
+        S.q1 = quotaRow(/classic/i)?.terjual ?? 0;
+        S.q2 = quotaRow(/premier/i)?.terjual ?? 0;
+        const CSRF = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
         const renderQuota = () => {
             $$('[data-quota-item]').forEach((el) => {
                 const used = Number(el.dataset.used);
-                const cap = Math.max(1, Number(el.dataset.cap));
-                const pct = Math.min(100, Math.round((used / cap) * 100));
+                const cap = Math.max(0, Number(el.dataset.cap));
+                const total = used + cap;
+                const pct = total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0;
                 const bar = $('[data-q-bar]', el), txt = $('[data-q-text]', el);
                 if (bar) bar.style.width = pct + '%';
-                if (txt) txt.textContent = 'Sisa ' + Math.max(0, cap - used) + ' tiket (' + pct + '%)';
+                if (txt) txt.textContent = 'Sisa ' + cap + ' tiket (' + pct + '% terpakai)';
                 animate($('[data-q-used]', el), used, 900);
             });
         };
@@ -532,10 +459,11 @@
         const render = () => {
             animate($('[data-revenue]'), S.revenue, 1200);
             animate($('[data-sold]'), S.sold);
-            const pct = Math.min(100, Math.round((S.sold / CAP) * 100));
+            const pool = CAP + S.sold;
+            const pct = pool > 0 ? Math.min(100, Math.round((S.sold / pool) * 100)) : 0;
             $('[data-sold-bar]').style.width = pct + '%';
             $('[data-sold-pct]').textContent = pct + '% Terisi';
-            $('[data-sold-left]').textContent = 'Sisa ' + Math.max(0, CAP - S.sold) + ' Slot';
+            $('[data-sold-left]').textContent = 'Sisa ' + Math.max(0, CAP) + ' Slot';
             renderQuota();
         };
 
@@ -549,7 +477,7 @@
         render();
 
         const setAll = (sel, v) => $$(sel).forEach((el) => (el.textContent = v));
-        let total = Number($('[data-total]').textContent);
+        let total = Number($('[data-total]')?.textContent || 0);
         let batch = Number($('[data-batch]').textContent);
 
         $$('[data-action]').forEach((btn) => {
@@ -594,9 +522,7 @@
 
         const rp = (n) => 'Rp ' + fmt(n);
         const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-        const STATUS = @json($status);
         const TODAY = '2026-09-20';
-        const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
         let toastTimer;
         const toast = (msg) => {
@@ -634,39 +560,95 @@
             if (e.target.closest('[data-close]')) closeModal();
             const opener = e.target.closest('[data-open]');
             if (!opener) return;
-            if (opener.dataset.open === 'walkin') openWalkin();
             if (opener.dataset.open === 'report') openModal('report');
             if (opener.dataset.open === 'quota') { syncQuotaInputs(); openModal('quota'); }
         });
 
-        const qClassic = $('#quota-classic');
-        const qPremier = $('#quota-premier');
-        const qError = $('#quota-error');
+        const quotaError = $('#quota-error');
 
         const syncQuotaInputs = () => {
-            qClassic.value = Q1_CAP;
-            qPremier.value = Q2_CAP;
-            qError.classList.add('hidden');
+            $$('[data-current]').forEach((el) => { el.value = el.dataset.current; });
+            quotaError.classList.add('hidden');
         };
 
-        $('#quota-save').addEventListener('click', () => {
-            const c = Number(qClassic.value);
-            const p = Number(qPremier.value);
-            if (!Number.isInteger(c) || !Number.isInteger(p) || c < 0 || p < 0 || c > 100000 || p > 100000) {
-                qError.textContent = 'Masukkan angka kuota yang valid (0 - 100000).';
-                qError.classList.remove('hidden');
+        const jsonPut = async (url, body) => {
+            const res = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': CSRF,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify(body),
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                const first = Object.values(err.errors || {}).flat()[0];
+                throw new Error(first || err.message || `Gagal menyimpan (${res.status}).`);
+            }
+            return res.json().catch(() => ({}));
+        };
+
+        $('#quota-save').addEventListener('click', async () => {
+            quotaError.classList.add('hidden');
+            const jobs = [];
+            let invalid = null;
+
+            $$('input[data-quota-id]').forEach((el) => {
+                const val = Number(el.value);
+                if (!Number.isInteger(val) || val < 0 || val > 100000) {
+                    invalid = `${el.dataset.quotaNama}: isi sisa kuota 0 - 100000 (0 = tutup penjualan).`;
+                    return;
+                }
+                jobs.push({ el, url: el.dataset.quotaUrl, body: { cap: val }, value: val, type: 'tiket' });
+            });
+
+            if (!invalid) {
+                $$('input[data-cabin-id]').forEach((el) => {
+                    const val = Number(el.value);
+                    if (!Number.isInteger(val) || val < 0 || val > 100) {
+                        invalid = `${el.dataset.cabinNama}: isi 0 untuk menutup pemesanan, atau 1 - 100.`;
+                        return;
+                    }
+                    jobs.push({ el, url: el.dataset.cabinUrl, body: { kapasitas: val }, value: val, type: 'cabin' });
+                });
+            }
+
+            if (invalid) {
+                quotaError.textContent = invalid;
+                quotaError.classList.remove('hidden');
                 return;
             }
-            if (c < S.q1 || p < S.q2) {
-                qError.textContent = 'Kuota tidak boleh lebih kecil dari yang sudah terjual (Classic ' + S.q1 + ', Premier ' + S.q2 + ').';
-                qError.classList.remove('hidden');
-                return;
+            if (!jobs.length) return;
+
+            const btn = $('#quota-save');
+            const label = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Menyimpan...';
+            try {
+                await Promise.all(jobs.map((j) => jsonPut(j.url, j.body)));
+                jobs.forEach((j) => { j.el.dataset.current = String(j.value); });
+                jobs.filter((j) => j.type === 'tiket').forEach((j) => {
+                    const item = $(`[data-quota-item][data-quota-id="${j.el.dataset.quotaId}"]`);
+                    if (item) item.dataset.cap = String(j.value);
+                    const row = QUOTA.find((q) => String(q.id) === String(j.el.dataset.quotaId));
+                    if (row) row.kapasitas = j.value;
+                });
+
+                CAP = Math.max(1, $$('[data-quota-item]').reduce((sum, el) => sum + Number(el.dataset.cap || 0), 0));
+                Q1_CAP = quotaRow(/classic/i)?.kapasitas ?? CAP;
+                Q2_CAP = quotaRow(/premier/i)?.kapasitas ?? CAP;
+                render();
+                closeModal();
+                toast('Kuota berhasil diperbarui');
+            } catch (err) {
+                quotaError.textContent = err.message;
+                quotaError.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = label;
             }
-            Q1_CAP = c;
-            Q2_CAP = p;
-            render();
-            closeModal();
-            toast('Kuota tiket diperbarui');
         });
 
         const resvCellText = (el) => el
@@ -689,134 +671,6 @@
             openModal('resv');
         });
 
-        const SERVICES = {
-            classic:    { lines: ['Tiket Renang', 'Classic'], type: 'tiket', price: 45000 },
-            premier:    { lines: ['Tiket Renang', 'Premier'], type: 'tiket', price: 85000 },
-            pinus:      { lines: ['Pinus', 'Cabin', 'Suite'],       type: 'cabin', price: 1040000 },
-            magnolia:   { lines: ['Magnolia', 'Cabin', 'Suite'],    type: 'cabin', price: 1040000 },
-            eukaliptus: { lines: ['Eukaliptus', 'Cabin', 'Suite'],  type: 'cabin', price: 1040000 },
-        };
-
-        const form = $('#walkin-form');
-        const f = (n) => form.elements[n];
-
-        const updateForm = () => {
-            const s = SERVICES[f('service').value];
-            form.querySelectorAll('[data-field]').forEach((el) => el.classList.toggle('hidden', el.dataset.field !== s.type));
-            const n = Number(s.type === 'tiket' ? f('qty').value : f('nights').value) || 0;
-            $('[data-wk-total]').textContent = rp(s.price * n);
-        };
-        ['service', 'qty', 'nights'].forEach((n) => f(n).addEventListener('input', updateForm));
-
-        const clearErrors = () => {
-            form.querySelectorAll('[data-err]').forEach((el) => { el.textContent = ''; el.classList.add('hidden'); });
-            form.querySelectorAll('input, select').forEach((el) => el.classList.remove('border-red-400'));
-            $('[data-wk-error]').classList.add('hidden');
-        };
-
-        const openWalkin = () => {
-            clearErrors(); form.reset();
-            f('date').value = TODAY;
-            f('time').value = new Date().toTimeString().slice(0, 5);
-            f('status').value = 'Lunas';
-            updateForm();
-            openModal('walkin');
-        };
-
-        const splitName = (name) => {
-            const w = name.trim().split(/\s+/);
-            if (w.length < 2) return [name.trim()];
-            const k = Math.ceil(w.length / 2);
-            return [w.slice(0, k).join(' '), w.slice(k).join(' ')];
-        };
-        const splitPhone = (ph) => {
-            const i = ph.indexOf('-');
-            return i > 0 && i < ph.length - 1 ? [ph.slice(0, i + 1), ph.slice(i + 1)] : [ph];
-        };
-        const dateLines = (s, d) => {
-            const dt = new Date(d.date + 'T00:00:00');
-            if (s.type === 'tiket') return [`${dt.getDate()} ${MON[dt.getMonth()]}`, `${dt.getFullYear()},`, `${d.time} WIB`];
-            const out = new Date(dt); out.setDate(out.getDate() + d.nights);
-            const left = dt.getMonth() === out.getMonth() ? `${dt.getDate()}` : `${dt.getDate()} ${MON[dt.getMonth()]}`;
-            return [`${left} - ${out.getDate()} ${MON[out.getMonth()]}`, `(${d.nights} Malam)`];
-        };
-        const nextCode = () => {
-            const nums = [...$$('#reservations [data-type]')].map((r) => parseInt(r.children[0].textContent.replace(/\D/g, ''), 10) || 0);
-            return Math.max(8000, ...nums) + 1;
-        };
-        const lines = (arr) => arr.map(esc).join('<br>');
-
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            clearErrors();
-            const d = {
-                guest: f('guest').value.trim(), phone: f('phone').value.trim(), service: f('service').value,
-                date: f('date').value, time: f('time').value, qty: Number(f('qty').value) || 0,
-                nights: Number(f('nights').value) || 0, status: f('status').value,
-            };
-            const s = SERVICES[d.service];
-
-            const errs = {};
-            if (d.guest.length < 3) errs.guest = 'Nama tamu minimal 3 karakter.';
-            if (!/^\+?[0-9][0-9\s-]{7,16}$/.test(d.phone)) errs.phone = 'Nomor tidak valid (contoh: +62 812-0000-000).';
-            if (!d.date) errs.date = 'Tanggal wajib diisi.';
-            if (s.type === 'tiket') {
-                if (!d.time) errs.time = 'Jam kunjungan wajib diisi.';
-                if (!(d.qty >= 1 && d.qty <= 30)) errs.qty = 'Jumlah 1 - 30 orang.';
-            } else if (!(d.nights >= 1 && d.nights <= 14)) errs.nights = 'Jumlah malam 1 - 14.';
-            if (Object.keys(errs).length) {
-                Object.entries(errs).forEach(([k, msg]) => {
-                    const el = form.querySelector(`[data-err="${k}"]`);
-                    el.textContent = msg; el.classList.remove('hidden'); f(k).classList.add('border-red-400');
-                });
-                return;
-            }
-
-            const counted = d.status !== 'Menunggu';
-            if (counted && s.type === 'tiket') {
-                const isClassic = d.service === 'classic';
-                const left = isClassic ? Q1_CAP - S.q1 : Q2_CAP - S.q2;
-                const err = $('[data-wk-error]');
-                if (d.qty > left) { err.textContent = `Kuota ${isClassic ? 'Classic' : 'Premier'} tidak cukup. Sisa ${left} tiket.`; err.classList.remove('hidden'); return; }
-                if (S.sold + d.qty > CAP) { err.textContent = `Kapasitas kolam harian penuh. Sisa ${CAP - S.sold} slot.`; err.classList.remove('hidden'); return; }
-            }
-
-            const [bg, dot] = STATUS[d.status];
-            const row = document.createElement('div');
-            row.dataset.type = s.type;
-            row.className = 'grid grid-cols-[60px_120px_100px_100px_90px_1fr] items-center px-5 py-4 transition hover:bg-slate-50 border-b border-slate-100 last:border-0';
-            row.innerHTML = `
-                <span class="text-[10px] font-bold">#JW-<br>${nextCode()}</span>
-                <span>
-                    <span class="block text-[11px] font-semibold">${lines(splitName(d.guest))}</span>
-                    <span class="mt-0.5 block text-[10px] text-slate-500">${lines(splitPhone(d.phone))}</span>
-                </span>
-                <span class="text-[11px] leading-relaxed">${lines(s.lines)}</span>
-                <span class="text-[10px] leading-relaxed">${lines(dateLines(s, d))}</span>
-                <span><span class="inline-flex items-center gap-1.5 rounded-full ${bg} px-2.5 py-1 text-[9px] font-bold"><span class="h-1.5 w-1.5 rounded-full ${dot}"></span>${esc(d.status)}</span></span>
-                <button type="button" class="justify-self-center text-slate-400 hover:text-slate-600" aria-label="Aksi">
-                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
-                </button>`;
-
-            const activeTab = [...$$('[data-filter]')].find((t) => t.classList.contains('bg-[#0B3A22]'));
-            if (activeTab && activeTab.dataset.filter !== 'all' && activeTab.dataset.filter !== s.type) row.classList.add('hidden');
-            if (!reduce) row.classList.add('opacity-0');
-            $('#reservations').prepend(row);
-            requestAnimationFrame(() => requestAnimationFrame(() => row.classList.remove('opacity-0')));
-
-            if (counted) {
-                S.revenue += s.price * (s.type === 'tiket' ? d.qty : d.nights);
-                if (s.type === 'tiket') {
-                    S.sold += d.qty;
-                    if (d.service === 'classic') S.q1 += d.qty; else S.q2 += d.qty;
-                }
-                render();
-            }
-
-            closeModal();
-            toast(`Reservasi walk-in #JW-${row.children[0].textContent.replace(/\D/g, '')} ditambahkan`);
-        });
-
         const rForm = $('#report-form');
 
         const cellText = (el, sep) => el.innerHTML.split(/<br\s*\/?>/i).map((s) => s.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').trim()).join(sep).replace(/\s+/g, ' ').trim();
@@ -828,11 +682,11 @@
         const buildReport = (sections) => {
             const out = { title: 'Laporan Ringkas Operasional - Jiwanta Ciwidey', period: 'Hari ini, 20 Sep 2026', blocks: [] };
             if (sections.includes('summary')) out.blocks.push({ name: 'Ringkasan', head: ['Indikator', 'Nilai'], rows: [
-                ['Pendapatan hari ini', rp(S.revenue)], ['Tiket terjual', `${S.sold} / ${CAP}`], ['Okupansi cabin', '{{ $totalCabinTerisi ?? 0 }} / {{ $totalCabin ?? 0 }} (100%)'], ['Struk perlu verifikasi', $('[data-batch]').textContent],
+                ['Pendapatan hari ini', rp(S.revenue)], ['Tiket terjual', `${S.sold} tiket`], ['Okupansi cabin', '{{ $totalCabinTerisi ?? 0 }} / {{ $totalCabin ?? 0 }} (100%)'], ['Struk perlu verifikasi', $('[data-batch]').textContent],
             ] });
             if (sections.includes('reservations')) out.blocks.push({ name: 'Daftar Reservasi', head: ['Kode', 'Nama Tamu', 'No. WhatsApp', 'Layanan', 'Jadwal', 'Status'], rows: readReservations() });
             if (sections.includes('quota')) out.blocks.push({ name: 'Kuota & Okupansi', head: ['Kolam / Unit', 'Terjual', 'Kapasitas', 'Sisa'], rows: [
-                ['Tiket Renang Classic', S.q1, Q1_CAP, Q1_CAP - S.q1], ['Tiket Renang Premier', S.q2, Q2_CAP, Q2_CAP - S.q2], ['Cabin Suite & Cabin Short ({{ $totalCabin ?? 0 }} unit)', {{ $totalCabinTerisi ?? 0 }}, {{ $totalCabin ?? 0 }}, {{ ($totalCabin ?? 0) - ($totalCabinTerisi ?? 0) }}],
+                ['Tiket Renang Classic', S.q1, S.q1 + Q1_CAP, Q1_CAP], ['Tiket Renang Premier', S.q2, S.q2 + Q2_CAP, Q2_CAP], ['Cabin Suite & Cabin Short ({{ $totalCabin ?? 0 }} unit)', {{ $totalCabinTerisi ?? 0 }}, {{ $totalCabin ?? 0 }}, {{ ($totalCabin ?? 0) - ($totalCabinTerisi ?? 0) }}],
             ] });
             return out;
         };

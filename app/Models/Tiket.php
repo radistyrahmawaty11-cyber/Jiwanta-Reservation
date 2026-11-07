@@ -15,6 +15,8 @@ class Tiket extends Model
         'harga',
         'stok',
         'kategori',
+        'gambar',
+        'fasilitas',
     ];
 
     public function detail_tikets()

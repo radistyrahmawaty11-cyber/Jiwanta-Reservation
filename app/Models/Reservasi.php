@@ -34,4 +34,9 @@ class Reservasi extends Model
     {
         return $this->belongsTo(Renang::class);
     }
+
+    public function detailtransaksis()
+    {
+        return $this->hasMany(Detailtransaksi::class);
+    }
 }

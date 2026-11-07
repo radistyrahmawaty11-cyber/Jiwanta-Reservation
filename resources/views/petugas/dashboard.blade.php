@@ -37,6 +37,7 @@
         'search'  => 'M11 18a7 7 0 100-14 7 7 0 000 14zM21 21l-4.5-4.5',
         'x'       => 'M6 6l12 12M18 6L6 18',
         'cloud'   => 'M7 18a4 4 0 010-8 5 5 0 019.6-1A4.5 4.5 0 0117 18H7z',
+        'plus'    => 'M12 5v14M5 12h14',
     ];
 
     $mint = 'bg-[#CDEFD5]'; $peach = 'bg-[#FBD9B0]'; $lav = 'bg-[#DDE6FB]'; $soft = 'bg-[#EEF1FD]';
@@ -49,11 +50,16 @@
             <section class="jw-rise flex flex-wrap items-end justify-between gap-4">
                 <div>
                     <h1 class="text-[26px] font-bold leading-tight">Dashboard Petugas Gate</h1>
-                    <p class="mt-1 max-w-xl text-[13px] leading-relaxed text-slate-600">Scan barcode e-ticket pengunjung (Code 128 / QR) dan verifikasi bukti pembayaran transfer.</p>
+                    <p class="mt-1 max-w-xl text-[13px] leading-relaxed text-slate-600">Scan barcode e-ticket pengunjung (Code 128 / QR) untuk memvalidasi tiket dan mencatat check-in.</p>
                 </div>
-                <span class="flex items-center gap-2 rounded-full {{ $mint }} px-4 py-2 text-[11px] font-semibold">
-                    {!! $ic($p['cloud'], 'h-4 w-4') !!} <span data-realtime-text>Realtime • Sinkron <span data-sync>2</span> dtk lalu</span>
-                </span>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" id="walkin-open" class="flex items-center gap-2 rounded-full bg-[#0B3A22] px-4 py-2 text-[11px] font-bold text-white transition hover:bg-[#124c2f] active:scale-95">
+                        {!! $ic($p['plus'], 'h-4 w-4') !!} Reservasi Walk-in
+                    </button>
+                    <span class="flex items-center gap-2 rounded-full {{ $mint }} px-4 py-2 text-[11px] font-semibold">
+                        {!! $ic($p['cloud'], 'h-4 w-4') !!} <span data-realtime-text>Realtime • Sinkron <span data-sync>2</span> dtk lalu</span>
+                    </span>
+                </div>
             </section>
 
             {{-- Ringkasan --}}
@@ -81,7 +87,7 @@
                 {{-- ========== KIRI: SCAN ========== --}}
                 <div class="space-y-5">
 
-                    <section class="jw-rise {{ $card }} p-5 lg:p-6" style="animation-delay:.1s">
+                    <section id="scanner" class="jw-rise {{ $card }} p-5 lg:p-6" style="animation-delay:.1s">
                         <div class="flex flex-wrap items-center justify-between gap-3">
                             <div class="flex items-center gap-3">
                                 <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-[#0B3A22] text-white">{!! $ic($p['scan'], 'h-5 w-5') !!}</span>
@@ -113,6 +119,7 @@
                                 <span class="jw-scanline absolute left-[-10%] right-[-10%] h-0.5 rounded-full bg-white shadow-[0_0_14px_4px_rgba(255,255,255,0.75)]"></span>
                             </div>
 
+                            <button type="button" id="cam-flip" class="absolute left-3 top-3 hidden rounded-full bg-black/45 px-3 py-1.5 text-[10px] font-bold text-white transition hover:bg-black/60">Balik Tampilan</button>
                             <button type="button" id="cam-stop" class="absolute right-3 top-3 hidden rounded-full bg-black/45 px-3 py-1.5 text-[10px] font-bold text-white transition hover:bg-black/60">Matikan Kamera</button>
                             <p id="cam-msg" class="absolute bottom-3 left-3 right-3 hidden rounded-lg bg-black/55 px-3 py-2 text-[11px] leading-snug text-white"></p>
                         </div>
@@ -132,12 +139,14 @@
                             </p>
                         </div>
                     </section>
+                </div>
 
+                {{-- ========== KANAN: HASIL SCAN & AKTIVITAS ========== --}}
+                <div class="space-y-5">
                     {{-- Hasil scan --}}
                     <div id="result" aria-live="polite"></div>
 
-                    {{-- Riwayat singkat --}}
-                    <section class="jw-rise {{ $card }} p-5 lg:p-6" style="animation-delay:.14s">
+                    <section class="jw-rise {{ $card }} p-5 lg:p-6" style="animation-delay:.12s">
                         <div class="flex items-center justify-between">
                             <h2 class="text-[16px] font-bold">Aktivitas Terakhir</h2>
                             <span class="text-[10px] text-slate-600">5 catatan terbaru</span>
@@ -145,23 +154,6 @@
                         <ul id="hist" class="mt-3"></ul>
                     </section>
                 </div>
-
-                {{-- ========== KANAN: VERIFIKASI ========== --}}
-                <section id="verifikasi" class="jw-rise {{ $card }} p-5 lg:p-6" style="animation-delay:.12s">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="flex items-center gap-3">
-                            <span class="flex h-11 w-11 items-center justify-center rounded-xl {{ $peach }} text-[#8B5E34]">{!! $ic($p['receipt'], 'h-5 w-5') !!}</span>
-                            <div>
-                                <h2 class="text-[18px] font-bold leading-tight">Verifikasi Pembayaran</h2>
-                                <p class="text-[11px] text-slate-600">Bukti transfer manual dari pengunjung</p>
-                            </div>
-                        </div>
-                        <span class="rounded-full {{ $peach }} px-3 py-1.5 text-[10px] font-bold text-[#6B4520]"><span id="pay-count">0</span> Menunggu</span>
-                    </div>
-
-                    <div id="pay-list" class="mt-5 space-y-3"></div>
-                    <p id="pay-empty" class="mt-5 hidden rounded-2xl {{ $soft }} px-4 py-10 text-center text-[12px] font-medium text-slate-600">Tidak ada pembayaran yang menunggu verifikasi.</p>
-                </section>
             </div>
 @endsection
 @section('overlays')
@@ -177,6 +169,74 @@
         </div>
         <div id="modal-body" class="mt-5"></div>
     </div>
+</div>
+
+{{-- Modal reservasi walk-in --}}
+<div id="walkin-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4">
+    <form id="walkin-form" novalidate class="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-xl">
+        <div class="flex items-start justify-between border-b border-slate-100 px-6 py-4">
+            <div>
+                <h3 class="text-[16px] font-bold text-slate-900">Reservasi Walk-in</h3>
+                <p class="mt-0.5 text-[11px] text-slate-600">Catat tamu yang datang langsung ke loket.</p>
+            </div>
+            <button type="button" data-wk-close class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Tutup">{!! $ic($p['x'], 'h-5 w-5') !!}</button>
+        </div>
+        <div class="grid grid-cols-2 gap-4 px-6 py-5">
+            <div class="col-span-2">
+                <label class="mb-1.5 block text-[11px] font-semibold text-slate-700" for="wk-nama">Nama Tamu</label>
+                <input id="wk-nama" name="nama" type="text" maxlength="100" placeholder="Contoh: Budi Santoso" class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[12px] outline-none transition focus:border-[#0B3A22] focus:ring-2 focus:ring-[#0B3A22]/20">
+            </div>
+            <div class="col-span-2">
+                <label class="mb-1.5 block text-[11px] font-semibold text-slate-700" for="wk-nohp">No. WhatsApp</label>
+                <input id="wk-nohp" name="nohp" type="tel" inputmode="tel" placeholder="+62 812-0000-000" class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[12px] outline-none transition focus:border-[#0B3A22] focus:ring-2 focus:ring-[#0B3A22]/20">
+            </div>
+            <div class="col-span-2">
+                <label class="mb-1.5 block text-[11px] font-semibold text-slate-700" for="wk-layanan">Layanan</label>
+                <select id="wk-layanan" name="layanan" class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-[12px] outline-none transition focus:border-[#0B3A22] focus:ring-2 focus:ring-[#0B3A22]/20">
+                    @if (! empty($payload['layanan']['tiket']))
+                        <optgroup label="Tiket Kolam">
+                            @foreach ($payload['layanan']['tiket'] as $t)
+                                <option value="tiket:{{ $t['id'] }}" data-type="tiket" data-price="{{ $t['harga'] }}" data-stok="{{ $t['stok'] }}" {{ $t['stok'] <= 0 ? 'disabled' : '' }}>
+                                    {{ $t['nama'] }} — Rp {{ number_format($t['harga'], 0, ',', '.') }}/orang{{ $t['stok'] <= 0 ? ' (Habis)' : ' • sisa '.$t['stok'] }}
+                                </option>
+                            @endforeach
+                        </optgroup>
+                    @endif
+                    @if (! empty($payload['layanan']['cabin']))
+                        <optgroup label="Cabin Suite">
+                            @foreach ($payload['layanan']['cabin'] as $c)
+                                @php $buka = $c['status'] === 'tersedia' && $c['kapasitas'] > 0; @endphp
+                                <option value="cabin:{{ $c['id'] }}" data-type="cabin" data-price="{{ $c['harga'] }}" data-kapasitas="{{ $c['kapasitas'] }}" {{ $buka ? '' : 'disabled' }}>
+                                    {{ $c['nama'] }} — Rp {{ number_format($c['harga'], 0, ',', '.') }}/malam{{ $buka ? ' • '.$c['kapasitas'].' tamu' : ' (Terisi)' }}
+                                </option>
+                            @endforeach
+                        </optgroup>
+                    @endif
+                </select>
+            </div>
+            <div data-wk-field="cabin" class="hidden">
+                <label class="mb-1.5 block text-[11px] font-semibold text-slate-700" for="wk-tanggal">Tanggal Check-in</label>
+                <input id="wk-tanggal" name="tanggal" type="date" class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[12px] outline-none transition focus:border-[#0B3A22] focus:ring-2 focus:ring-[#0B3A22]/20">
+            </div>
+            <div data-wk-field="tiket">
+                <label class="mb-1.5 block text-[11px] font-semibold text-slate-700" for="wk-jumlah">Jumlah Pengunjung</label>
+                <input id="wk-jumlah" name="jumlah" type="number" min="1" max="30" value="1" class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[12px] outline-none transition focus:border-[#0B3A22] focus:ring-2 focus:ring-[#0B3A22]/20">
+            </div>
+            <div data-wk-field="cabin" class="hidden">
+                <label class="mb-1.5 block text-[11px] font-semibold text-slate-700" for="wk-malam">Jumlah Malam</label>
+                <input id="wk-malam" name="malam" type="number" min="1" max="14" value="1" class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[12px] outline-none transition focus:border-[#0B3A22] focus:ring-2 focus:ring-[#0B3A22]/20">
+            </div>
+            <div class="col-span-2 flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
+                <span class="text-[11px] font-medium text-slate-600">Total Tagihan</span>
+                <b data-wk-total class="text-[18px] text-[#0B3A22]">Rp 0</b>
+            </div>
+            <p data-wk-error class="col-span-2 hidden rounded-lg bg-red-50 px-3 py-2 text-[11px] font-medium text-red-700"></p>
+        </div>
+        <div class="flex justify-end gap-2 border-t border-slate-100 bg-slate-50 px-6 py-4">
+            <button type="button" data-wk-close class="rounded-xl bg-slate-100 px-5 py-2.5 text-[12px] font-semibold text-slate-700 transition hover:bg-slate-200 active:scale-95">Batal</button>
+            <button type="submit" class="flex items-center gap-2 rounded-xl bg-[#0B3A22] px-5 py-2.5 text-[12px] font-bold text-white transition hover:bg-[#124c2f] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40">{!! $ic($p['checkc'], 'h-4 w-4') !!} Simpan Reservasi</button>
+        </div>
+    </form>
 </div>
 
 <div id="toasts" class="fixed bottom-6 right-6 z-[60] space-y-2"></div>
@@ -247,6 +307,94 @@
             return r.json();
         };
 
+        // ---------- Reservasi walk-in ----------
+        const wkModal = $('#walkin-modal');
+        const wkForm = $('#walkin-form');
+        const wk = (n) => wkForm.elements[n];
+        const wkErr = (msg) => { const el = $('[data-wk-error]', wkForm); el.textContent = msg || ''; el.classList.toggle('hidden', !msg); };
+        const wkService = () => wk('layanan').selectedOptions[0];
+        const isoLocal = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        const wkTotal = () => {
+            const opt = wkService();
+            if (!opt) return 0;
+            const n = Number(opt.dataset.type === 'tiket' ? wk('jumlah').value : wk('malam').value) || 0;
+            return (Number(opt.dataset.price) || 0) * n;
+        };
+        const wkSync = () => {
+            const opt = wkService();
+            const type = opt ? opt.dataset.type : 'tiket';
+            wkForm.querySelectorAll('[data-wk-field]').forEach((el) => el.classList.toggle('hidden', el.dataset.wkField !== type));
+            $('[data-wk-total]', wkForm).textContent = rp(wkTotal());
+        };
+        const wkOpen = () => {
+            wkErr('');
+            wkForm.reset();
+            wk('jumlah').value = 1;
+            wk('malam').value = 1;
+            wk('tanggal').value = isoLocal();
+            if (!wkService() || wkService().disabled) {
+                const first = [...wk('layanan').options].find((o) => !o.disabled);
+                if (first) wk('layanan').value = first.value;
+            }
+            wkSync();
+            wkModal.classList.remove('hidden'); wkModal.classList.add('flex');
+            setTimeout(() => wk('nama').focus(), 40);
+        };
+        const wkClose = () => { wkModal.classList.add('hidden'); wkModal.classList.remove('flex'); };
+        $('#walkin-open').addEventListener('click', wkOpen);
+        $$('[data-wk-close]').forEach((b) => b.addEventListener('click', wkClose));
+        wkModal.addEventListener('click', (e) => { if (e.target === wkModal) wkClose(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !wkModal.classList.contains('hidden')) wkClose(); });
+        ['layanan', 'jumlah', 'malam'].forEach((n) => { wk(n).addEventListener('input', wkSync); wk(n).addEventListener('change', wkSync); });
+
+        wkForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            wkErr('');
+            const opt = wkService();
+            if (!opt || opt.disabled) return wkErr('Tidak ada layanan yang bisa dipesan.');
+            const type = opt.dataset.type;
+            const payload = {
+                nama: wk('nama').value.trim(),
+                nohp: wk('nohp').value.trim(),
+                layanan: wk('layanan').value,
+                jumlah: type === 'tiket' ? Number(wk('jumlah').value) : null,
+                malam: type === 'cabin' ? Number(wk('malam').value) : null,
+                tanggal: type === 'cabin' ? wk('tanggal').value : null,
+            };
+            if (payload.nama.length < 3) return wkErr('Nama tamu minimal 3 karakter.');
+            if (!/^\+?[0-9][0-9\s-]{7,18}$/.test(payload.nohp)) return wkErr('Nomor tidak valid (contoh: +62 812-0000-000).');
+            if (type === 'tiket' && !(payload.jumlah >= 1 && payload.jumlah <= 30)) return wkErr('Jumlah pengunjung 1 - 30 orang.');
+            if (type === 'cabin' && !(payload.malam >= 1 && payload.malam <= 14)) return wkErr('Jumlah malam 1 - 14.');
+            if (type === 'cabin' && !payload.tanggal) return wkErr('Tanggal check-in wajib diisi.');
+
+            const btn = wkForm.querySelector('button[type=submit]');
+            const label = btn.innerHTML;
+            btn.disabled = true; btn.textContent = 'Menyimpan...';
+            try {
+                const r = await fetch(DATA.walkinUrl || '/petugas/walkin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF },
+                    body: JSON.stringify(payload),
+                });
+                const d = await r.json().catch(() => ({}));
+                if (!r.ok || !d.ok) {
+                    const first = Object.values(d.errors || {}).flat()[0];
+                    throw new Error(first || d.message || `Gagal menyimpan (${r.status}).`);
+                }
+                wkClose();
+                const t = d.transaksi || {};
+                hist.unshift({ t: clockStr(), name: t.name || payload.nama, sub: (t.code || '') + ' • ' + (t.pkg || 'Walk-in'), ok: true });
+                renderHist();
+                if (d.stats) { S.gate = d.stats.gate ?? S.gate; S.verified = d.stats.verified ?? S.verified; }
+                renderStats(); touch(); beep(true);
+                toast('Reservasi walk-in ' + (t.code || '') + ' tersimpan.');
+            } catch (err) {
+                wkErr(err.message || 'Gagal menyimpan reservasi walk-in.');
+            } finally {
+                btn.disabled = false; btn.innerHTML = label;
+            }
+        });
+
         // ---------- Sinkron, jam & umur unggahan ----------
         let syncAge = 2;
         const touch = () => { syncAge = 0; $('[data-sync]').textContent = 0; };
@@ -267,7 +415,6 @@
             setNum('[data-s-pending]', n);
             setNum('[data-s-ok]', S.verified);
             $('[data-s-bar]').style.width = Math.min(100, (S.gate / S.cap) * 100) + '%';
-            $('#pay-count').textContent = n;
             const bc = $('[data-bell-count]'); bc.textContent = n; bc.classList.toggle('hidden', n === 0);
         };
 
@@ -280,24 +427,12 @@
         };
 
         // ---------- Daftar verifikasi ----------
-        const bankChip = (bank) => `<span class="rounded-md ${bank === 'BCA' ? 'bg-[#DBE4FF] text-[#0A4AA8]' : 'bg-[#F3E6CF] text-[#8A5A1C]'} px-2 py-0.5 text-[9px] font-bold">${bank}</span>`;
-        const payCard = (b) => `<article data-pay="${b.code}" class="jw-rise flex items-center gap-4 rounded-2xl bg-[#EEF1FD] p-4 transition duration-300">
-            <img src="${proofSVG(b)}" alt="Bukti transfer ${esc(b.name)}" class="h-[64px] w-[52px] shrink-0 rounded-lg bg-white object-cover shadow-sm">
-            <div class="min-w-0 flex-1">
-                <p class="flex flex-wrap items-center gap-2"><b class="truncate text-[13px]">${esc(b.name)}</b>${bankChip(b.bank)}${b.paid !== b.total ? '<span class="rounded-md bg-[#FBD9B0] px-2 py-0.5 text-[9px] font-bold text-[#6B4520]">Nominal berbeda</span>' : ''}</p>
-                <p class="mt-0.5 text-[11px] text-slate-600">${b.code} • ${b.pax} Dewasa</p>
-                <p class="mt-1 text-[12px]"><b>${rp(b.total)}</b> <span class="text-slate-500">• <span data-ago data-t="${b.uploaded}">${ago(b.uploaded)}</span></span></p>
-            </div>
-            <button type="button" data-open="${b.code}" class="shrink-0 rounded-xl bg-[#0B3A22] px-4 py-2.5 text-[11px] font-bold text-white transition hover:bg-[#124c2f] active:scale-95">Periksa</button>
-        </article>`;
-        const renderPay = () => {
-            const list = pending();
-            $('#pay-list').innerHTML = list.map(payCard).join('');
-            $('#pay-empty').classList.toggle('hidden', list.length > 0);
-            renderStats();
-        };
-        $('#pay-list').addEventListener('click', (e) => { const b = e.target.closest('[data-open]'); if (b) openPay(b.dataset.open); });
-        $('#bell').addEventListener('click', () => $('#verifikasi').scrollIntoView({ behavior: 'smooth', block: 'start' }));
+        const renderPay = () => { renderStats(); };
+        $('#bell').addEventListener('click', () => {
+            const n = pending().length;
+            $('#scanner').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (n > 0) toast(n + ' pembayaran menunggu verifikasi. Pindai tiket untuk memeriksa.');
+        });
 
         // ---------- Modal verifikasi ----------
         const modal = $('#modal');
@@ -346,18 +481,13 @@
             if (!e.target.matches('[data-chk]')) return;
             $('[data-m-verify]').disabled = !$$('[data-chk]', modal).every((c) => c.checked);
         });
-        const fadeOut = (code) => {
-            const el = $(`[data-pay="${code}"]`);
-            if (el) el.classList.add('opacity-0', 'scale-95');
-            setTimeout(renderPay, 280);
-        };
         modal.addEventListener('click', async (e) => {
             if (e.target.closest('[data-m-verify]')) {
                 const b = B[payCode]; if (!b) return;
                 try { await postAction(ACTION_URL + '/' + b.id + '/verify'); }
                 catch (err) { return toast('Gagal memverifikasi pembayaran. Coba lagi.'); }
                 b.status = 'paid'; S.verified++;
-                const code = payCode; closeModal(); fadeOut(code); touch(); beep(true);
+                const code = payCode; closeModal(); renderPay(); touch(); beep(true);
                 hist.unshift({ t: clockStr(), name: b.name, sub: b.code + ' • ' + b.pkg, ok: true });
                 renderHist();
                 toast('Pembayaran ' + esc(b.name) + ' terverifikasi. E-ticket diterbitkan.');
@@ -369,7 +499,7 @@
                 try { await postAction(ACTION_URL + '/' + b.id + '/reject'); }
                 catch (err) { return toast('Gagal menolak pembayaran. Coba lagi.'); }
                 b.status = 'rejected'; b.why = why;
-                const code = payCode; closeModal(); fadeOut(code); touch(); beep(false);
+                const code = payCode; closeModal(); renderPay(); touch(); beep(false);
                 hist.unshift({ t: clockStr(), name: b.name, sub: b.code + ' • ' + why, ok: false });
                 renderHist();
                 toast('Pembayaran ' + esc(b.name) + ' ditolak: ' + why + '. Pengunjung diberi tahu.');
@@ -538,12 +668,18 @@
         const video = $('#cam');
         const WANTED_FORMATS = ['code_128', 'qr_code'];
         let detector = null, zxingReader = null, zxingCanvas = null, zxingCtx = null;
-        let stream = null, loopTimer = null, lastRaw = '', lastAt = 0;
+        let stream = null, loopTimer = null, lastRaw = '', lastAt = 0, camFlipped = false;
         const camMsg = (t) => { const m = $('#cam-msg'); m.textContent = t || ''; m.classList.toggle('hidden', !t); };
+        const camFlip = (on) => {
+            camFlipped = on;
+            video.style.transform = on ? 'scaleX(-1)' : '';
+            $('#cam-flip').textContent = on ? 'Tampilan Dibalik' : 'Balik Tampilan';
+        };
         const camUI = (on) => {
             video.classList.toggle('hidden', !on);
             $('#cam-off').classList.toggle('hidden', on);
             $('#frame').classList.toggle('hidden', !on);
+            $('#cam-flip').classList.toggle('hidden', !on);
             $('#cam-stop').classList.toggle('hidden', !on);
             const pill = $('#cam-pill');
             pill.textContent = on ? 'Siap Scan' : 'Kamera Mati';
@@ -617,6 +753,8 @@
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
                 video.srcObject = stream; await video.play();
+                const facing = stream.getVideoTracks()[0]?.getSettings?.().facingMode;
+                camFlip(facing !== 'environment');
                 camUI(true); camMsg('');
 
                 detector = await initDetector();
@@ -633,9 +771,10 @@
         function stopCam() {
             clearTimeout(loopTimer);
             if (stream) stream.getTracks().forEach((t) => t.stop());
-            stream = null; video.srcObject = null; lastRaw = ''; camUI(false); camMsg('');
+            stream = null; video.srcObject = null; video.style.transform = ''; camFlipped = false; lastRaw = ''; camUI(false); camMsg('');
         }
         $('#cam-on').addEventListener('click', startCam);
+        $('#cam-flip').addEventListener('click', () => camFlip(!camFlipped));
         $('#cam-stop').addEventListener('click', stopCam);
         window.addEventListener('pagehide', stopCam);
 

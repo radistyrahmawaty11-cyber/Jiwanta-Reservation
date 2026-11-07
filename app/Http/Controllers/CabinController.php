@@ -12,7 +12,9 @@ class CabinController extends Controller
     public function index()
     {
         $cabins = Cabin::with(['reservasis' => function ($q) {
-            $q->where('status', 'confirmed')->with('pengguna');
+            $q->where('status', '!=', 'cancelled')
+                ->with(['pengguna', 'detailtransaksis.transaksi'])
+                ->orderBy('tanggal_checkin');
         }])->orderBy('created_at', 'desc')->get();
 
         return view('admin.cabin', compact('cabins'));
@@ -81,6 +83,24 @@ class CabinController extends Controller
         $cabin->update($validated);
 
         return redirect()->route('admin.cabin.index')->with('success', 'Cabin berhasil diperbarui!');
+    }
+
+    // Update kapasitas cabin (dipakai modal Atur Kuota di dashboard)
+    public function updateKapasitas(Request $request, $id)
+    {
+        $cabin = Cabin::findOrFail($id);
+
+        $validated = $request->validate([
+            'kapasitas' => 'required|integer|min:0|max:100',
+        ]);
+
+        $cabin->update(['kapasitas' => $validated['kapasitas']]);
+
+        return response()->json([
+            'ok' => true,
+            'id' => (int) $cabin->id,
+            'kapasitas' => (int) $cabin->kapasitas,
+        ]);
     }
 
     // Hapus cabin

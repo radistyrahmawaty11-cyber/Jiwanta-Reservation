@@ -54,7 +54,7 @@ class PengunjungController extends Controller
     {
         $cabins = Cabin::orderBy('id')->get()->map(fn ($c) => [
             'key' => $c->id,
-            'sold' => $c->status === 'terisi',
+            'sold' => $c->status === 'terisi' || (int) $c->kapasitas <= 0,
         ])->values();
 
         return response()->json(['ok' => true, 'data' => $cabins]);
@@ -168,11 +168,18 @@ class PengunjungController extends Controller
                     continue;
                 }
 
-                $malam = (int) $item['malam'];
-                $harga = $item['harga_satuan'] > 0 ? (int) $item['harga_satuan'] : (int) $cabin->harga_per_malam;
-                $subtotal = $harga * $malam;
+                if ((int) $cabin->kapasitas <= 0 || $cabin->status === 'terisi') {
+                    return redirect()->route('reservasi', ['tab' => 'cabin'])
+                        ->with('error', "Cabin {$cabin->nama_cabin} sedang tidak dapat dipesan.");
+                }
 
-                $lines[] = ['tipe' => 'cabin', 'cabin' => $cabin, 'jumlah' => $malam, 'harga' => $harga, 'subtotal' => $subtotal];
+                $malam = (int) $item['malam'];
+                $durasi = (int) ($item['durasi'] ?? 0);
+                $jam = ($durasi >= 3 && $durasi < 24) ? $durasi : null;
+                $harga = $item['harga_satuan'] > 0 ? (int) $item['harga_satuan'] : (int) $cabin->harga_per_malam;
+                $subtotal = $jam ? $harga : $harga * $malam;
+
+                $lines[] = ['tipe' => 'cabin', 'cabin' => $cabin, 'jumlah' => $jam ? 1 : $malam, 'jam' => $jam, 'harga' => $harga, 'subtotal' => $subtotal];
                 $total += $subtotal;
                 $pax += (int) $cabin->kapasitas;
                 $titles[] = 'Cabin '.$cabin->nama_cabin;
@@ -184,6 +191,11 @@ class PengunjungController extends Controller
                 }
 
                 $jumlah = (int) $item['jumlah'];
+                if ((int) $tiket->stok < $jumlah) {
+                    return redirect()->route('reservasi')
+                        ->with('error', "Kuota {$tiket->nama_tiket} tidak mencukupi (sisa ".max(0, (int) $tiket->stok).' tiket).');
+                }
+
                 $harga = $item['harga_satuan'] > 0 ? (int) $item['harga_satuan'] : (int) $tiket->harga;
                 $subtotal = $harga * $jumlah;
 
@@ -221,7 +233,7 @@ class PengunjungController extends Controller
                     'cabin_id' => $cabin->id,
                     'renang_id' => null,
                     'tanggal_checkin' => $checkin->toDateString(),
-                    'tanggal_checkout' => $checkin->copy()->addDays($line['jumlah'])->toDateString(),
+                    'tanggal_checkout' => ($line['jam'] ? $checkin->copy() : $checkin->copy()->addDays($line['jumlah']))->toDateString(),
                     'jumlah_tamu' => $cabin->kapasitas ?? 4,
                     'total_harga' => $line['subtotal'],
                     'status' => 'pending',
@@ -241,7 +253,7 @@ class PengunjungController extends Controller
                     'jumlah' => $line['jumlah'],
                     'satuan' => $line['harga'],
                     'subtotal' => $line['subtotal'],
-                    'keterangan' => $line['jumlah'].' malam',
+                    'keterangan' => $line['jam'] ? "1 paket ({$line['jam']} jam)" : $line['jumlah'].' malam',
                 ];
             } else {
                 $tiket = $line['tiket'];
@@ -266,6 +278,8 @@ class PengunjungController extends Controller
         }
 
         $tipe = $hasCabin && $hasTiket ? 'mixed' : ($hasCabin ? 'cabin' : 'tiket');
+
+        $transaksi->consumeQuota();
 
         $order = [
             'tipe' => $tipe,
@@ -302,7 +316,14 @@ class PengunjungController extends Controller
 
         if ($tipe === 'cabin') {
             $cabin = Cabin::find($request->input('unit'));
+            if ($cabin && ((int) $cabin->kapasitas <= 0 || $cabin->status === 'terisi')) {
+                return redirect()->route('reservasi', ['tab' => 'cabin'])
+                    ->with('error', "Cabin {$cabin->nama_cabin} sedang tidak dapat dipesan.");
+            }
+
             $malam = max(1, (int) $request->input('malam', 1));
+            $durasi = (int) $request->input('durasi', 0);
+            $jam = ($durasi >= 3 && $durasi < 24) ? $durasi : null;
             $harga = $malam > 0 ? (int) round($total / $malam) : $total;
 
             $order = [
@@ -310,13 +331,14 @@ class PengunjungController extends Controller
                 'judul' => 'Cabin '.($cabin?->nama_cabin ?? ucfirst((string) $request->input('unit'))),
                 'badge' => 'Cabin Suite',
                 'tamu' => ($cabin?->kapasitas ?? 4).' Tamu Dewasa',
-                'harga_label' => 'Harga per Malam',
-                'harga_value' => 'Rp '.number_format($harga, 0, ',', '.'),
+                'harga_label' => $jam ? 'Harga Paket' : 'Harga per Malam',
+                'harga_value' => 'Rp '.number_format($harga, 0, ',', '.').($jam ? " ({$jam} jam)" : ''),
                 'subtotal_label' => 'Subtotal Cabin',
                 'total' => $total,
                 'tanggal' => $tanggal,
                 'unit' => $cabin?->id ?? $request->input('unit'),
                 'malam' => $malam,
+                'durasi' => $jam,
                 'kode' => $kode,
                 'status' => 'belum',
             ];
@@ -328,7 +350,7 @@ class PengunjungController extends Controller
                 'cabin_id' => $cabin?->id,
                 'renang_id' => null,
                 'tanggal_checkin' => $checkin->toDateString(),
-                'tanggal_checkout' => $checkin->copy()->addDays($malam)->toDateString(),
+                'tanggal_checkout' => ($jam ? $checkin->copy() : $checkin->copy()->addDays($malam))->toDateString(),
                 'jumlah_tamu' => $cabin?->kapasitas ?? 4,
                 'total_harga' => $total,
                 'status' => 'pending',
@@ -343,6 +365,12 @@ class PengunjungController extends Controller
         } else {
             $tiket = $this->resolveTiket($request);
             $jumlah = max(1, (int) $request->input('jumlah', 1));
+
+            if ($tiket && (int) $tiket->stok < $jumlah) {
+                return redirect()->route('reservasi')
+                    ->with('error', "Kuota {$tiket->nama_tiket} tidak mencukupi (sisa ".max(0, (int) $tiket->stok).' tiket).');
+            }
+
             $harga = $tiket?->harga ? (int) $tiket->harga : ($jumlah > 0 ? (int) round($total / $jumlah) : $total);
 
             $order = [
@@ -381,6 +409,8 @@ class PengunjungController extends Controller
         ]);
 
         Detailtransaksi::create($detail + ['transaksi_id' => $transaksi->id]);
+
+        $transaksi->consumeQuota();
 
         $order['transaksi_id'] = $transaksi->id;
 
@@ -435,9 +465,11 @@ class PengunjungController extends Controller
 
             if ($transaksi->status === 'gagal') {
                 $transaksi->status = 'pending';
+                $transaksi->save();
+                $transaksi->consumeQuota();
+            } else {
+                $transaksi->save();
             }
-
-            $transaksi->save();
         }
 
         $order['metode'] = $metode;
@@ -526,6 +558,7 @@ class PengunjungController extends Controller
                     'tipe' => 'cabin',
                     'cabin_id' => $cabinId,
                     'malam' => max(1, (int) ($row['malam'] ?? 1)),
+                    'durasi' => max(0, (int) ($row['durasi'] ?? 0)),
                     'harga_satuan' => max(0, (int) ($row['harga_satuan'] ?? 0)),
                 ];
 

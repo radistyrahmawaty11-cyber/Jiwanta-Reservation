@@ -106,6 +106,10 @@ class TransaksiController extends Controller
 
     public function reject(Request $request, Transaksi $transaksi)
     {
+        if ($transaksi->status !== 'gagal') {
+            $transaksi->releaseQuota();
+        }
+
         $transaksi->status = 'gagal';
         $transaksi->save();
 

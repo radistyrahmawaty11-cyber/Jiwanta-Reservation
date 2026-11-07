@@ -434,6 +434,10 @@ class MidtransController extends Controller
             return 'lunas';
         }
 
+        if ($status === 'gagal' && $transaksi->status !== 'gagal') {
+            $transaksi->releaseQuota();
+        }
+
         $paymentType = (string) ($payload['payment_type'] ?? '');
         $previous = is_array($transaksi->payment_detail) ? $transaksi->payment_detail : [];
         $method = $this->methodFromPaymentType($paymentType) ?? ($previous['method'] ?? null);
@@ -581,7 +585,7 @@ class MidtransController extends Controller
             return;
         }
 
-        Reservasi::whereIn('id', $ids)->where('status', 'pending')->update(['status' => 'confirmed']);
+        Reservasi::whereIn('id', $ids)->whereIn('status', ['pending', 'cancelled'])->update(['status' => 'confirmed']);
     }
 
     private function broadcastStatus(Transaksi $transaksi): void

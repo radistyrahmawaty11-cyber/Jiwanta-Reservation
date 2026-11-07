@@ -224,7 +224,7 @@
 <div id="modal-root">
     <div data-modal="ticket" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="tf-title">
         <div data-close class="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"></div>
-        <form id="ticket-form" novalidate data-panel class="relative flex max-h-[92vh] w-full max-w-xl scale-95 flex-col overflow-hidden rounded-2xl bg-white opacity-0 shadow-2xl transition duration-200">
+        <form id="ticket-form" novalidate enctype="multipart/form-data" data-panel class="relative flex max-h-[92vh] w-full max-w-xl scale-95 flex-col overflow-hidden rounded-2xl bg-white opacity-0 shadow-2xl transition duration-200">
             <input type="hidden" name="id">
             <div class="flex items-start justify-between border-b border-slate-100 px-6 py-4">
                 <div>
@@ -277,6 +277,17 @@
                 <div class="col-span-2">
                     <label class="{{ $lbl }}" for="tf-fac">Fasilitas inklusi <span class="font-normal text-slate-400">(pisahkan koma)</span></label>
                     <input id="tf-fac" name="facilities" type="text" placeholder="Gazebo Publik, Kamar Bilas Standar" class="{{ $inp }}">
+                </div>
+                <div class="col-span-2">
+                    <label class="{{ $lbl }}" for="tf-gambar">Foto Tiket <span class="font-normal text-slate-400">(opsional)</span></label>
+                    <input id="tf-gambar" name="gambar" type="file" accept="image/jpeg,image/png,image/jpg"
+                           class="block w-full cursor-pointer text-[11px] text-slate-600 transition file:mr-3 file:rounded-lg file:border-0 file:bg-[#CDEFD5] file:px-3.5 file:py-2 file:text-[11px] file:font-bold file:text-[#0B3A22] hover:file:bg-[#b8e6c1]">
+                    <p class="mt-1 text-[10px] text-slate-500">Format: JPG, PNG. Maksimal 2MB.</p>
+                    <p data-err="gambar" class="{{ $err }}"></p>
+                    <div id="tf-gambar-preview" class="mt-3 hidden">
+                        <p class="mb-1 text-[10px] font-semibold text-slate-600">Gambar Saat Ini:</p>
+                        <img id="tf-gambar-img" src="" alt="Preview" class="h-24 w-auto rounded-lg border border-slate-200 object-cover">
+                    </div>
                 </div>
                 <div class="col-span-2">
                     <label class="{{ $lbl }}" for="tf-desc">Deskripsi singkat</label>
@@ -356,6 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
         csrf: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
         urls: {
             tickets: '/admin/tiket',
+            ticket: '/admin/tiket/{id}',
             quota: '/admin/tiket/{id}/kuota',
             openAll: '/admin/tiket/buka-semua',
         },
@@ -381,6 +393,31 @@ document.addEventListener('DOMContentLoaded', () => {
             throw new Error(err.message || `Error ${res.status}`);
         }
         if (res.status === 204) return true;
+        const json = await res.json();
+        return json && json.data ? json.data : json;
+    };
+
+    const submitForm = async (url, body, id = null, files = null) => {
+        const finalUrl = id ? url.replace('{id}', id) : url;
+        const fd = new FormData();
+        Object.entries(body).forEach(([k, v]) => fd.append(k, Array.isArray(v) ? v.join(', ') : v ?? ''));
+        if (id) fd.append('_method', 'PUT');
+        if (files && files.gambar) fd.append('gambar', files.gambar);
+
+        const res = await fetch(finalUrl, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': CONFIG.csrf,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: fd,
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            const first = Object.values(err.errors || {}).flat()[0];
+            throw new Error(err.message || first || `Error ${res.status}`);
+        }
         const json = await res.json();
         return json && json.data ? json.data : json;
     };
@@ -557,9 +594,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 : `<span class="shrink-0 rounded-2xl bg-slate-200 px-2.5 py-1.5 text-center text-[9px] font-bold leading-tight text-slate-600">Non-<br>aktif</span>`)
             : (low ? '' : `<span class="shrink-0 rounded-2xl bg-[#CDEFD5] px-2.5 py-1.5 text-center text-[10px] font-bold leading-tight text-[#0B3A22]">Aktif /<br><span class="inline-flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-[#0B3A22]"></span>Buka</span></span>`);
 
+        const mediaImg = t.image
+            ? `<img src="${esc(t.image)}" alt="Foto ${esc(t.name)}" loading="lazy" onerror="this.remove()" class="absolute inset-0 h-full w-full object-cover">`
+            : '';
+
         const media = `
             <div class="relative h-[140px] w-[140px] shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-[#2d5a4a] to-[#0B3A22] ${isActive ? '' : 'grayscale'}">
-                <img src="${esc(t.image || '')}" alt="" onerror="this.remove()" class="absolute inset-0 h-full w-full object-cover">
+                ${mediaImg}
                 <span class="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent"></span>
                 ${imgChip ? `<span class="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-[10px] font-semibold text-slate-800">${imgChip}</span>` : ''}
                 ${isActive ? `<span class="absolute bottom-2 left-2 text-[9px] font-bold uppercase tracking-wide text-white">${badge}</span>` : `<span class="absolute inset-0 flex items-center justify-center"><span class="rounded-full bg-white px-3 py-1.5 text-[10px] font-bold tracking-wide text-slate-700 shadow">NONAKTIF</span></span>`}
@@ -575,8 +616,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ? `<p class="mt-2.5 flex flex-wrap items-center gap-1.5 text-[11px]"><span class="flex items-center gap-1.5 font-semibold text-slate-700"><span class="text-[#8B5E34]">${ICONS.calendar}</span> ${t.sessions.length} Sesi Terjadwal:</span>${t.sessions.map((s) => `<span class="rounded-lg bg-[#E4E8FB] px-2 py-1 text-[10px] font-semibold text-slate-700">${esc(s)}</span>`).join('')}</p>`
             : (t.hours ? `<p class="mt-2.5 flex items-start gap-2 text-[11px] leading-snug text-slate-700"><span class="mt-0.5 text-[#8B5E34]">${ICONS.clock}</span> ${esc(t.hours)}</p>` : ''));
 
-        const facilities = isActive && t.facilities && t.facilities.length ? `<div class="mt-2.5 flex flex-wrap gap-1.5">${t.facilities.map((f) => `<span class="${chip}">${ICONS.checkc} ${esc(f)}</span>`).join('')}</div>` : '';
-        const desc = !isActive && t.desc ? `<p class="mt-2 text-[11px] leading-relaxed text-slate-600">${esc(t.desc)}</p>` : '';
+        const facilities = t.facilities && t.facilities.length ? `<div class="mt-2.5 flex flex-wrap gap-1.5">${t.facilities.map((f) => `<span class="${chip}">${ICONS.checkc} ${esc(f)}</span>`).join('')}</div>` : '';
+        const desc = t.desc ? `<p class="mt-2 text-[11px] leading-relaxed text-slate-600">${esc(t.desc)}</p>` : '';
 
         const actions = isActive
             ? `<button type="button" data-act="edit" class="${BTN} ${vip ? 'bg-[#7A5230] text-white hover:bg-[#6a4628]' : 'bg-[#DDE6FB] text-slate-800 hover:bg-[#cfdaf7]'}">Ubah Harga &amp; Kuota</button>
@@ -732,6 +773,21 @@ document.addEventListener('DOMContentLoaded', () => {
         f('facilities').value = t ? (t.facilities || []).join(', ') : '';
         f('desc').value = t ? t.desc : '';
 
+        const preview = $('#tf-gambar-preview'), previewImg = $('#tf-gambar-img');
+        if (preview && previewImg) {
+            if (previewImg.dataset.objectUrl) {
+                URL.revokeObjectURL(previewImg.dataset.objectUrl);
+                delete previewImg.dataset.objectUrl;
+            }
+            if (t && t.image) {
+                previewImg.src = t.image;
+                preview.classList.remove('hidden');
+            } else {
+                previewImg.removeAttribute('src');
+                preview.classList.add('hidden');
+            }
+        }
+
         const deleteBtn = $('#tf-delete');
         if (mode === 'create') {
             deleteBtn.classList.add('hidden');
@@ -750,6 +806,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const abbr = name.replace(/^tiket\s+/i, '').replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase().padEnd(3, 'X');
         return `JWN-TKT-${abbr}-${String(state.tickets.length + 1).padStart(2, '0')}`;
     };
+
+    const gambarInput = $('#tf-gambar');
+    if (gambarInput) {
+        gambarInput.addEventListener('change', (e) => {
+            const file = e.target.files && e.target.files[0];
+            const preview = $('#tf-gambar-preview'), previewImg = $('#tf-gambar-img');
+            if (!file || !preview || !previewImg) return;
+            if (previewImg.dataset.objectUrl) URL.revokeObjectURL(previewImg.dataset.objectUrl);
+            const objectUrl = URL.createObjectURL(file);
+            previewImg.dataset.objectUrl = objectUrl;
+            previewImg.src = objectUrl;
+            preview.classList.remove('hidden');
+        });
+    }
+
+    const withLocalFields = (saved, d) => Object.assign({}, saved, {
+        unit: d.unit, accent: d.accent, temp: d.temp, status: d.status, hours: d.hours, sessions: d.sessions,
+        facilities: (saved.facilities && saved.facilities.length) ? saved.facilities : d.facilities,
+    });
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -773,18 +848,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const label = formMode === 'create' ? 'Simpan Tiket' : 'Simpan Perubahan';
         setBusy(form, true, label);
+        const fileEl = f('gambar');
+        const file = fileEl && fileEl.files ? fileEl.files[0] : null;
+        const payload = {
+            name: d.name, price: d.price, cap: d.cap, desc: d.desc,
+            fasilitas: d.facilities.join(', '),
+        };
         try {
             let saved;
             if (formMode === 'create') {
                 const short = d.name.replace(/^tiket\s+(kolam\s+)?/i, '').split(' ').slice(0, 2).join(' ');
                 saved = CONFIG.USE_API
-                    ? await http('POST', CONFIG.urls.tickets, d)
+                    ? await submitForm(CONFIG.urls.tickets, payload, null, { gambar: file })
                     : { ...d, id: 'tk-' + Date.now(), sku: makeSku(d.name), short, portfolio: d.name, sold: 0, safeMax: Math.max(d.cap + 50, Math.round(d.cap * 1.25)), image: '', updatedAt: Date.now() };
+                saved = withLocalFields(saved, d);
                 saved.updatedAt = Date.now();
                 state.tickets.push(saved);
                 addLog(`Menambahkan kategori tiket baru "${saved.name}" (${rp(saved.price)}, kuota ${saved.cap}).`, saved.id, 'green');
             } else {
-                saved = CONFIG.USE_API ? await http('PUT', CONFIG.urls.tickets, d, id) : { ...old, ...d };
+                saved = CONFIG.USE_API ? await submitForm(CONFIG.urls.ticket, payload, id, { gambar: file }) : { ...old, ...d };
+                saved = withLocalFields(saved, d);
                 saved.updatedAt = Date.now();
                 const parts = [];
                 if (saved.price !== old.price) parts.push(`harga ${rp(old.price)} → ${rp(saved.price)}`);
@@ -927,7 +1010,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const ok = await askConfirm({ title: 'Aktifkan Penjualan?', text: `<b>${esc(t.name)}</b> akan tampil di loket online dan gate kiosk.`, label: 'Aktifkan', tone: 'ok' });
             if (!ok) return;
             try {
-                if (CONFIG.USE_API) await http('PUT', CONFIG.urls.tickets, { ...t, status: 'active' }, t.id);
+                if (CONFIG.USE_API) await http('PUT', CONFIG.urls.ticket, { ...t, status: 'active' }, t.id);
                 t.status = 'active'; t.updatedAt = Date.now();
                 addLog(`Mengaktifkan penjualan Tiket ${t.short || t.name} (kuota ${t.cap} pax).`, t.id, 'green');
                 renderAll(); toast(`${t.short || t.name} kini aktif dijual`);

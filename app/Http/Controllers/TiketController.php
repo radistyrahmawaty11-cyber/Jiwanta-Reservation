@@ -4,9 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\Tiket;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class TiketController extends Controller
 {
+    private function parseFacilities(?string $raw): array
+    {
+        if (! $raw) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('trim', preg_split('/[,\n]/', $raw))));
+    }
+
     private function formatTiket($tiket)
     {
         $short = str_replace(['tiket', 'kolam', 'renang'], '', strtolower($tiket->nama_tiket));
@@ -26,7 +36,7 @@ class TiketController extends Controller
             'status' => 'active',
             'hours' => '08:00 - 18:00 WIB',
             'sessions' => ['Pagi 08-12', 'Sore 13-17'],
-            'facilities' => ['Gazebo Publik', 'Kamar Bilas Standar'],
+            'facilities' => $this->parseFacilities($tiket->fasilitas),
             'desc' => $tiket->deskripsi ?? 'Tiket masuk area kolam renang Jiwanta.',
             'kategori' => $tiket->kategori,
             'sku' => $sku,
@@ -34,7 +44,7 @@ class TiketController extends Controller
             'portfolio' => $tiket->nama_tiket,
             'sold' => (int) ($tiket->sold ?? 0),
             'safeMax' => (int) ($tiket->stok * 1.25),
-            'image' => 'https://via.placeholder.com/150x150/2d5a4a/ffffff?text='.urlencode($tiket->nama_tiket),
+            'image' => $tiket->gambar ? asset('storage/'.$tiket->gambar) : '',
             'updatedAt' => time() * 1000,
         ];
     }
@@ -59,7 +69,13 @@ class TiketController extends Controller
             'price' => 'required|numeric|min:0',
             'cap' => 'required|integer|min:0',
             'desc' => 'nullable|string',
+            'fasilitas' => 'nullable|string|max:500',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
+
+        $gambar = $request->hasFile('gambar')
+            ? $request->file('gambar')->store('tikets', 'public')
+            : null;
 
         $tiket = Tiket::create([
             'nama_tiket' => $validated['name'],
@@ -67,6 +83,8 @@ class TiketController extends Controller
             'stok' => $validated['cap'],
             'deskripsi' => $validated['desc'] ?? null,
             'kategori' => 'dewasa',
+            'fasilitas' => $validated['fasilitas'] ?? null,
+            'gambar' => $gambar,
         ]);
 
         return response()->json(['ok' => true, 'data' => $this->formatTiket($tiket)]);
@@ -81,14 +99,30 @@ class TiketController extends Controller
             'price' => 'required|numeric|min:0',
             'cap' => 'required|integer|min:0',
             'desc' => 'nullable|string',
+            'fasilitas' => 'nullable|string|max:500',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        $tiket->update([
+        if ($request->hasFile('gambar')) {
+            if ($tiket->gambar) {
+                Storage::disk('public')->delete($tiket->gambar);
+            }
+            $validated['gambar'] = $request->file('gambar')->store('tikets', 'public');
+        }
+
+        $attributes = [
             'nama_tiket' => $validated['name'],
             'harga' => $validated['price'],
             'stok' => $validated['cap'],
             'deskripsi' => $validated['desc'] ?? null,
-        ]);
+            'gambar' => $validated['gambar'] ?? $tiket->gambar,
+        ];
+
+        if ($request->has('fasilitas')) {
+            $attributes['fasilitas'] = $validated['fasilitas'] ?? null;
+        }
+
+        $tiket->update($attributes);
 
         return response()->json(['ok' => true, 'data' => $this->formatTiket($tiket)]);
     }
@@ -96,6 +130,11 @@ class TiketController extends Controller
     public function destroy($id)
     {
         $tiket = Tiket::findOrFail($id);
+
+        if ($tiket->gambar) {
+            Storage::disk('public')->delete($tiket->gambar);
+        }
+
         $tiket->delete();
 
         return response()->json(['ok' => true, 'message' => 'Tiket berhasil dihapus']);
@@ -104,7 +143,8 @@ class TiketController extends Controller
     public function updateQuota(Request $request, $id)
     {
         $tiket = Tiket::findOrFail($id);
-        $validated = $request->validate(['cap' => 'required|integer|min:0']);
+        $validated = $request->validate(['cap' => 'required|integer|min:0|max:100000']);
+
         $tiket->update(['stok' => $validated['cap']]);
 
         return response()->json(['ok' => true, 'data' => $this->formatTiket($tiket)]);
