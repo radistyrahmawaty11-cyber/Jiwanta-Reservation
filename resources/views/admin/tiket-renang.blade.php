@@ -894,19 +894,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if ((t.sold || 0) > 0) {
-            if (openName === 'ticket') {
-                const box = $('[data-form-error]');
-                if (box) {
-                    box.textContent = `Tiket tidak bisa dihapus karena sudah terjual ${t.sold} hari ini. Ubah status menjadi Nonaktif saja.`;
-                    box.classList.remove('hidden');
-                }
-            } else {
-                toast(`Tidak bisa dihapus: ${t.name} sudah terjual ${t.sold} hari ini.`, 'err');
-            }
-            return;
-        }
-
         const ok = await askConfirm({
             title: 'Hapus Kategori Tiket?',
             text: `<b>${esc(t.name)}</b> akan dihapus dari katalog dan tidak dapat dikembalikan.`,

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tiket;
+use App\Support\ImageOptimizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -73,9 +74,11 @@ class TiketController extends Controller
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        $gambar = $request->hasFile('gambar')
-            ? $request->file('gambar')->store('tikets', 'public')
-            : null;
+        $gambar = null;
+        if ($request->hasFile('gambar')) {
+            $gambar = $request->file('gambar')->store('tikets', 'public');
+            ImageOptimizer::optimize(Storage::disk('public')->path($gambar));
+        }
 
         $tiket = Tiket::create([
             'nama_tiket' => $validated['name'],
@@ -108,6 +111,7 @@ class TiketController extends Controller
                 Storage::disk('public')->delete($tiket->gambar);
             }
             $validated['gambar'] = $request->file('gambar')->store('tikets', 'public');
+            ImageOptimizer::optimize(Storage::disk('public')->path($validated['gambar']));
         }
 
         $attributes = [

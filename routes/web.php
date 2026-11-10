@@ -14,6 +14,7 @@ use App\Models\Detailtransaksi;
 use App\Models\Pengguna;
 use App\Models\Tiket;
 use App\Models\Transaksi;
+use App\Support\ImageOptimizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -339,6 +340,7 @@ Route::middleware(['auth', 'role:pengunjung', 'no-store'])->group(function () {
             }
 
             $user->foto = $request->file('foto')->store('profil', 'public');
+            ImageOptimizer::optimize(Storage::disk('public')->path($user->foto));
         }
 
         if (! empty($data['password'])) {

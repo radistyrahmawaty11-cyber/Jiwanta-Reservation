@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cabin;
+use App\Support\ImageOptimizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -42,6 +43,7 @@ class CabinController extends Controller
         // Handle upload gambar
         if ($request->hasFile('gambar')) {
             $validated['gambar'] = $request->file('gambar')->store('cabins', 'public');
+            ImageOptimizer::optimize(Storage::disk('public')->path($validated['gambar']));
         }
 
         Cabin::create($validated);
@@ -78,6 +80,7 @@ class CabinController extends Controller
                 Storage::disk('public')->delete($cabin->gambar);
             }
             $validated['gambar'] = $request->file('gambar')->store('cabins', 'public');
+            ImageOptimizer::optimize(Storage::disk('public')->path($validated['gambar']));
         }
 
         $cabin->update($validated);
