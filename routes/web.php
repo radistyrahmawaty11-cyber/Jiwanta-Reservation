@@ -51,8 +51,6 @@ Route::middleware(['guest', 'no-store'])->group(function () {
 Route::middleware(['auth', 'no-store'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    Route::get('/ulasan', [UlasanController::class, 'index'])->name('ulasan.index');
-
     Route::get('/', function () {
         return match (auth()->user()->role) {
             'admin' => redirect()->route('admin.dashboard'),
@@ -317,6 +315,7 @@ Route::middleware(['auth', 'role:pengunjung', 'no-store'])->group(function () {
     Route::get('/transaksi/midtrans/status', [MidtransController::class, 'status'])->name('transaksi.midtrans.status');
 
     // Ulasan & rating layanan (satu ulasan per pengunjung)
+    Route::get('/ulasan', [UlasanController::class, 'index'])->name('ulasan.index');
     Route::post('/ulasan', [UlasanController::class, 'store'])->name('ulasan.store');
 
     // Pengaturan profil: lihat & ubah data akun

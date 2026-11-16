@@ -7,23 +7,60 @@ use Illuminate\Http\Request;
 
 class UlasanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $ulasans = Ulasan::with('pengguna')
-            ->latest()
+        if (! $request->user()->hasVerifiedTransaction()) {
+            if ($request->boolean('partial') || $request->expectsJson()) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'Rating hanya dapat diberikan setelah transaksi Anda diverifikasi oleh petugas.',
+                ], 403);
+            }
+
+            return view('pengunjung.ulasan.locked', [
+                'ringkasan' => Ulasan::ringkasan(),
+            ]);
+        }
+
+        $sort = $request->query('sort') === 'rating' ? 'rating' : 'terbaru';
+        $ulasans = $this->listQuery($sort)
             ->get()
             ->map(fn (Ulasan $ulasan) => $this->format($ulasan))
             ->values();
+        $ringkasan = Ulasan::ringkasan();
 
-        return response()->json([
-            'ok' => true,
-            'data' => $ulasans,
-            'ringkasan' => Ulasan::ringkasan(),
+        if ($request->boolean('partial')) {
+            return response()->view('pengunjung.ulasan._list', [
+                'ulasans' => $ulasans,
+            ]);
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'ok' => true,
+                'data' => $ulasans,
+                'ringkasan' => $ringkasan,
+                'sort' => $sort,
+            ]);
+        }
+
+        return view('pengunjung.ulasan.index', [
+            'ulasans' => $ulasans,
+            'ringkasan' => $ringkasan,
+            'sort' => $sort,
+            'ulasanSaya' => $request->user()->ulasan,
         ]);
     }
 
     public function store(Request $request)
     {
+        if (! $request->user()->hasVerifiedTransaction()) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Rating hanya dapat diberikan setelah transaksi Anda diverifikasi oleh petugas.',
+            ], 403);
+        }
+
         $data = $request->validate([
             'rating' => ['required', 'integer', 'between:1,5'],
             'komentar' => ['required', 'string', 'min:10', 'max:1000'],
@@ -50,6 +87,13 @@ class UlasanController extends Controller
             'data' => $this->format($ulasan->load('pengguna')),
             'ringkasan' => Ulasan::ringkasan(),
         ]);
+    }
+
+    private function listQuery(string $sort)
+    {
+        return Ulasan::with('pengguna')
+            ->when($sort === 'rating', fn ($query) => $query->orderByDesc('rating'))
+            ->latest();
     }
 
     /**

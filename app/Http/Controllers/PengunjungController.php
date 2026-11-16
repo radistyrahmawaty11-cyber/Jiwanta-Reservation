@@ -9,6 +9,7 @@ use App\Models\Detailtransaksi;
 use App\Models\Reservasi;
 use App\Models\Tiket;
 use App\Models\Transaksi;
+use App\Models\Ulasan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -21,6 +22,7 @@ class PengunjungController extends Controller
         return view('pengunjung.dashboard', [
             'tikets' => Tiket::orderBy('kategori')->orderBy('id')->get(),
             'cabins' => Cabin::orderBy('id')->get(),
+            'ringkasan' => Ulasan::ringkasan(),
         ]);
     }
 
