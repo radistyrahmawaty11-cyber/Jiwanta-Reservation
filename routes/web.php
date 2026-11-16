@@ -8,6 +8,7 @@ use App\Http\Controllers\PengunjungController;
 use App\Http\Controllers\PetugasController;
 use App\Http\Controllers\TiketController;
 use App\Http\Controllers\TransaksiController;
+use App\Http\Controllers\UlasanController;
 use App\Models\Bank;
 use App\Models\Cabin;
 use App\Models\Detailtransaksi;
@@ -49,6 +50,8 @@ Route::middleware(['guest', 'no-store'])->group(function () {
 // ==========================================
 Route::middleware(['auth', 'no-store'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    Route::get('/ulasan', [UlasanController::class, 'index'])->name('ulasan.index');
 
     Route::get('/', function () {
         return match (auth()->user()->role) {
@@ -312,6 +315,9 @@ Route::middleware(['auth', 'role:pengunjung', 'no-store'])->group(function () {
     // BCA VA / Mandiri Bill / QRIS via Core API
     Route::post('/transaksi/midtrans/charge', [MidtransController::class, 'charge'])->name('transaksi.midtrans.charge');
     Route::get('/transaksi/midtrans/status', [MidtransController::class, 'status'])->name('transaksi.midtrans.status');
+
+    // Ulasan & rating layanan (satu ulasan per pengunjung)
+    Route::post('/ulasan', [UlasanController::class, 'store'])->name('ulasan.store');
 
     // Pengaturan profil: lihat & ubah data akun
     Route::get('/profil', function (Request $request) {

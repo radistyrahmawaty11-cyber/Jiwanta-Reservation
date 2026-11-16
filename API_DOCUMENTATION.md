@@ -115,6 +115,8 @@ Redirect role: admin → `/admin/dashboard`, petugas → `/petugas/dashboard`, p
 | POST | `/transaksi/midtrans/charge` | JSON |
 | GET | `/transaksi/midtrans/status` | JSON |
 | GET/POST | `/profil` | HTML / redirect |
+| GET | `/ulasan` | JSON |
+| POST | `/ulasan` | JSON (khusus pengunjung) |
 
 **`GET /dashboard/feed`**
 
@@ -175,6 +177,24 @@ Error: `404` pesanan tidak ditemukan, `409` sudah lunas, `422` metode tidak ters
 ```
 
 **`POST /profil`** (`multipart/form-data`) — `nama_pengguna`, `email`, `nohp`, opsional `foto` (maks 2 MB), `password_lama`, `password` + `password_confirmation`. Foto otomatis dioptimalkan.
+
+**Ulasan**
+
+- `GET /ulasan` → daftar ulasan + ringkasan yang dihitung langsung dari database.
+- `POST /ulasan` → `{ "rating": 5, "komentar": "Pelayanan sangat memuaskan." }`.
+  - `rating` wajib **integer 1–5** (desimal ditolak).
+  - `komentar` wajib, **minimal 10 karakter** (maks 1000).
+  - Satu pengunjung hanya punya satu ulasan; kirim ulang akan memperbarui ulasan lama.
+
+```json
+{
+  "ok": true,
+  "data": { "id": 1, "pengguna_id": 12, "rating": 5, "komentar": "...", "created_at": "..." },
+  "ringkasan": { "rata_rata": 4.5, "jumlah_ulasan": 12 }
+}
+```
+
+`rata_rata` dan `jumlah_ulasan` selalu dihitung dari tabel `ulasans` (bukan hardcode).
 
 ### 3.3 Admin
 
@@ -303,6 +323,7 @@ window.Echo.channel('user.' + userId).listen('.order.status', console.log);
 | `transaksis` | `kode_transaksi` (unik, `TRX-YYYYMMDD-NNN`), `midtrans_order_id`, `snap_token`, `total_amount`, `total_bayar`, `kembalian`, `metode_pembayaran`, `payment_type`, `payment_detail`, `paid_at`, `verified_at`, `checked_in_at`, `bukti_transfer`, `status`, `tanggal_transaksi` |
 | `detailtransaksis` | `transaksi_id`, `tiket_id`, `reservasi_id`, `jumlah`, `harga_satuan`, `subtotal` |
 | `banks` | `nama_bank`, `nomor_rekening`, `atas_nama`, `status` |
+| `ulasans` | `pengguna_id` (unik), `rating` (1–5), `komentar` |
 
 Enum/logika status:
 
