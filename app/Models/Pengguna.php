@@ -34,4 +34,22 @@ class Pengguna extends Authenticatable
             ? asset('storage/'.$this->foto)
             : asset('images/profil.jpg');
     }
+
+    public function ulasan()
+    {
+        return $this->hasOne(Ulasan::class);
+    }
+
+    public function transaksis()
+    {
+        return $this->hasMany(Transaksi::class);
+    }
+
+    public function hasVerifiedTransaction(): bool
+    {
+        return $this->transaksis()
+            ->where('status', 'lunas')
+            ->whereNotNull('verified_at')
+            ->exists();
+    }
 }
