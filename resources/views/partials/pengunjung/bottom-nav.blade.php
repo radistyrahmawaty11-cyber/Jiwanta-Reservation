@@ -1,4 +1,6 @@
 @php
+    $showUlasan = auth()->user()?->hasVerifiedTransaction() ?? false;
+
     $navItems = [
         [
             'route' => 'dashboard',
@@ -31,6 +33,16 @@
             </svg>',
         ],
     ];
+
+    if ($showUlasan) {
+        $navItems[] = [
+            'route' => 'ulasan.index',
+            'label' => 'Ulasan',
+            'icon' => '<svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1L3.2 9.4l6.1-.9z"/>
+            </svg>',
+        ];
+    }
 @endphp
 
 <nav class="fixed bottom-0 left-1/2 z-30 w-full max-w-none -translate-x-1/2 bg-white pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-4px_16px_rgba(11,46,34,0.06)] sm:max-w-[390px]"

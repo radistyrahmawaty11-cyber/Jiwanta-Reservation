@@ -49,6 +49,12 @@
     ];
 
     $shadow = 'shadow-[0_4px_18px_rgba(15,69,39,0.08)]';
+
+    $ringkasan = $ringkasan ?? \App\Models\Ulasan::ringkasan();
+
+    $star = '<svg class="h-3 w-3 text-[#F5A623]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z"/></svg>';
+
+    $ratingBadge = '<span class="inline-flex items-center gap-1 rounded-full border border-[#F3E2C0] bg-[#FFF8E7] px-2.5 py-1 text-[10px] font-bold text-[#8B5E34]" title="Rata-rata rating layanan dari seluruh ulasan">'.$star.' <span data-rating-average>'.number_format($ringkasan['rata_rata'], 1, ',', '.').'</span> <span class="font-medium text-[#8B5E34]/70">(<span data-rating-count>'.$ringkasan['jumlah_ulasan'].'</span> ulasan)</span></span>';
 @endphp
 
         {{-- ========== HERO ========== --}}
@@ -137,6 +143,8 @@
                                 </div>
                             </div>
 
+                            <div class="mt-2">{!! $ratingBadge !!}</div>
+
                             @if ($tiketFeatures->isNotEmpty())
                                 <div class="mt-3 flex flex-wrap gap-2">
                                     @foreach ($tiketFeatures as $feature)
@@ -192,6 +200,8 @@
                                         <p class="text-[11px] text-slate-600">/malam</p>
                                     </div>
                                 </div>
+
+                                <div class="mt-2">{!! $ratingBadge !!}</div>
 
                                 @if ($features->isNotEmpty())
                                     <div class="mt-3 flex flex-wrap gap-2">
