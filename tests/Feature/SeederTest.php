@@ -11,6 +11,7 @@ use App\Models\Renang;
 use App\Models\Reservasi;
 use App\Models\Tiket;
 use App\Models\Transaksi;
+use App\Models\Ulasan;
 use Database\Seeders\BankSeeder;
 use Database\Seeders\CabinSeeder;
 use Database\Seeders\DetailTiketSeeder;
@@ -20,6 +21,7 @@ use Database\Seeders\RenangSeeder;
 use Database\Seeders\ReservasiSeeder;
 use Database\Seeders\TiketSeeder;
 use Database\Seeders\TransaksiSeeder;
+use Database\Seeders\UlasanSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
@@ -40,6 +42,7 @@ class SeederTest extends TestCase
         DetailTiketSeeder::class,
         ReservasiSeeder::class,
         DetailTransaksiSeeder::class,
+        UlasanSeeder::class,
     ];
 
     private function seedAll(): void
@@ -61,6 +64,7 @@ class SeederTest extends TestCase
             'detailtiket' => Detailtiket::count(),
             'reservasi' => Reservasi::count(),
             'detailtransaksi' => Detailtransaksi::count(),
+            'ulasan' => Ulasan::count(),
         ];
     }
 
@@ -122,5 +126,20 @@ class SeederTest extends TestCase
 
         $this->assertNotNull($detail);
         $this->assertNotNull($detail->transaksi, 'Relasi detailtransaksi->transaksi tidak valid.');
+    }
+
+    public function test_seeded_ulasan_has_30_users_with_varied_ratings(): void
+    {
+        $this->seedAll();
+
+        $penggunaIds = Pengguna::where('email', 'like', 'ulasan%@jiwanta.test')->pluck('id');
+        $ulasans = Ulasan::whereIn('pengguna_id', $penggunaIds)->get();
+
+        $this->assertCount(30, $penggunaIds);
+        $this->assertCount(30, $ulasans);
+        $this->assertSame([1, 2, 3, 4, 5], $ulasans->pluck('rating')->unique()->sort()->values()->all());
+        $this->assertSame([1 => 6, 2 => 6, 3 => 6, 4 => 6, 5 => 6], $ulasans->countBy('rating')->sortKeys()->all());
+        $this->assertSame(15, $ulasans->where('kategori', Ulasan::KATEGORI_TIKET)->count());
+        $this->assertSame(15, $ulasans->where('kategori', Ulasan::KATEGORI_CABIN)->count());
     }
 }
