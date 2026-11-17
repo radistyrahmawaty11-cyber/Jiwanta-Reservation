@@ -22,7 +22,8 @@ class PengunjungController extends Controller
         return view('pengunjung.dashboard', [
             'tikets' => Tiket::orderBy('kategori')->orderBy('id')->get(),
             'cabins' => Cabin::orderBy('id')->get(),
-            'ringkasan' => Ulasan::ringkasan(),
+            'ringkasanTiket' => Ulasan::ringkasan(Ulasan::KATEGORI_TIKET),
+            'ringkasanCabin' => Ulasan::ringkasan(Ulasan::KATEGORI_CABIN),
         ]);
     }
 

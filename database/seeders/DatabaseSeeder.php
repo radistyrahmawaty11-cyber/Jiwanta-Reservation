@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             DetailTiketSeeder::class,
             ReservasiSeeder::class,
             DetailTransaksiSeeder::class,
+            UlasanSeeder::class,
         ]);
 
         $pengunjungIds = Pengguna::where('role', 'pengunjung')->pluck('id')->toArray();
@@ -40,19 +41,19 @@ class DatabaseSeeder extends Seeder
             $bayar = $total + (($i % 2) * 50000);
 
             Transaksi::updateOrCreate(
-                ['kode_transaksi' => 'TRX-GEN-' . str_pad($i, 3, '0', STR_PAD_LEFT)],
+                ['kode_transaksi' => 'TRX-GEN-'.str_pad($i, 3, '0', STR_PAD_LEFT)],
                 [
-                    'pengguna_id'       => $pengunjungIds[array_rand($pengunjungIds)],
+                    'pengguna_id' => $pengunjungIds[array_rand($pengunjungIds)],
                     'tanggal_transaksi' => $tanggal,
-                    'total_amount'      => $total,
-                    'total_bayar'       => $bayar,
-                    'kembalian'         => max(0, $bayar - $total),
+                    'total_amount' => $total,
+                    'total_bayar' => $bayar,
+                    'kembalian' => max(0, $bayar - $total),
                     'metode_pembayaran' => $metodes[array_rand($metodes)],
-                    'status'            => $statuses[array_rand($statuses)],
+                    'status' => $statuses[array_rand($statuses)],
                 ]
             );
         }
 
-        $this->command->info('Data seeder (Pengguna, Cabin, Tiket, Renang, Bank, Transaksi, DetailTiket, Reservasi & DetailTransaksi) berhasil di-generate!');
+        $this->command->info('Data seeder (Pengguna, Cabin, Tiket, Renang, Bank, Transaksi, DetailTiket, Reservasi, DetailTransaksi & Ulasan) berhasil di-generate!');
     }
 }

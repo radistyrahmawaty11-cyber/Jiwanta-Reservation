@@ -1,5 +1,6 @@
 @php
     $tanggal = fn ($iso) => $iso ? \Illuminate\Support\Carbon::parse($iso)->format('d M Y') : '';
+    $labelKategori = \App\Models\Ulasan::labelKategori($kategori ?? \App\Models\Ulasan::KATEGORI_TIKET);
 @endphp
 
 @forelse ($ulasans as $ulasan)
@@ -25,7 +26,7 @@
     </article>
 @empty
     <div class="rounded-2xl border border-dashed border-slate-300 bg-white/60 px-4 py-8 text-center">
-        <p class="text-[13px] font-bold text-[#0B3A22]">Belum ada ulasan</p>
-        <p class="mt-1 text-[11px] text-slate-500">Jadilah yang pertama membagikan pengalaman Anda.</p>
+        <p class="text-[13px] font-bold text-[#0B3A22]">Belum ada ulasan {{ $labelKategori }}</p>
+        <p class="mt-1 text-[11px] text-slate-500">Ulasan pengunjung untuk kategori ini akan tampil di sini.</p>
     </div>
 @endforelse

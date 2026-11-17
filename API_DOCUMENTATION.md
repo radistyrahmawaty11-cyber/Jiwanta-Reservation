@@ -115,8 +115,8 @@ Redirect role: admin → `/admin/dashboard`, petugas → `/petugas/dashboard`, p
 | POST | `/transaksi/midtrans/charge` | JSON |
 | GET | `/transaksi/midtrans/status` | JSON |
 | GET/POST | `/profil` | HTML / redirect |
-| GET | `/ulasan` | JSON |
-| POST | `/ulasan` | JSON (khusus pengunjung) |
+| GET | `/ulasan` | HTML / JSON (mendukung `kategori`, `sort` & `partial`) |
+| POST | `/ulasan` | JSON (khusus pengunjung, otomatis per kategori) |
 
 **`GET /dashboard/feed`**
 
@@ -180,21 +180,35 @@ Error: `404` pesanan tidak ditemukan, `409` sudah lunas, `422` metode tidak ters
 
 **Ulasan**
 
-- `GET /ulasan` → daftar ulasan + ringkasan yang dihitung langsung dari database.
+> Semua pengunjung dapat melihat daftar dan rata-rata ulasan (view-only). Tombol **Beri Rating Sekarang** otomatis mengirim rating ke seluruh kategori yang memiliki transaksi `status = lunas` dan sudah diverifikasi petugas (`verified_at` terisi): `tiket` memerlukan detail `tiket_id`, sedangkan `cabin` memerlukan reservasi dengan `cabin_id`. Jika pengunjung memesan tiket dan cabin sekaligus, satu kiriman rating berlaku untuk kedua kategori. Tanpa transaksi terverifikasi, `POST` menghasilkan `403`.
+
+- `GET /ulasan?kategori=tiket|cabin` → halaman HTML daftar ulasan + ringkasan kategori aktif. Default `tiket`.
+  - `?sort=terbaru` (default) atau `?sort=rating` (rating tertinggi).
+  - `Accept: application/json` → respons JSON.
+  - `?partial=1` → potongan HTML daftar ulasan kategori aktif (dipakai pembaruan otomatis via AJAX).
 - `POST /ulasan` → `{ "rating": 5, "komentar": "Pelayanan sangat memuaskan." }`.
   - `rating` wajib **integer 1–5** (desimal ditolak).
   - `komentar` wajib, **minimal 10 karakter** (maks 1000).
-  - Satu pengunjung hanya punya satu ulasan; kirim ulang akan memperbarui ulasan lama.
+  - Kategori tidak dikirim dari form; server menentukan sendiri semua kategori yang boleh dinilai.
+  - Satu pengunjung hanya punya satu ulasan **per kategori**; kirim ulang akan memperbarui semua kategori yang memenuhi syarat.
+  - Respons berisi `kategori_dinilai`, `ringkasan` kategori utama, dan `ringkasan_kategori` untuk kedua kategori.
 
 ```json
 {
   "ok": true,
-  "data": { "id": 1, "pengguna_id": 12, "rating": 5, "komentar": "...", "created_at": "..." },
-  "ringkasan": { "rata_rata": 4.5, "jumlah_ulasan": 12 }
+  "kategori": "tiket",
+  "kategori_dinilai": ["tiket", "cabin"],
+  "data": [{ "id": 1, "pengguna_id": 12, "kategori": "tiket", "rating": 5, "komentar": "...", "created_at": "..." }],
+  "ringkasan": { "rata_rata": 4.5, "jumlah_ulasan": 12 },
+  "ringkasan_kategori": {
+    "tiket": { "rata_rata": 4.5, "jumlah_ulasan": 12 },
+    "cabin": { "rata_rata": 4.8, "jumlah_ulasan": 6 }
+  },
+  "sort": "terbaru"
 }
 ```
 
-`rata_rata` dan `jumlah_ulasan` selalu dihitung dari tabel `ulasans` (bukan hardcode).
+`rata_rata` dan `jumlah_ulasan` selalu dihitung dari tabel `ulasans` sesuai kategori (bukan hardcode).
 
 ### 3.3 Admin
 
@@ -323,7 +337,7 @@ window.Echo.channel('user.' + userId).listen('.order.status', console.log);
 | `transaksis` | `kode_transaksi` (unik, `TRX-YYYYMMDD-NNN`), `midtrans_order_id`, `snap_token`, `total_amount`, `total_bayar`, `kembalian`, `metode_pembayaran`, `payment_type`, `payment_detail`, `paid_at`, `verified_at`, `checked_in_at`, `bukti_transfer`, `status`, `tanggal_transaksi` |
 | `detailtransaksis` | `transaksi_id`, `tiket_id`, `reservasi_id`, `jumlah`, `harga_satuan`, `subtotal` |
 | `banks` | `nama_bank`, `nomor_rekening`, `atas_nama`, `status` |
-| `ulasans` | `pengguna_id` (unik), `rating` (1–5), `komentar` |
+| `ulasans` | `pengguna_id` + `kategori` (`tiket`/`cabin`) unik, `rating` (1–5), `komentar` |
 
 Enum/logika status:
 

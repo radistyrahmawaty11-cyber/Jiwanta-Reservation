@@ -203,6 +203,8 @@
 
     // Rating hanya terbuka setelah transaksi lunas dan dikonfirmasi petugas.
     $canRate = $statusKey === 'lunas' && ! empty($ticket['verified']);
+    $ratingKategori = ($isCabin ?? false) ? \App\Models\Ulasan::KATEGORI_CABIN : \App\Models\Ulasan::KATEGORI_TIKET;
+    $ratingKategoriLabel = \App\Models\Ulasan::labelKategori($ratingKategori);
 
     // ---------- Barcode Code 128 (SVG asli, bisa discan petugas) ----------
     $bookingCode = $ticket['code'] ?? 'JW-00000000-000';
@@ -358,11 +360,11 @@
                         </span>
                         <div class="min-w-0 flex-1">
                             <h3 class="text-[15px] font-bold text-[#0B3A22]">Transaksi sudah diverifikasi</h3>
-                            <p class="mt-1 text-[11.5px] leading-relaxed text-slate-600">Bagikan pengalaman Anda selama berkunjung ke Jiwanta Ciwidey.</p>
+                            <p class="mt-1 text-[11.5px] leading-relaxed text-slate-600">Bagikan pengalaman {{ strtolower($ratingKategoriLabel) }} Anda selama berkunjung ke Jiwanta Ciwidey.</p>
                         </div>
                     </div>
-                    <a href="{{ route('ulasan.index') }}" class="mt-3 block w-full rounded-full bg-[#0B3A22] px-5 py-2.5 text-center text-[12px] font-bold text-white transition hover:bg-[#0F4527] active:scale-[0.99]">
-                        Beri Rating Sekarang
+                    <a href="{{ route('ulasan.index', ['kategori' => $ratingKategori]) }}" class="mt-3 block w-full rounded-full bg-[#0B3A22] px-5 py-2.5 text-center text-[12px] font-bold text-white transition hover:bg-[#0F4527] active:scale-[0.99]">
+                        Beri Rating {{ $ratingKategoriLabel }}
                     </a>
                 </section>
             @endif
