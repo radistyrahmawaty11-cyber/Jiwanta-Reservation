@@ -8,11 +8,26 @@ use Picqer\Barcode\BarcodeGeneratorSVG;
 class Barcode
 {
     /**
+     * Kode booking kanonik yang dipakai pengunjung dan petugas.
+     * Menerima TRX-YYYYMMDD-NNN maupun hasil scan barcode YYYYMMDD-NNN.
+     */
+    public static function canonical(string $code): string
+    {
+        $code = strtoupper(trim($code));
+
+        if (preg_match('/^(?:TRX-)?(\d{8}-\d{3})$/', $code, $m)) {
+            return 'TRX-'.$m[1];
+        }
+
+        return $code;
+    }
+
+    /**
      * Kode yang di-encode pada barcode (tanpa prefiks TRX- agar modulnya rapat & mudah discan).
      */
     public static function payload(string $code): string
     {
-        $code = strtoupper(trim($code));
+        $code = self::canonical($code);
 
         return preg_match('/^TRX-(\d{8}-\d{3})$/', $code, $m) ? $m[1] : $code;
     }

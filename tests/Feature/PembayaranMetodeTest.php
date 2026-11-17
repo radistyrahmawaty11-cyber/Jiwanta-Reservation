@@ -157,19 +157,19 @@ class PembayaranMetodeTest extends TestCase
             ->assertOk()
             ->assertSee('Daftar Booking')
             ->assertSee('Menunggu Konfirmasi Petugas')
-            ->assertSee('Secure Token Authenticated')
-            ->assertSee('LUNAS')
-            // Barcode Code 128 asli (SVG) berisi kode booking tanpa prefiks TRX-.
-            ->assertSee('<desc>'.preg_replace('/^TRX-/', '', $trx->kode_transaksi).'</desc>', false);
+            ->assertDontSee('Secure Token Authenticated');
 
         $trx->update(['verified_at' => now()]);
 
-        // Terverifikasi = masih boleh discan (tiket belum dipakai di gerbang).
+        // Terverifikasi = barcode tampil dan masih boleh discan (belum dipakai di gerbang).
         $this->actingAs($user)
             ->get('/tiket')
             ->assertOk()
             ->assertSee('LUNAS &amp; DIKONFIRMASI', false)
             ->assertSee('Terkonfirmasi')
+            ->assertSee('Secure Token Authenticated')
+            // Barcode Code 128 asli (SVG) berisi kode booking tanpa prefiks TRX-.
+            ->assertSee('<desc>'.preg_replace('/^TRX-/', '', $trx->kode_transaksi).'</desc>', false)
             ->assertDontSee('Berhasil');
 
         $trx->update(['checked_in_at' => now()]);

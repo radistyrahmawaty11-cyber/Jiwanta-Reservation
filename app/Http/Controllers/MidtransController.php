@@ -599,6 +599,8 @@ class MidtransController extends Controller
                 (int) $transaksi->pengguna_id,
                 (string) $transaksi->kode_transaksi,
                 (string) $transaksi->status,
+                false,
+                $transaksi->verified_at !== null,
             );
         } catch (\Throwable $e) {
             report($e);

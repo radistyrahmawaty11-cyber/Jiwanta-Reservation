@@ -34,6 +34,7 @@ class PetugasDashboardTest extends TestCase
             'kembalian' => 0,
             'metode_pembayaran' => 'BCA',
             'status' => $status,
+            'verified_at' => $status === 'lunas' ? now() : null,
         ]);
     }
 
@@ -128,6 +129,19 @@ class PetugasDashboardTest extends TestCase
             ->assertJsonPath('transaksi.code', $transaksi->kode_transaksi);
     }
 
+    public function test_scan_menolak_transaksi_lunas_yang_belum_diverifikasi(): void
+    {
+        $petugas = $this->pengguna('petugas', 'gate-scan-unverified@jiwanta.test');
+        $pengunjung = $this->pengguna('pengunjung', 'gate-scan-unverified-visitor@jiwanta.test');
+        $transaksi = $this->transaksi($pengunjung, 'lunas');
+        $transaksi->update(['verified_at' => null]);
+
+        $this->actingAs($petugas)
+            ->postJson('/petugas/scan', ['code' => $transaksi->kode_transaksi])
+            ->assertOk()
+            ->assertJson(['ok' => false, 'reason' => 'pending']);
+    }
+
     public function test_pengunjung_cannot_verify_payment(): void
     {
         $pengunjung = $this->pengguna('pengunjung', 'gate-forbidden@jiwanta.test');
@@ -175,6 +189,21 @@ class PetugasDashboardTest extends TestCase
             ->assertOk()
             ->assertJson(['ok' => false, 'reason' => 'expired'])
             ->assertJsonPath('transaksi.visit_date', now()->subDay()->toDateString());
+    }
+
+    public function test_check_in_menolak_transaksi_lunas_yang_belum_diverifikasi(): void
+    {
+        $petugas = $this->pengguna('petugas', 'gate-unverified-checkin@jiwanta.test');
+        $pengunjung = $this->pengguna('pengunjung', 'gate-unverified-checkin-visitor@jiwanta.test');
+        $transaksi = $this->transaksi($pengunjung, 'lunas');
+        $transaksi->update(['verified_at' => null]);
+
+        $this->actingAs($petugas)
+            ->postJson("/petugas/transaksi/{$transaksi->id}/check-in")
+            ->assertStatus(422)
+            ->assertJson(['ok' => false, 'reason' => 'pending']);
+
+        $this->assertNull($transaksi->fresh()->checked_in_at);
     }
 
     public function test_check_in_menolak_tiket_kedaluwarsa(): void
