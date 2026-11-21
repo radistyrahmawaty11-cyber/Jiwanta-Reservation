@@ -4,7 +4,7 @@ services:
     build: .
     container_name: jiwanta-reservation-app
     ports:
-      - "6001:8000"
+      - "6001:6001"
     volumes:
       - ".:/var/www/html"
     environment:
@@ -28,7 +28,7 @@ services:
       MYSQL_PASSWORD: demo_app_db
       MYSQL_ROOT_PASSWORD: demopass123
     ports:
-      - "6001:8000"
+      - "6001:6001"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
