@@ -10,7 +10,7 @@ services:
     environment:
       - DB_CONNECTION=mysql
       - DB_HOST=127.0.0.1
-      - DB_PORT=3306
+      - DB_PORT=8532
       - DB_DATABASE=jiwanta_db
       - DB_USERNAME=root
       - DB_PASSWORD=
@@ -28,7 +28,7 @@ services:
       MYSQL_PASSWORD: demo_app_db
       MYSQL_ROOT_PASSWORD: demopass123
     ports:
-      - "2358:3306"
+      - "8532:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
