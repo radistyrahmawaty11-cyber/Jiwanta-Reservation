@@ -1,21 +1,20 @@
 services:
-  app:
+
+  app :
     build: .
     container_name: jiwanta-reservation-app
     ports:
-      - "1007:8000"
+      - "1500:8000"
     volumes:
       - ".:/var/www/html"
     environment:
-      - APP_ENV=local
-      - APP_KEY=base64:GANTI_DENGAN_APP_KEY_KAMU
       - DB_CONNECTION=mysql
-      - DB_HOST=mysql                 # <-- DIPERBAIKI: Harus nama service 'mysql'
-      - DB_PORT=3306
+      - DB_HOST=127.0.0.1
+      - DB_PORT=7001
       - DB_DATABASE=jiwanta_db
       - DB_USERNAME=root
-      - DB_PASSWORD=jiwantaspring     # <-- DIPERBAIKI: Spasi dihapus, password disamakan
-      - SESSION_DRIVER=file
+      - DB_PASSWORD=
+      - SESSION_DRIVER=database
     depends_on:
       mysql:
         condition: service_healthy
@@ -25,13 +24,15 @@ services:
     container_name: mysql_service
     environment:
       MYSQL_DATABASE: jiwanta_db
-      MYSQL_ROOT_PASSWORD: jiwantaspring  # <-- DIPERBAIKI: Disamakan dengan DB_PASSWORD di atas
+      MYSQL_USER: demo_app_db
+      MYSQL_PASSWORD: demo_app_db
+      MYSQL_ROOT_PASSWORD: demopass123
     ports:
-      - "3306:3306"
+      - "7001:7001"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-pjiwantaspring", "--silent"]
+      test: ["CMD-SHELL", "mysqladmin ping --host=127.0.0.1 --user=root --password=\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -39,3 +40,9 @@ services:
 
 volumes:
   mysql_data:
+
+
+
+
+
+
