@@ -4,13 +4,13 @@ services:
     build: .
     container_name: jiwanta-reservation-app
     ports:
-      - "7001:8000"
+      - "9001:8000"
     volumes:
       - ".:/var/www/html"
     environment:
       - DB_CONNECTION=mysql
       - DB_HOST=127.0.0.1
-      - DB_PORT=7001
+      - DB_PORT=9001
       - DB_DATABASE=jiwanta_db
       - DB_USERNAME=root
       - DB_PASSWORD=
@@ -28,7 +28,7 @@ services:
       MYSQL_PASSWORD: demo_app_db
       MYSQL_ROOT_PASSWORD: demopass123
     ports:
-      - "7001:7001"
+      - "9001:9001"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
