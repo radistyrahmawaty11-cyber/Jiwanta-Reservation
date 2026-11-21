@@ -1,23 +1,48 @@
 services:
-  app:
+
+  app :
     build: .
     container_name: jiwanta-reservation-app
     ports:
-      - "1007:8000"
+      - "1500:8000"
     volumes:
       - ".:/var/www/html"
     environment:
-      - APP_ENV=local
-      - APP_KEY=base64:GANTI_DENGAN_APP_KEY_KAMU
       - DB_CONNECTION=mysql
-      - DB_HOST=mysql                 # <-- DIPERBAIKI: Harus nama service 'mysql'
+      - DB_HOST=127.0.0.1
       - DB_PORT=7001
       - DB_DATABASE=jiwanta_db
-      - DB_USERNAME=demo_app_db
-      - DB_PASSWORD=demopass123    # <-- DIPERBAIKI: Spasi dihapus, password disamakan
-      - SESSION_DRIVER=file
+      - DB_USERNAME=root
+      - DB_PASSWORD=
+      - SESSION_DRIVER=database
     depends_on:
       mysql:
         condition: service_healthy
 
-  
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_service
+    environment:
+      MYSQL_DATABASE: jiwanta_db
+      MYSQL_USER: demo_app_db
+      MYSQL_PASSWORD: demo_app_db
+      MYSQL_ROOT_PASSWORD: demopass123
+    ports:
+      - "7001:7001"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping --host=127.0.0.1 --user=root --password=\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  mysql_data:
+
+
+
+
+
+
