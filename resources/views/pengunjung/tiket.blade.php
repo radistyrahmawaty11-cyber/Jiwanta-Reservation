@@ -77,6 +77,7 @@
 
         if ($matched) {
             $currentTrx = $matched;
+            $ticket['code'] = $matched->kode_transaksi;
             $ticket['total'] = (int) ($matched->total_amount ?: $ticket['total']);
             $ticket['verified'] = (bool) $matched->verified_at;
             $ticket['checked_in'] = (bool) $matched->checked_in_at;
@@ -198,8 +199,8 @@
     };
     $statusIcon = $statusKey === 'lunas' ? $p['check'] : $p['clock'];
 
-    // QR & barcode gate hanya diterbitkan setelah pembayaran lunas/terverifikasi.
-    $qrReady = $statusKey === 'lunas';
+    // Barcode diterbitkan setelah status lunas dan diverifikasi petugas agar sinkron dengan scan gate.
+    $qrReady = $statusKey === 'lunas' && ! empty($ticket['verified']);
 
     // Rating hanya terbuka setelah transaksi lunas dan dikonfirmasi petugas.
     $canRate = $statusKey === 'lunas' && ! empty($ticket['verified']);
@@ -513,7 +514,6 @@
         }, { passive: true });
 
         // 5. Status pembayaran tiket
-        const QR_READY = {{ $qrReady ? 'true' : 'false' }};
         const TICKET_STATUS = @json($statusKey);
         let VERIFIED = {{ ! empty($ticket['verified']) ? 'true' : 'false' }};
         let CHECKED_IN = {{ $isCheckedIn ? 'true' : 'false' }};
@@ -540,30 +540,40 @@
             badge.textContent = meta[0];
             badge.className = 'shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold ' + meta[1];
         };
-        const applyStatus = (status) => {
+        const applyStatus = (status, verified = VERIFIED) => {
             const meta = STATUS_META[status] || STATUS_META.pending;
             const label = document.getElementById('status-label');
             const icon = document.getElementById('status-icon');
             if (label) {
-                label.textContent = status === 'lunas' && !VERIFIED ? 'LUNAS' : meta.label;
+                label.textContent = status === 'lunas'
+                    ? (verified ? 'LUNAS & DIKONFIRMASI' : 'LUNAS • MENUNGGU VERIFIKASI')
+                    : meta.label;
             }
             if (icon) {
                 icon.className = 'flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 ' + meta.color;
                 icon.innerHTML = status === 'lunas' ? IC_CHECK : IC_CLOCK;
-            }
-            if (status === 'lunas') {
-                // Muat ulang agar QR/barcode dan status konfirmasi petugas ikut terbarui.
-                if (!QR_READY || !VERIFIED) { window.location.reload(); return; }
             }
         };
         if (window.JiwantaRealtime && window.JiwantaRealtime.userChannel) {
             window.JiwantaRealtime.subscribe(window.JiwantaRealtime.userChannel, 'order.status', (e) => {
                 const code = (e && e.kode) || '';
                 const status = (e && e.status) || 'pending';
-                // Tiket sudah dipakai di gerbang -> muat ulang agar tampil stempel abu-abu.
-                if (e && e.checked_in && code === bookingCode) { window.location.reload(); return; }
+                const verified = !!(e && e.verified);
+
+                if (code !== bookingCode) {
+                    applyBadge(code, status);
+                    return;
+                }
+
+                // Verifikasi petugas/check-in gerbang -> muat ulang agar barcode tampil & sinkron.
+                if ((verified && !VERIFIED) || (e && e.checked_in)) {
+                    window.location.reload();
+                    return;
+                }
+
+                VERIFIED = VERIFIED || verified;
                 applyBadge(code, status);
-                if (code && code === bookingCode) applyStatus(status);
+                applyStatus(status, VERIFIED);
             });
         }
 

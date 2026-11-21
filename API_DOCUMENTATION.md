@@ -272,6 +272,8 @@ Error: `404` pesanan tidak ditemukan, `409` sudah lunas, `422` metode tidak ters
 **`GET /petugas/feed`** — `stats` (`gate`, `cap`, `verified`), `pending`, `history`, `layanan`, serta `scanUrl`, `walkinUrl`, `actionUrl`, `feedUrl`.
 
 **`POST /petugas/scan`** `{ "code": "TRX-20261109-123" }` → `{ "ok": true, "reason": null, "transaksi": { ... } }`.
+Kode barcode hasil scan (`20261109-123`) juga diterima dan dinormalisasi ke `TRX-20261109-123`.
+Barcode pengunjung hanya tampil setelah transaksi `lunas` dan `verified_at` terisi; scan/check-in menolak transaksi lunas yang belum diverifikasi dengan `reason: pending`.
 `reason`: `not_found`, `pending`, `rejected`, `used`, `expired` (semua tetap HTTP `200`).
 
 **`POST /petugas/walkin`**:
@@ -317,7 +319,7 @@ Status `lunas` tidak pernah diturunkan kembali.
 | `order.status` | `user.{pengguna_id}` | Status berubah (verify/reject/check-in/callback) |
 
 Payload `order.placed`: `transaksi_id`, `kode`, `judul`, `tipe`, `tamu`, `total`, `total_label`, `pemesan`, `waktu`.
-Payload `order.status`: `kode`, `status`, `checked_in`.
+Payload `order.status`: `kode`, `status`, `checked_in`, `verified`.
 
 ```javascript
 window.Echo.channel('admin.orders').listen('.order.placed', console.log);

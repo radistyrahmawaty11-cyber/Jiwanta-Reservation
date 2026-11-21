@@ -10,6 +10,7 @@ use App\Models\Pengguna;
 use App\Models\Reservasi;
 use App\Models\Tiket;
 use App\Models\Transaksi;
+use App\Support\Barcode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -68,7 +69,7 @@ class PetugasController extends Controller
 
     public function checkIn(Transaksi $transaksi)
     {
-        if ($transaksi->status !== 'lunas') {
+        if ($transaksi->status !== 'lunas' || $transaksi->verified_at === null) {
             return response()->json([
                 'ok' => false,
                 'reason' => $transaksi->status === 'gagal' ? 'rejected' : 'pending',
@@ -333,6 +334,7 @@ class PetugasController extends Controller
                 (string) $transaksi->kode_transaksi,
                 (string) $transaksi->status,
                 $transaksi->checked_in_at !== null,
+                $transaksi->verified_at !== null,
             );
         } catch (\Throwable $e) {
             report($e);
@@ -341,18 +343,11 @@ class PetugasController extends Controller
 
     public function scan(Request $request)
     {
-        $code = strtoupper(trim((string) $request->input('code')));
+        $code = Barcode::canonical((string) $request->input('code'));
 
         $transaksi = Transaksi::with(self::EAGER)
             ->whereRaw('UPPER(kode_transaksi) = ?', [$code])
             ->first();
-
-        // Barcode tiket memuat kode tanpa prefiks "TRX-" (lebih mudah discan).
-        if (! $transaksi && preg_match('/^\d{8}-\d{3}$/', $code)) {
-            $transaksi = Transaksi::with(self::EAGER)
-                ->whereRaw('UPPER(kode_transaksi) = ?', ['TRX-'.$code])
-                ->first();
-        }
 
         if (! $transaksi) {
             return response()->json(['ok' => false, 'reason' => 'not_found']);
@@ -360,12 +355,12 @@ class PetugasController extends Controller
 
         $tiket = $this->present($transaksi);
 
-        $reason = match ($transaksi->status) {
-            'pending' => 'pending',
-            'gagal' => 'rejected',
-            default => $transaksi->checked_in_at !== null
-                ? 'used'
-                : ($this->isExpired($transaksi) ? 'expired' : null),
+        $reason = match (true) {
+            $transaksi->status !== 'lunas' => $transaksi->status === 'gagal' ? 'rejected' : 'pending',
+            $transaksi->verified_at === null => 'pending',
+            $transaksi->checked_in_at !== null => 'used',
+            $this->isExpired($transaksi) => 'expired',
+            default => null,
         };
 
         return response()->json([

@@ -108,14 +108,16 @@ class BroadcastNotifikasiTest extends TestCase
         Event::assertDispatched(OrderStatusUpdated::class, function (OrderStatusUpdated $event) use ($pengunjung, $trx) {
             return $event->penggunaId === $pengunjung->id
                 && $event->kode === $trx->kode_transaksi
-                && $event->status === 'lunas';
+                && $event->status === 'lunas'
+                && $event->verified;
         });
     }
 
     public function test_order_status_event_broadcasts_on_user_channel(): void
     {
         $event = new OrderStatusUpdated(42, 'TRX-20261013-001', 'lunas');
-        $checked = new OrderStatusUpdated(42, 'TRX-20261013-001', 'lunas', true);
+        $verified = new OrderStatusUpdated(42, 'TRX-20261013-001', 'lunas', false, true);
+        $checked = new OrderStatusUpdated(42, 'TRX-20261013-001', 'lunas', true, true);
 
         $channel = $event->broadcastOn()[0];
 
@@ -123,9 +125,10 @@ class BroadcastNotifikasiTest extends TestCase
         $this->assertSame('user.42', $channel->name);
         $this->assertSame('order.status', $event->broadcastAs());
         $this->assertSame(
-            ['kode' => 'TRX-20261013-001', 'status' => 'lunas', 'checked_in' => false],
+            ['kode' => 'TRX-20261013-001', 'status' => 'lunas', 'checked_in' => false, 'verified' => false],
             $event->broadcastWith()
         );
+        $this->assertTrue($verified->broadcastWith()['verified']);
         $this->assertTrue($checked->broadcastWith()['checked_in']);
     }
 }
