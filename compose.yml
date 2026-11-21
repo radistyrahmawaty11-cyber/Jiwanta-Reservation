@@ -11,7 +11,7 @@ services:
       - APP_KEY=base64:GANTI_DENGAN_APP_KEY_KAMU
       - DB_CONNECTION=mysql
       - DB_HOST=mysql                 # <-- DIPERBAIKI: Harus nama service 'mysql'
-      - DB_PORT=3306
+      - DB_PORT=7001
       - DB_DATABASE=jiwanta_db
       - DB_USERNAME=root
       - DB_PASSWORD=jiwantaspring     # <-- DIPERBAIKI: Spasi dihapus, password disamakan
@@ -27,7 +27,7 @@ services:
       MYSQL_DATABASE: jiwanta_db
       MYSQL_ROOT_PASSWORD: jiwantaspring  # <-- DIPERBAIKI: Disamakan dengan DB_PASSWORD di atas
     ports:
-      - "3306:3306"
+      - "7001:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
