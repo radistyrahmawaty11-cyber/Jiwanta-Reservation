@@ -19,4 +19,9 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 EXPOSE 8000
 
+# --- INI YANG KURANG DI DOCKERFILE KAMU ---
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8000/ || exit 1
+# -------------------------------------------
+
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
