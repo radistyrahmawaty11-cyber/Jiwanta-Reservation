@@ -1,20 +1,27 @@
 services:
-
-  app :
-    build: .
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: jiwanta-reservation-app
+    restart: unless-stopped
     ports:
-      - "2358:8000"
+      - "2358:8000"       # <-- PORT 2358 AMAN DIGUNAKAN SEKARANG
     volumes:
       - ".:/var/www/html"
     environment:
+      - APP_NAME=Laravel
+      - APP_ENV=local
+      - APP_KEY=base64:gYnmREhuQrBG5FBMVT9UeDlMQ4mCCYRyGBvuoMp3wmA=
+      - APP_DEBUG=false
+      - APP_URL=http://localhost:2358
       - DB_CONNECTION=mysql
-      - DB_HOST=127.0.0.1
-      - DB_PORT=8532
+      - DB_HOST=mysql           # <-- WAJIB 'mysql' (komunikasi internal)
+      - DB_PORT=3306            # <-- WAJIB 3306 (port internal Docker)
       - DB_DATABASE=jiwanta_db
       - DB_USERNAME=root
-      - DB_PASSWORD=
-      - SESSION_DRIVER=database
+      - DB_PASSWORD=demopass123 # <-- HARUS SAMA DENGAN MYSQL_ROOT_PASSWORD
+      - SESSION_DRIVER=file
     depends_on:
       mysql:
         condition: service_healthy
@@ -22,27 +29,19 @@ services:
   mysql:
     image: mysql:8.0
     container_name: mysql_service
+    restart: unless-stopped
     environment:
       MYSQL_DATABASE: jiwanta_db
-      MYSQL_USER: demo_app_db
-      MYSQL_PASSWORD: demo_app_db
       MYSQL_ROOT_PASSWORD: demopass123
-    ports:
-      - "8532:3306"
+    # TIDAK ADA 'ports' DI SINI! Agar tidak bentrok.
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping --host=127.0.0.1 --user=root --password=\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
-      interval: 5s
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -pdemopass123 || exit 1"]
+      interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 40s
 
 volumes:
   mysql_data:
-
-
-
-
-
-
